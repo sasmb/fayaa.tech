@@ -1,0 +1,15 @@
+# FAYAA — The All-in-One Content Creation Studio
+
+> Pick trending templates, copy TikTok dances, build consistent virtual creators, and generate viral videos at 10x speed.
+
+FAYAA (https://fayaa.tech) is an autonomous AI video & motion-transfer creation studio powered by Higgsfield Genjutsu Light/Pro and MuAPI. Creators, choreographers, and marketing teams use FAYAA to clone human motions, swap clothing and faces with temporal identity locking, and produce professional 1080p / 4K content.
+
+## Core Pages
+
+- [Home](https://fayaa.tech): Landing page with templates, features, and showcase
+- [Pricing](https://fayaa.tech/pricing): Creator subscriptions and credit packs
+- [Sign Up](https://fayaa.tech/signup): Create a free account with 30 bonus credits
+- [Login](https://fayaa.tech/login): Sign in with Google or Email
+- [Terms of Service](https://fayaa.tech/terms): Terms and commercial usage guidelines
+- [Privacy Policy](https://fayaa.tech/privacy): Data handling and privacy disclosures
+- [Refund Policy](https://fayaa.tech/refunds): Cancellation and refund terms

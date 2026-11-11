@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+.wasp/
+dist/
+build/
+
+# Secrets
+.env.server
+.env.client
+*.env.local
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,124 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  email                     String?         @unique
+  username                  String?         @unique
+  isAdmin                   Boolean         @default(false)
+
+  name                      String?
+  showNamePublicly          Boolean         @default(false)
+  avatarUrl                 String?
+  headline                  String?
+  bio                       String?
+  location                  String?
+  socialLinks               String?
+
+  paymentProcessorUserId    String?         @unique
+  lemonSqueezyCustomerPortalUrl String?     // You can delete this if you're not using Lemon Squeezy as your payments processor.
+  subscriptionStatus        String?         // 'active', 'cancel_at_period_end', 'past_due', 'deleted'
+  subscriptionPlan          String?         // 'hobby', 'pro'
+  datePaid                  DateTime?
+  credits                   Int             @default(30)
+
+  contactFormMessages       ContactFormMessage[]
+  files                     File[]
+  videoTasks                VideoTask[]
+}
+
+model ProcessedWebhookEvent {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  paymentProcessorEventId   String          @unique // The payment processor's event id, e.g. `evt_...` for Stripe.
+  eventType                 String                  // The payment processor's event type, e.g. `invoice.paid`.
+}
+
+model File {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  user                      User            @relation(fields: [userId], references: [id])
+  userId                    String
+
+  name                      String
+  type                      String
+  s3Key                     String
+}
+
+model DailyStats {
+  id                               Int             @id @default(autoincrement())
+  date                             DateTime        @default(now()) @unique
+
+  totalViews                       Int             @default(0)
+  prevDayViewsChangePercent        String          @default("0")
+  userCount                        Int             @default(0)
+  paidUserCount                    Int             @default(0)
+  userDelta                        Int             @default(0)
+  paidUserDelta                    Int             @default(0)
+  totalRevenue                     Float           @default(0)
+  totalProfit                      Float           @default(0)
+
+  sources                          PageViewSource[]
+}
+
+model PageViewSource {
+  @@id([date, name])
+  name                     String
+  date                     DateTime        @default(now())
+
+  dailyStats               DailyStats?     @relation(fields: [dailyStatsId], references: [id])
+  dailyStatsId             Int?
+
+  visitors                 Int
+}
+
+model Logs {
+  id                       Int             @id @default(autoincrement())
+  createdAt                DateTime        @default(now())
+
+  message                  String
+  level                    String
+}
+
+model ContactFormMessage {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  user                      User            @relation(fields: [userId], references: [id])
+  userId                    String
+
+  content                   String
+  isRead                    Boolean         @default(false)
+  repliedAt                 DateTime?
+}
+
+model VideoTask {
+  id                 String    @id @default(uuid())
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String
+  provider           String    // "HIGGSFIELD" | "MUAPI"
+  model              String    // "seedance-2.5-intl-motion-control" | "higgsfield/genjutsu/motion-transfer/v1.0"
+  requestId          String    @unique
+  prompt             String?
+  sourceVideoUrl     String
+  referenceImageUrls String[]
+  outputVideoUrl     String?
+  resolution         String    @default("720p") // "480p" | "720p" | "1080p"
+  status             String    @default("PENDING") // "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED"
+  error              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
