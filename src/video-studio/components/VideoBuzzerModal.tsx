@@ -44,13 +44,13 @@ export function VideoBuzzerModal({ videoUrl, onClose }: VideoBuzzerModalProps) {
               </button>
             </div>
 
-            <div className="rounded-xl overflow-hidden aspect-[9/16] bg-black border border-white/10">
+            <div className="rounded-xl overflow-hidden min-h-[220px] max-h-[60vh] aspect-video bg-black/95 border border-white/10 flex items-center justify-center">
               <video
                 src={videoUrl}
                 controls
                 playsInline
                 autoPlay
-                className="w-full h-full object-cover"
+                className="max-h-full max-w-full object-contain"
               />
             </div>
 

@@ -430,13 +430,13 @@ function ElementCard({
             muted
             playsInline
             preload="metadata"
-            className="size-full object-cover"
+            className="size-full object-contain bg-black/90"
           />
         ) : (
           <img
             src={item.src}
             alt={item.name ?? ""}
-            className="size-full object-cover"
+            className="size-full object-contain bg-black/90"
             loading="lazy"
           />
         )}

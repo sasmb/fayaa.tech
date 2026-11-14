@@ -19,6 +19,7 @@ import {
   Loader2,
   LogIn,
   LogOut,
+  Maximize2,
   Pencil,
   Plus,
   RefreshCw,
@@ -471,6 +472,24 @@ export function GenjutsuWorkbench({
   // Style Drawer / Selector state
   const [selectedStyleId, setSelectedStyleId] = useState<string>("none")
   const [stylePickerOpen, setStylePickerOpen] = useState<boolean>(false)
+
+  // Full-frame uncropped media preview modal
+  const [fullFrameMedia, setFullFrameMedia] = useState<{
+    type: "video" | "image"
+    url: string
+    title: string
+    aspectRatio?: string
+  } | null>(null)
+  const [sourceVideoAspect, setSourceVideoAspect] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!fullFrameMedia) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFullFrameMedia(null)
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [fullFrameMedia])
 
   // Left-sidebar inputs (empty by default so new users start afresh with no preloaded media)
   const [sourceVideo, setSourceVideo] = useState<MediaItem | null>(null)
@@ -1326,10 +1345,10 @@ export function GenjutsuWorkbench({
                 >
                   {sourceVideo ? (
                     <div className="flex flex-col gap-2">
-                      <div className="relative h-24 w-full overflow-hidden rounded-lg bg-black">
+                      <div className="relative min-h-[160px] max-h-[220px] aspect-video w-full overflow-hidden rounded-lg bg-black/95 border border-white/10 group flex items-center justify-center">
                         <video
                           src={sourceVideo.url}
-                          className="size-full object-cover"
+                          className="size-full object-contain"
                           controls
                           muted
                           playsInline
@@ -1340,25 +1359,75 @@ export function GenjutsuWorkbench({
                             )
                             setVideoDuration(dur)
                             setTrimRange({ start: 0, end: dur })
+                            const w = e.currentTarget.videoWidth
+                            const h = e.currentTarget.videoHeight
+                            if (w && h) {
+                              setSourceVideoAspect(w >= h ? `${w}×${h} (16:9)` : `${w}×${h} (9:16)`)
+                            }
                           }}
                         />
-                        <button
-                          type="button"
-                          onClick={removeSourceVideo}
-                          aria-label="Remove motion video"
-                          className="absolute top-1.5 right-1.5 flex size-6 cursor-pointer items-center justify-center rounded-full bg-black/75 text-zinc-300 hover:bg-red-500/80 hover:text-white"
-                        >
-                          <Trash2 className="size-3" />
-                        </button>
+                        <div className="absolute top-1.5 left-1.5 flex items-center gap-1 pointer-events-none">
+                          <span className="rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/30 backdrop-blur">
+                            FULL FRAME
+                          </span>
+                          {sourceVideoAspect && (
+                            <span className="rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-mono text-zinc-300 border border-white/10 backdrop-blur">
+                              {sourceVideoAspect}
+                            </span>
+                          )}
+                        </div>
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFullFrameMedia({
+                                type: "video",
+                                url: sourceVideo.url,
+                                title: sourceVideo.name ?? "Motion_Copy.mp4",
+                                aspectRatio: sourceVideoAspect ?? undefined,
+                              })
+                            }
+                            aria-label="View Full Frame"
+                            title="Expand to Full Frame"
+                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-[#D9FF00] hover:text-black border border-white/10 backdrop-blur transition-all"
+                          >
+                            <Maximize2 className="size-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={removeSourceVideo}
+                            aria-label="Remove motion video"
+                            title="Remove video"
+                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-red-500 hover:text-white border border-white/10 backdrop-blur transition-all"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-[10px] text-zinc-400">
-                        <span className="truncate font-medium text-zinc-200">
+                      <div className="flex items-center justify-between text-[10px] text-zinc-400 px-0.5">
+                        <span className="truncate font-medium text-zinc-200 max-w-[170px]" title={sourceVideo.name}>
                           {sourceVideo.name ?? "Motion_Copy.mp4"}
                         </span>
-                        <span className="font-mono text-[#D9FF00]">
-                          {trimRange.start.toFixed(1)}s – {trimRange.end.toFixed(1)}s
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFullFrameMedia({
+                                type: "video",
+                                url: sourceVideo.url,
+                                title: sourceVideo.name ?? "Motion_Copy.mp4",
+                                aspectRatio: sourceVideoAspect ?? undefined,
+                              })
+                            }
+                            className="text-[#D9FF00] hover:underline flex items-center gap-0.5 text-[10px] font-medium cursor-pointer"
+                          >
+                            <Maximize2 className="size-2.5" /> Inspect full
+                          </button>
+                          <span className="font-mono text-zinc-300">
+                            {trimRange.start.toFixed(1)}s – {trimRange.end.toFixed(1)}s
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -1410,20 +1479,64 @@ export function GenjutsuWorkbench({
                   )}
                 >
                   {referenceImages.length > 0 ? (
-                    <div className="relative h-28 w-full overflow-hidden rounded-lg bg-black">
-                      <img
-                        src={referenceImages[0].url}
-                        alt={referenceImages[0].name ?? "Character"}
-                        className="size-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setReferenceImages([])}
-                        aria-label="Remove character image"
-                        className="absolute top-1.5 right-1.5 flex size-6 cursor-pointer items-center justify-center rounded-full bg-black/75 text-zinc-300 hover:bg-red-500/80 hover:text-white"
-                      >
-                        <X className="size-3" />
-                      </button>
+                    <div className="flex flex-col gap-2">
+                      <div className="relative aspect-[4/3] max-h-[180px] w-full overflow-hidden rounded-lg bg-black/95 border border-white/10 group flex items-center justify-center">
+                        <img
+                          src={referenceImages[0].url}
+                          alt={referenceImages[0].name ?? "Character"}
+                          className="size-full object-contain"
+                        />
+                        <div className="absolute top-1.5 left-1.5 flex items-center gap-1 pointer-events-none">
+                          <span className="rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/30 backdrop-blur">
+                            FULL FRAME
+                          </span>
+                        </div>
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFullFrameMedia({
+                                type: "image",
+                                url: referenceImages[0].url,
+                                title: referenceImages[0].name ?? "Character Reference",
+                              })
+                            }
+                            aria-label="View Full Frame"
+                            title="Expand Full Photo"
+                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-[#D9FF00] hover:text-black border border-white/10 backdrop-blur transition-all"
+                          >
+                            <Maximize2 className="size-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setReferenceImages([])}
+                            aria-label="Remove character image"
+                            title="Remove photo"
+                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-red-500 hover:text-white border border-white/10 backdrop-blur transition-all"
+                          >
+                            <X className="size-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] text-zinc-400 px-0.5">
+                        <span className="truncate font-medium text-zinc-200 max-w-[170px]" title={referenceImages[0].name}>
+                          {referenceImages[0].name ?? "Character Reference"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFullFrameMedia({
+                              type: "image",
+                              url: referenceImages[0].url,
+                              title: referenceImages[0].name ?? "Character Reference",
+                            })
+                          }
+                          className="text-[#D9FF00] hover:underline flex items-center gap-0.5 text-[10px] font-medium cursor-pointer"
+                        >
+                          <Maximize2 className="size-2.5" /> Inspect full
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <AssetLibraryModal
@@ -1794,10 +1907,10 @@ export function GenjutsuWorkbench({
                 >
                   {sourceVideo ? (
                     <div className="flex flex-col gap-2">
-                      <div className="relative h-28 w-full overflow-hidden rounded-lg bg-black">
+                      <div className="relative min-h-[160px] max-h-[220px] aspect-video w-full overflow-hidden rounded-lg bg-black/95 border border-white/10 group flex items-center justify-center">
                         <video
                           src={sourceVideo.url}
-                          className="size-full object-cover"
+                          className="size-full object-contain"
                           controls
                           muted
                           playsInline
@@ -1808,16 +1921,50 @@ export function GenjutsuWorkbench({
                             )
                             setVideoDuration(dur)
                             setTrimRange({ start: 0, end: dur })
+                            const w = e.currentTarget.videoWidth
+                            const h = e.currentTarget.videoHeight
+                            if (w && h) {
+                              setSourceVideoAspect(w >= h ? `${w}×${h} (16:9)` : `${w}×${h} (9:16)`)
+                            }
                           }}
                         />
-                        <button
-                          type="button"
-                          onClick={removeSourceVideo}
-                          aria-label="Remove reference video"
-                          className="absolute top-1.5 right-1.5 flex size-6 cursor-pointer items-center justify-center rounded-full bg-black/75 text-zinc-300 hover:bg-red-500/80 hover:text-white"
-                        >
-                          <Trash2 className="size-3" />
-                        </button>
+                        <div className="absolute top-1.5 left-1.5 flex items-center gap-1 pointer-events-none">
+                          <span className="rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/30 backdrop-blur">
+                            FULL FRAME
+                          </span>
+                          {sourceVideoAspect && (
+                            <span className="rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-mono text-zinc-300 border border-white/10 backdrop-blur">
+                              {sourceVideoAspect}
+                            </span>
+                          )}
+                        </div>
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFullFrameMedia({
+                                type: "video",
+                                url: sourceVideo.url,
+                                title: sourceVideo.name ?? "Motion_Reference.mp4",
+                                aspectRatio: sourceVideoAspect ?? undefined,
+                              })
+                            }
+                            aria-label="View Full Frame"
+                            title="Expand to Full Frame"
+                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-[#D9FF00] hover:text-black border border-white/10 backdrop-blur transition-all"
+                          >
+                            <Maximize2 className="size-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={removeSourceVideo}
+                            aria-label="Remove reference video"
+                            title="Remove video"
+                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-red-500 hover:text-white border border-white/10 backdrop-blur transition-all"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex flex-col gap-1 rounded-lg bg-black/40 px-2 py-1.5">
@@ -1956,30 +2103,48 @@ export function GenjutsuWorkbench({
                         {referenceImages.map((img, idx) => (
                           <div
                             key={img.id}
-                            className="group relative size-12 shrink-0 overflow-hidden rounded-lg border border-white/15 bg-black"
+                            className="group relative size-12 shrink-0 overflow-hidden rounded-lg border border-white/15 bg-black/95 flex items-center justify-center cursor-pointer"
                             onClick={() => injectImageToken(idx + 1)}
                             title={`Click to insert @Image${idx + 1}`}
                           >
                             <img
                               src={img.url}
                               alt={img.name ?? `Reference ${idx + 1}`}
-                              className="size-full object-cover transition-transform group-hover:scale-105 cursor-pointer"
+                              className="size-full object-contain"
                             />
-                            <span className="pointer-events-none absolute bottom-0.5 left-0.5 rounded bg-black/75 px-1 py-0.2 font-mono text-[8px] font-semibold text-[#D9FF00]">
+                            <span className="pointer-events-none absolute bottom-0.5 left-0.5 rounded bg-black/85 px-1 py-0.2 font-mono text-[8px] font-semibold text-[#D9FF00]">
                               Ref {idx + 1}
                             </span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setReferenceImages((prev) =>
-                                  prev.filter((item) => item.id !== img.id)
-                                )
-                              }}
-                              className="absolute top-0.5 right-0.5 flex size-4 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500 hover:text-white"
-                            >
-                              <X className="size-2.5" />
-                            </button>
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setFullFrameMedia({
+                                    type: "image",
+                                    url: img.url,
+                                    title: img.name ?? `Reference Photo ${idx + 1}`,
+                                  })
+                                }}
+                                title="Inspect full frame"
+                                className="flex size-5 cursor-pointer items-center justify-center rounded-full bg-white/20 text-white hover:bg-[#D9FF00] hover:text-black transition-colors"
+                              >
+                                <Maximize2 className="size-2.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setReferenceImages((prev) =>
+                                    prev.filter((item) => item.id !== img.id)
+                                  )
+                                }}
+                                title="Remove reference"
+                                className="flex size-5 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-red-500 hover:text-white transition-colors"
+                              >
+                                <X className="size-2.5" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -2699,7 +2864,7 @@ export function GenjutsuWorkbench({
                                   loop
                                   muted
                                   playsInline
-                                  className="size-full object-cover"
+                                  className="size-full object-contain bg-black"
                                 />
                               ) : undefined
                             }
@@ -2828,6 +2993,88 @@ export function GenjutsuWorkbench({
         selectedModel={selectedMotionModel}
         onSelectModel={(m) => setSelectedMotionModel(m)}
       />
+
+      {/* Full-Frame Uncropped Media Preview Modal */}
+      {fullFrameMedia && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={fullFrameMedia.title}
+          onClick={() => setFullFrameMedia(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 sm:p-6 md:p-8 animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative flex flex-col w-full max-w-5xl max-h-[92vh] rounded-2xl bg-[#0E0E12] border border-white/15 overflow-hidden shadow-2xl"
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 bg-[#141418]">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  FULL FRAME • UNCROPPED
+                </span>
+                <span className="truncate text-xs font-semibold text-white max-w-[240px] sm:max-w-md">
+                  {fullFrameMedia.title}
+                </span>
+                {fullFrameMedia.aspectRatio && (
+                  <span className="rounded bg-black/60 px-2 py-0.5 text-[10px] font-mono text-zinc-300 border border-white/10 hidden sm:inline-block">
+                    {fullFrameMedia.aspectRatio}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={fullFrameMedia.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-zinc-300 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  <Eye className="size-3" /> Open in tab
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setFullFrameMedia(null)}
+                  aria-label="Close full frame preview"
+                  className="flex size-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: Uncropped Media Viewport */}
+            <div className="relative flex flex-1 items-center justify-center min-h-[300px] max-h-[76vh] overflow-hidden bg-black/95 p-3 sm:p-6">
+              {fullFrameMedia.type === "video" ? (
+                <video
+                  src={fullFrameMedia.url}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="max-h-[70vh] max-w-full rounded-lg object-contain shadow-2xl"
+                />
+              ) : (
+                <img
+                  src={fullFrameMedia.url}
+                  alt={fullFrameMedia.title}
+                  className="max-h-[70vh] max-w-full rounded-lg object-contain shadow-2xl"
+                />
+              )}
+            </div>
+
+            {/* Modal Footer: Informative Self-Explanatory Context */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t border-white/10 bg-[#121216] px-4 py-2.5 text-[11px] text-zinc-400">
+              <span className="flex items-center gap-1.5">
+                <Check className="size-3.5 text-[#D9FF00]" />
+                Preserved 100% native aspect ratio — no borders, head, or feet are cropped during AI transfer.
+              </span>
+              <span className="text-[10px] text-zinc-500 font-mono">
+                Press ESC or click outside to close
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

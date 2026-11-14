@@ -50,12 +50,12 @@ export function RenderHistory({ tasks, onRefresh }: RenderHistoryProps) {
               </div>
 
               {task.outputVideoUrl ? (
-                <div className="relative rounded-lg overflow-hidden aspect-[9/16] bg-black">
+                <div className="relative rounded-lg overflow-hidden min-h-[220px] max-h-[360px] aspect-video bg-black/95 flex items-center justify-center border border-white/10">
                   <video
                     src={task.outputVideoUrl}
                     controls
                     playsInline
-                    className="w-full h-full object-cover"
+                    className="max-h-full max-w-full object-contain"
                   />
                 </div>
               ) : (

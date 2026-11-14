@@ -165,12 +165,15 @@ export function MotionControlInspector({
           </label>
 
           {characterImageUrl ? (
-            <div className="relative group rounded-xl overflow-hidden border border-lime-500/40 bg-black/40 aspect-[4/3] flex items-center justify-center">
+            <div className="relative group rounded-xl overflow-hidden border border-lime-500/40 bg-black/95 aspect-[4/3] flex items-center justify-center">
               <img
                 src={characterImageUrl}
                 alt="Target Character"
-                className="w-full h-full object-cover"
+                className="max-h-full max-w-full object-contain"
               />
+              <span className="absolute top-2 left-2 rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/30 backdrop-blur pointer-events-none">
+                FULL FRAME
+              </span>
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <label className="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-lg cursor-pointer backdrop-blur font-medium">
                   Replace Photo
