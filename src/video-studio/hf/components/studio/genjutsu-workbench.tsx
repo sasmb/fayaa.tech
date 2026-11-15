@@ -67,6 +67,8 @@ import {
 import { cn } from "../../lib/utils"
 
 import { ModelSelectorModal } from "../../../components/ModelSelectorModal"
+import { FayaaWatermark } from "../../../components/FayaaWatermark"
+import { useWatermark } from "../../../lib/watermark-store"
 import { MOTION_MODELS, calculateRealtimeVideoCost } from "../../../templates"
 import type { MotionModel, VideoQuality } from "../../../types"
 
@@ -481,6 +483,7 @@ export function GenjutsuWorkbench({
     aspectRatio?: string
   } | null>(null)
   const [sourceVideoAspect, setSourceVideoAspect] = useState<string | null>(null)
+  const { watermarkEnabled, toggleWatermark } = useWatermark(true)
 
   useEffect(() => {
     if (!fullFrameMedia) return
@@ -973,6 +976,34 @@ export function GenjutsuWorkbench({
 
         {/* Right Global Actions: Search | Upgrade 30% OFF | Enterprise | Assets | Credits & User */}
         <div className="flex shrink-0 items-center gap-2">
+
+          {/* Watermark Toggle (Available for Test & Paying Users) */}
+          <button
+            type="button"
+            onClick={toggleWatermark}
+            title={
+              watermarkEnabled
+                ? "Watermark ON: Click to disable watermark (Paying / Test User feature)"
+                : "Watermark OFF: Click to enable watermark"
+            }
+            className={cn(
+              "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-all select-none",
+              watermarkEnabled
+                ? "border-[#D9FF00]/40 bg-[#D9FF00]/10 text-white hover:bg-[#D9FF00]/20"
+                : "border-white/10 bg-white/[0.03] text-zinc-400 hover:bg-white/[0.08] hover:text-white"
+            )}
+          >
+            <span
+              className={cn(
+                "size-2 rounded-full transition-all",
+                watermarkEnabled ? "bg-[#D9FF00] shadow-[0_0_8px_#D9FF00]" : "bg-zinc-600"
+              )}
+            />
+            <span className="font-mono text-[11px] hidden sm:inline">Watermark:</span>
+            <span className={watermarkEnabled ? "text-[#D9FF00] font-bold font-mono text-[11px]" : "text-zinc-400 font-mono text-[11px]"}>
+              {watermarkEnabled ? "ON" : "OFF"}
+            </span>
+          </button>
 
           <button
             type="button"
@@ -2858,14 +2889,19 @@ export function GenjutsuWorkbench({
                             }
                             media={
                               videoUrl ? (
-                                <video
-                                  src={videoUrl}
-                                  autoPlay
-                                  loop
-                                  muted
-                                  playsInline
-                                  className="size-full object-contain bg-black"
-                                />
+                                <div className="relative size-full flex items-center justify-center bg-black">
+                                  <video
+                                    src={videoUrl}
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                    className="size-full object-contain"
+                                  />
+                                  {watermarkEnabled && (
+                                    <FayaaWatermark size="default" position="bottom-right" />
+                                  )}
+                                </div>
                               ) : undefined
                             }
                             actions={
@@ -3024,6 +3060,25 @@ export function GenjutsuWorkbench({
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggleWatermark}
+                  title="Toggle watermark on/off"
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer select-none",
+                    watermarkEnabled
+                      ? "border-[#D9FF00]/40 bg-[#D9FF00]/10 text-white"
+                      : "border-white/10 bg-white/5 text-zinc-400 hover:text-white"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full",
+                      watermarkEnabled ? "bg-[#D9FF00] shadow-[0_0_6px_#D9FF00]" : "bg-zinc-600"
+                    )}
+                  />
+                  <span>Watermark: {watermarkEnabled ? "ON" : "OFF"}</span>
+                </button>
                 <a
                   href={fullFrameMedia.url}
                   target="_blank"
@@ -3044,22 +3099,27 @@ export function GenjutsuWorkbench({
             </div>
 
             {/* Modal Body: Uncropped Media Viewport */}
-            <div className="relative flex flex-1 items-center justify-center min-h-[300px] max-h-[76vh] overflow-hidden bg-black/95 p-3 sm:p-6">
-              {fullFrameMedia.type === "video" ? (
-                <video
-                  src={fullFrameMedia.url}
-                  controls
-                  autoPlay
-                  playsInline
-                  className="max-h-[70vh] max-w-full rounded-lg object-contain shadow-2xl"
-                />
-              ) : (
-                <img
-                  src={fullFrameMedia.url}
-                  alt={fullFrameMedia.title}
-                  className="max-h-[70vh] max-w-full rounded-lg object-contain shadow-2xl"
-                />
-              )}
+            <div className="relative flex flex-1 items-center justify-center min-h-[300px] max-h-[76vh] overflow-hidden bg-black/95 p-3 sm:p-6 group">
+              <div className="relative flex items-center justify-center max-h-[70vh] max-w-full">
+                {fullFrameMedia.type === "video" ? (
+                  <video
+                    src={fullFrameMedia.url}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="max-h-[70vh] max-w-full rounded-lg object-contain shadow-2xl"
+                  />
+                ) : (
+                  <img
+                    src={fullFrameMedia.url}
+                    alt={fullFrameMedia.title}
+                    className="max-h-[70vh] max-w-full rounded-lg object-contain shadow-2xl"
+                  />
+                )}
+                {watermarkEnabled && (
+                  <FayaaWatermark size="hero" position="bottom-right" />
+                )}
+              </div>
             </div>
 
             {/* Modal Footer: Informative Self-Explanatory Context */}

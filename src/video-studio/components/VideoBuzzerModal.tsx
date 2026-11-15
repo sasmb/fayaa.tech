@@ -1,6 +1,8 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Download } from "lucide-react";
+import { FayaaWatermark } from "./FayaaWatermark";
+import { useWatermark } from "../lib/watermark-store";
 
 interface VideoBuzzerModalProps {
   videoUrl: string | null;
@@ -8,6 +10,7 @@ interface VideoBuzzerModalProps {
 }
 
 export function VideoBuzzerModal({ videoUrl, onClose }: VideoBuzzerModalProps) {
+  const { watermarkEnabled } = useWatermark(true);
   React.useEffect(() => {
     if (!videoUrl) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -44,7 +47,7 @@ export function VideoBuzzerModal({ videoUrl, onClose }: VideoBuzzerModalProps) {
               </button>
             </div>
 
-            <div className="rounded-xl overflow-hidden min-h-[220px] max-h-[60vh] aspect-video bg-black/95 border border-white/10 flex items-center justify-center">
+            <div className="relative rounded-xl overflow-hidden min-h-[220px] max-h-[60vh] aspect-video bg-black/95 border border-white/10 flex items-center justify-center group">
               <video
                 src={videoUrl}
                 controls
@@ -52,6 +55,9 @@ export function VideoBuzzerModal({ videoUrl, onClose }: VideoBuzzerModalProps) {
                 autoPlay
                 className="max-h-full max-w-full object-contain"
               />
+              {watermarkEnabled && (
+                <FayaaWatermark size="large" position="bottom-right" />
+              )}
             </div>
 
             <div className="flex items-center gap-2">

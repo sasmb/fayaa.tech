@@ -1,6 +1,8 @@
 import React from "react";
 import { VideoTask } from "wasp/entities";
 import { RefreshCw, Film, AlertCircle, Download } from "lucide-react";
+import { FayaaWatermark } from "./FayaaWatermark";
+import { useWatermark } from "../lib/watermark-store";
 
 interface RenderHistoryProps {
   tasks: VideoTask[];
@@ -8,6 +10,7 @@ interface RenderHistoryProps {
 }
 
 export function RenderHistory({ tasks, onRefresh }: RenderHistoryProps) {
+  const { watermarkEnabled } = useWatermark(true);
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -50,13 +53,16 @@ export function RenderHistory({ tasks, onRefresh }: RenderHistoryProps) {
               </div>
 
               {task.outputVideoUrl ? (
-                <div className="relative rounded-lg overflow-hidden min-h-[220px] max-h-[360px] aspect-video bg-black/95 flex items-center justify-center border border-white/10">
+                <div className="relative rounded-lg overflow-hidden min-h-[220px] max-h-[360px] aspect-video bg-black/95 flex items-center justify-center border border-white/10 group">
                   <video
                     src={task.outputVideoUrl}
                     controls
                     playsInline
                     className="max-h-full max-w-full object-contain"
                   />
+                  {watermarkEnabled && (
+                    <FayaaWatermark size="large" position="bottom-right" />
+                  )}
                 </div>
               ) : (
                 <div className="aspect-[9/16] rounded-lg bg-black/40 border border-white/5 flex flex-col items-center justify-center text-center p-4">
