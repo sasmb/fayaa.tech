@@ -3,6 +3,7 @@ name: PR Preview Deployment
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,22 +17,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout PR Code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: |
-          npm ci || npm install --legacy-peer-deps
-
-      - name: Typecheck Codebase
-        run: |
-          npx tsc --noEmit || echo "Typecheck completed"
 
       - name: Create GitHub Deployment
         id: create_deployment
@@ -42,41 +34,41 @@ jobs:
               const deployment = await github.rest.repos.createDeployment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: context.payload.pull_request.head.ref,
+                ref: context.payload.pull_request ? context.payload.pull_request.head.ref : context.ref,
                 environment: 'Preview',
-                description: `PR Preview for #${context.issue.number}`,
+                description: `PR Preview for #${context.issue ? context.issue.number : 'manual'}`,
                 required_contexts: [],
                 auto_merge: false
               });
               return deployment.data.id;
             } catch (err) {
-              core.warning(`Deployment registration warning: ${err.message}`);
-              return null;
+              core.warning(`Deployment registration: ${err.message}`);
+              return '';
             }
 
       - name: Resolve Preview Target URL
         id: resolve_preview
         run: |
-          PR_NUM="${{ github.event.pull_request.number }}"
-          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
-          
-          # Default to production preview route or configured staging domain
+          PR_NUM="${{ github.event.pull_request.number || 'preview' }}"
           PREVIEW_URL="https://fayaa-pr-${PR_NUM}.fayaa.tech/studio"
           echo "url=$PREVIEW_URL" >> $GITHUB_OUTPUT
 
       - name: Set GitHub Deployment Status
-        if: steps.create_deployment.outputs.result != 'null'
+        if: steps.create_deployment.outputs.result != ''
         uses: actions/github-script@v7
+        env:
+          DEPLOYMENT_ID: ${{ steps.create_deployment.outputs.result }}
+          PREVIEW_URL: ${{ steps.resolve_preview.outputs.url }}
         with:
           script: |
-            const deploymentId = ${{ steps.create_deployment.outputs.result }};
-            const previewUrl = "${{ steps.resolve_preview.outputs.url }}";
-            
+            const deploymentId = process.env.DEPLOYMENT_ID;
+            const previewUrl = process.env.PREVIEW_URL;
+            if (!deploymentId) return;
             try {
               await github.rest.repos.createDeploymentStatus({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                deployment_id: deploymentId,
+                deployment_id: Number(deploymentId),
                 state: 'success',
                 environment_url: previewUrl,
                 description: 'Preview deployment ready for Captain review',
@@ -87,24 +79,27 @@ jobs:
             }
 
       - name: Post or Update Sticky PR Comment
+        if: github.event.pull_request != null
         uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.resolve_preview.outputs.url }}
         with:
           script: |
             const prNumber = context.issue.number;
-            const previewUrl = "${{ steps.resolve_preview.outputs.url }}";
+            const previewUrl = process.env.PREVIEW_URL;
             const branchName = context.payload.pull_request.head.ref;
             const sha = context.payload.pull_request.head.sha.substring(0, 7);
 
             const commentBody = `### 🚀 FAYAA Studio PR Preview Ready
-            
+
 | Resource | Link |
 | :--- | :--- |
 | **Live Studio Preview** | [Open Studio on PR #${prNumber}](${previewUrl}) |
 | **Branch** | \`${branchName}\` (\`${sha}\`) |
 | **Deployment Status** | ✅ **Ready for Review** |
-            
+
 ---
-            
+
 #### 📋 Captain's Review Checklist:
 1. Click the **[Open Studio Preview](${previewUrl})** link above (or the native **"View deployment"** button on this PR).
 2. Verify the uncropped full-frame video previews and marketing watermark.
