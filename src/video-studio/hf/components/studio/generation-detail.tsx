@@ -75,6 +75,7 @@ export function GenerationDetailModal({
 }: GenerationDetailModalProps) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const { watermarkEnabled, toggleWatermark } = useWatermark(true)
   const isVideo = generation.mediaType === "video"
   const backdrop = isVideo ? generation.poster : generation.src
@@ -190,9 +191,20 @@ export function GenerationDetailModal({
                 <>
                   <Button
                     className="flex-1"
-                    onClick={() => void downloadMedia(generation.src)}
+                    disabled={downloading}
+                    onClick={() => {
+                      setDownloading(true)
+                      void downloadMedia(generation.src, undefined, {
+                        watermark: watermarkEnabled,
+                      }).finally(() => setDownloading(false))
+                    }}
                   >
-                    <Download /> Download
+                    <Download />{" "}
+                    {downloading
+                      ? watermarkEnabled
+                        ? "Stamping watermark..."
+                        : "Downloading..."
+                      : "Download"}
                   </Button>
                   {generation.prompt ? (
                     <Button

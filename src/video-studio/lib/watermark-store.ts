@@ -13,6 +13,11 @@ function readStoredWatermark(fallback: boolean): boolean {
   }
 }
 
+/** Read current watermark preference synchronously (defaults to true). */
+export function isWatermarkEnabled(fallback = true): boolean {
+  return readStoredWatermark(fallback)
+}
+
 /**
  * Hook to manage FAYAA marketing watermark state, synchronized across all
  * mounted components in the same tab and persisted in localStorage.

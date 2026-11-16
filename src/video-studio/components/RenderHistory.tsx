@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { VideoTask } from "wasp/entities";
 import { RefreshCw, Film, AlertCircle, Download } from "lucide-react";
 import { FayaaWatermark } from "./FayaaWatermark";
 import { useWatermark } from "../lib/watermark-store";
+import { downloadMedia } from "../hf/lib/studio/download-media";
 
 interface RenderHistoryProps {
   tasks: VideoTask[];
@@ -11,6 +12,7 @@ interface RenderHistoryProps {
 
 export function RenderHistory({ tasks, onRefresh }: RenderHistoryProps) {
   const { watermarkEnabled } = useWatermark(true);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -85,15 +87,27 @@ export function RenderHistory({ tasks, onRefresh }: RenderHistoryProps) {
               <div className="text-[11px] text-neutral-500 flex items-center justify-between">
                 <span>{new Date(task.createdAt).toLocaleTimeString()}</span>
                 {task.outputVideoUrl && (
-                  <a
-                    href={task.outputVideoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    download
-                    className="text-lime-400 hover:underline flex items-center gap-1 font-semibold"
+                  <button
+                    type="button"
+                    disabled={downloadingId === task.id}
+                    onClick={() => {
+                      if (!task.outputVideoUrl) return;
+                      setDownloadingId(task.id);
+                      void downloadMedia(
+                        task.outputVideoUrl,
+                        `fayaa-${task.id}.mp4`,
+                        { watermark: watermarkEnabled }
+                      ).finally(() => setDownloadingId(null));
+                    }}
+                    className="text-lime-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer disabled:opacity-60"
                   >
-                    <Download className="w-3 h-3" /> Download MP4
-                  </a>
+                    <Download className="w-3 h-3" />{" "}
+                    {downloadingId === task.id
+                      ? watermarkEnabled
+                        ? "Watermarking..."
+                        : "Downloading..."
+                      : "Download MP4"}
+                  </button>
                 )}
               </div>
             </div>
