@@ -90,20 +90,22 @@ jobs:
             const branchName = context.payload.pull_request.head.ref;
             const sha = context.payload.pull_request.head.sha.substring(0, 7);
 
-            const commentBody = `### 🚀 FAYAA Studio PR Preview Ready
-
-| Resource | Link |
-| :--- | :--- |
-| **Live Studio Preview** | [Open Studio on PR #${prNumber}](${previewUrl}) |
-| **Branch** | \`${branchName}\` (\`${sha}\`) |
-| **Deployment Status** | ✅ **Ready for Review** |
-
----
-
-#### 📋 Captain's Review Checklist:
-1. Click the **[Open Studio Preview](${previewUrl})** link above (or the native **"View deployment"** button on this PR).
-2. Verify the uncropped full-frame video previews and marketing watermark.
-3. When satisfied, click the green **"Merge pull request"** button below!`;
+            const commentBody = [
+              '### 🚀 FAYAA Studio PR Preview Ready',
+              '',
+              '| Resource | Link |',
+              '| :--- | :--- |',
+              `| **Live Studio Preview** | [Open Studio on PR #${prNumber}](${previewUrl}) |`,
+              `| **Branch** | \`${branchName}\` (\`${sha}\`) |`,
+              '| **Deployment Status** | ✅ **Ready for Review** |',
+              '',
+              '---',
+              '',
+              '#### 📋 Captain\'s Review Checklist:',
+              `1. Click the **[Open Studio Preview](${previewUrl})** link above (or the native **"View deployment"** button on this PR).`,
+              '2. Verify the uncropped full-frame video previews and marketing watermark.',
+              '3. When satisfied, click the green **"Merge pull request"** button below!'
+            ].join('\n');
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
