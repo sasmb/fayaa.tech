@@ -61,7 +61,7 @@ export function RenderHistory({ tasks, onRefresh }: RenderHistoryProps) {
                     className="max-h-full max-w-full object-contain"
                   />
                   {watermarkEnabled && (
-                    <FayaaWatermark size="large" position="bottom-right" />
+                    <FayaaWatermark size="large" position="bottom-right" avoidControls />
                   )}
                 </div>
               ) : (
