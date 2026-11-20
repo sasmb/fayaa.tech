@@ -9,6 +9,7 @@ import {
   SubscriptionStatus,
   prettyPaymentPlanName,
 } from "../../../payment/plans"
+import { estimateLongVideoPlan } from "../../longVideoPlanning"
 import { creditCostForResolution } from "../../taskSync"
 import { GenjutsuWorkbench } from "../components/studio/genjutsu-workbench"
 import {
@@ -329,10 +330,21 @@ export function StudioTemplate({
         setShowGuestSignupGate(true)
         return
       }
-      const res = String(plane.settings.resolution ?? "480p")
-      const variant = String(plane.settings.variant ?? "light")
+      const res = (plane.settings.resolution === "1080p" || plane.settings.resolution === "720p"
+        ? plane.settings.resolution
+        : "480p") as "480p" | "720p" | "1080p"
+      const variant = plane.settings.variant === "pro" ? "pro" : "light"
       const durationSec = Number(plane.settings.duration ?? 5)
-      const cost = creditCostForResolution(res, variant, durationSec)
+      const trimStartSec = Number(plane.settings.trimStartSec ?? 0)
+      const isLongForm = Boolean(plane.settings.longForm) && durationSec > 30
+      const cost = isLongForm
+        ? estimateLongVideoPlan({
+            totalDurationSec: durationSec,
+            trimStartSec,
+            resolution: res,
+            variant,
+          }).credits
+        : creditCostForResolution(res, variant, durationSec)
       if (user.credits < cost && !user.isAdmin) {
         setLocalError(
           `Insufficient credits (${user.credits} available, ${cost} needed). Subscribe or top up to continue.`
@@ -341,6 +353,31 @@ export function StudioTemplate({
         return
       }
       const projectId = view.kind === "project" ? view.projectId : undefined
+      if (isLongForm) {
+        const sourceVideoUrl =
+          plane.media.source?.[0]?.url ?? plane.media.video?.[0]?.url ?? ""
+        const referenceImageUrls = [
+          ...(plane.media.reference ?? []).map((m) => m.url),
+          ...(plane.media.start ?? []).map((m) => m.url),
+        ]
+        void runs
+          .submitLong(
+            {
+              sourceVideoUrl,
+              referenceImageUrls,
+              prompt: plane.prompt.text,
+              resolution: res,
+              variant,
+              trimStartSec,
+              totalDurationSec: durationSec,
+            },
+            projectId
+          )
+          .then((record) => {
+            if (record && projectId) projectsStore.touch(projectId)
+          })
+        return
+      }
       void runs.submit(plane, projectId).then((record) => {
         if (record && projectId) projectsStore.touch(projectId)
       })

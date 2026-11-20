@@ -1,4 +1,7 @@
 import type { CheckVideoTasksJob } from "wasp/server/jobs";
+import { uploadLocalFileToS3 } from "../file-upload/s3Utils";
+import { createPlatformClient } from "./hf/generation/platform";
+import { defaultLongVideoMediaOps, syncLongVideoJob } from "./longVideoProcessor";
 import { syncVideoTaskStatus } from "./taskSync";
 
 /**
@@ -47,6 +50,38 @@ export const checkVideoTasksJob: CheckVideoTasksJob<never, void> = async (
     if (completed > 0 || failed > 0) {
       console.log(
         `[checkVideoTasksJob] Batch results: ${completed} completed, ${failed} failed.`
+      );
+    }
+
+    const activeLongJobs = await context.entities.LongVideoJob.findMany({
+      where: {
+        status: {
+          in: ["SPLITTING", "PROCESSING_CLIPS"],
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+      take: 10,
+    });
+
+    const apiKey = process.env.HF_CREDENTIALS?.trim();
+    if (activeLongJobs.length > 0 && apiKey) {
+      const baseUrl = (
+        process.env.HF_API_BASE_URL || "https://api.higgsfield.ai"
+      ).replace(/\/+$/, "");
+      const platformClient = createPlatformClient({ apiKey, baseUrl });
+      const mediaOps = defaultLongVideoMediaOps(uploadLocalFileToS3);
+
+      await Promise.allSettled(
+        activeLongJobs.map((job) =>
+          syncLongVideoJob({
+            job,
+            entities: context.entities,
+            platformClient,
+            mediaOps,
+          })
+        )
       );
     }
   } catch (error) {

@@ -411,6 +411,16 @@ export function AccountPage({ user }: AccountPageProps) {
                 <Copy className="w-4 h-4" />
               )}
             </button>
+
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="p-2.5 rounded-xl border border-red-500/25 bg-[#16161b] hover:bg-red-500/15 text-red-400 hover:text-red-300 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold px-3"
+              title="Log out of your account"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log Out</span>
+            </button>
           </div>
 
           {/* Headline / Bio Snippet */}

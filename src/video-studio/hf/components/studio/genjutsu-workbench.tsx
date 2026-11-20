@@ -70,7 +70,8 @@ import { cn } from "../../lib/utils"
 import { ModelSelectorModal } from "../../../components/ModelSelectorModal"
 import { FayaaWatermark } from "../../../components/FayaaWatermark"
 import { useWatermark } from "../../../lib/watermark-store"
-import { MOTION_MODELS, calculateRealtimeVideoCost } from "../../../templates"
+import { MOTION_MODELS } from "../../../templates"
+import { estimateLongVideoPlan } from "../../../longVideoPlanning"
 import type { MotionModel, VideoQuality } from "../../../types"
 
 import { AssetLibraryModal } from "./asset-library"
@@ -553,18 +554,23 @@ export function GenjutsuWorkbench({
   }, [authUser?.id])
 
   const selectedDurationSec = useMemo(
-    () => Math.max(4, Math.min(30, Math.round((trimRange.end - trimRange.start) * 10) / 10)),
+    () => Math.max(4, Math.round((trimRange.end - trimRange.start) * 10) / 10),
     [trimRange.end, trimRange.start]
   )
 
   const realtimeCost = useMemo(
     () =>
-      calculateRealtimeVideoCost(
-        selectedMotionModel,
+      estimateLongVideoPlan({
+        totalDurationSec: selectedDurationSec,
+        trimStartSec: trimRange.start,
         resolution,
-        selectedDurationSec
-      ),
-    [selectedMotionModel, resolution, selectedDurationSec]
+        variant:
+          selectedMotionModel.id === "higgsfield/genjutsu/motion-transfer/v1.0"
+            ? "pro"
+            : "light",
+        usdPerSecByRes: selectedMotionModel.usdPerSecByRes,
+      }),
+    [selectedMotionModel, resolution, selectedDurationSec, trimRange.start]
   )
 
   const applyDurationPreset = (seconds: number) => {
@@ -852,8 +858,8 @@ export function GenjutsuWorkbench({
     if (!sourceVideo) {
       setLocalError(
         sidebarTab === "motion-control"
-          ? "Add motion to copy (4 to 30 seconds)."
-          : "Add a reference video (4 to 30 seconds) to extract motion."
+          ? "Add a source motion video (4s or longer — >30s auto-splits cleanly)."
+          : "Add a reference video (4s or longer — >30s auto-splits cleanly)."
       )
       return
     }
@@ -894,6 +900,7 @@ export function GenjutsuWorkbench({
       .filter(Boolean)
       .join(" ")
 
+    const isLongForm = selectedDurationSec > 30
     const plane: GenerationPlane = {
       model: genjutsu.id,
       prompt: { text: composedPrompt },
@@ -903,7 +910,12 @@ export function GenjutsuWorkbench({
           selectedMotionModel.id === "higgsfield/genjutsu/motion-transfer/v1.0"
             ? "pro"
             : "light",
-        duration: Math.max(4, Math.min(30, Math.round(selectedDurationSec))),
+        duration: isLongForm
+          ? selectedDurationSec
+          : Math.max(4, Math.min(30, Math.round(selectedDurationSec))),
+        ...(isLongForm
+          ? { trimStartSec: trimRange.start, longForm: true }
+          : {}),
       },
       media: {
         source: [sourceVideo],
@@ -1001,6 +1013,17 @@ export function GenjutsuWorkbench({
             >
               Pricing
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setSidebarTab("edit-video")
+                setMode("object-swap")
+              }}
+              className="hidden cursor-pointer items-center gap-1 rounded-full border border-[#D9FF00]/35 bg-[#D9FF00]/10 px-2.5 py-0.5 text-[11px] font-bold text-[#D9FF00] transition-colors hover:bg-[#D9FF00]/20 md:inline-flex"
+            >
+              <span>Also supports 2+ min videos</span>
+              <ChevronRight className="size-3" />
+            </button>
           </nav>
         </div>
 
@@ -1095,63 +1118,76 @@ export function GenjutsuWorkbench({
           </button>
 
           {authUser ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="Account profile and options"
-                  title={authUser.email ?? "Account"}
-                  className="flex size-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white transition-transform hover:scale-105 focus:outline-none"
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Account profile and options"
+                    title={authUser.email ?? "Account"}
+                    className="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.06] pr-2 pl-0.5 transition-colors hover:border-[#C8FF00]/60 focus:outline-none"
+                  >
+                    <img
+                      src={getUserAvatarUrl(authUser)}
+                      alt="User avatar"
+                      className="size-7 rounded-full bg-white object-cover"
+                    />
+                    <ChevronRight className="size-3.5 rotate-90 text-zinc-400" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="z-50 w-56 rounded-2xl border border-white/12 bg-[#141418] p-1.5 text-white shadow-2xl backdrop-blur-md"
                 >
-                  <img
-                    src={getUserAvatarUrl(authUser)}
-                    alt="User avatar"
-                    className="size-full object-cover"
-                  />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="z-50 w-56 rounded-2xl border border-white/12 bg-[#141418] p-1.5 text-white shadow-2xl backdrop-blur-md"
-              >
-                <div className="border-b border-white/[0.08] px-3 py-2">
-                  <p className="truncate text-xs font-semibold text-white">
-                    {authUser.username || authUser.email || "Creator"}
-                  </p>
-                  {authUser.email ? (
-                    <p className="truncate text-[11px] text-zinc-400">
-                      {authUser.email}
+                  <div className="border-b border-white/[0.08] px-3 py-2">
+                    <p className="truncate text-xs font-semibold text-white">
+                      {authUser.username || authUser.email || "Creator"}
                     </p>
-                  ) : null}
-                </div>
-                <DropdownMenuItem asChild>
-                  <Link
-                    to={routes.AccountRoute.to}
-                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
+                    {authUser.email ? (
+                      <p className="truncate text-[11px] text-zinc-400">
+                        {authUser.email}
+                      </p>
+                    ) : null}
+                  </div>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to={routes.AccountRoute.to}
+                      className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
+                    >
+                      <User className="size-3.5 text-zinc-400" />
+                      <span>Account Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to={routes.PricingPageRoute.to}
+                      className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
+                    >
+                      <Crown className="size-3.5 text-[#C8FF00]" />
+                      <span>Plans & Credits</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="my-1 bg-white/[0.08]" />
+                  <DropdownMenuItem
+                    onClick={() => void logout()}
+                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
                   >
-                    <User className="size-3.5 text-zinc-400" />
-                    <span>Account Profile</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link
-                    to={routes.PricingPageRoute.to}
-                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
-                  >
-                    <Crown className="size-3.5 text-[#C8FF00]" />
-                    <span>Plans & Credits</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-1 bg-white/[0.08]" />
-                <DropdownMenuItem
-                  onClick={() => void logout()}
-                  className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
-                >
-                  <LogOut className="size-3.5" />
-                  <span>Log Out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                    <LogOut className="size-3.5" />
+                    <span>Log Out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <button
+                type="button"
+                onClick={() => void logout()}
+                title="Log out"
+                className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-lg border border-red-500/25 bg-red-500/10 px-2.5 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/20 hover:text-white"
+              >
+                <LogOut className="size-3.5" />
+                <span className="hidden sm:inline">Log Out</span>
+              </button>
+            </div>
           ) : (
             <Link
               to={routes.LoginRoute.to}
@@ -1356,6 +1392,13 @@ export function GenjutsuWorkbench({
 
           {/* Scrollable Left Form Controls */}
           <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto p-3">
+            <div className="flex items-start gap-2 rounded-xl border border-[#D9FF00]/25 bg-[#D9FF00]/[0.06] px-2.5 py-2 text-[11px] leading-snug text-zinc-200">
+              <ChevronRight className="mt-0.5 size-3.5 shrink-0 text-[#D9FF00]" />
+              <span>
+                <strong className="text-[#D9FF00]">Videos up to 2+ min supported:</strong>{" "}
+                uploads over 30s auto-split into 30s passes and return one final video.
+              </span>
+            </div>
             {sidebarTab === "motion-control" ? (
               /* ══════════════════════════════════════════════════════════════════
                  MOTION CONTROL SIDEBAR CONTROLS (Screenshots 2 & 3)
@@ -1414,9 +1457,9 @@ export function GenjutsuWorkbench({
                           muted
                           playsInline
                           onLoadedMetadata={(e) => {
-                            const dur = Math.min(
-                              30,
-                              Math.max(4, Math.round(e.currentTarget.duration || 10))
+                            const dur = Math.max(
+                              4,
+                              Math.round(e.currentTarget.duration || 10)
                             )
                             setVideoDuration(dur)
                             setTrimRange({ start: 0, end: dur })
@@ -1510,12 +1553,15 @@ export function GenjutsuWorkbench({
                               <VideoIcon className="size-4" />
                             )}
                           </span>
-                          <div className="flex flex-col gap-0.5">
+                          <div className="flex flex-col items-center gap-1">
                             <span className="text-xs font-semibold text-zinc-200">
-                              {uploadingVideo ? "Uploading video…" : "Add motion to copy"}
+                              {uploadingVideo ? "Uploading video…" : "Add motion or long video"}
+                            </span>
+                            <span className="rounded-full border border-[#D9FF00]/35 bg-[#D9FF00]/10 px-2 py-0.5 text-[10px] font-bold text-[#D9FF00]">
+                              Long Video Ready • Auto 30s Split
                             </span>
                             <span className="text-[11px] text-zinc-500">
-                              Video duration: 4–30 seconds
+                              4s to multi-minute MP4 / MOV (up to 250 MB)
                             </span>
                           </div>
                         </button>
@@ -1976,9 +2022,9 @@ export function GenjutsuWorkbench({
                           muted
                           playsInline
                           onLoadedMetadata={(e) => {
-                            const dur = Math.min(
-                              30,
-                              Math.max(4, Math.round(e.currentTarget.duration || 10))
+                            const dur = Math.max(
+                              4,
+                              Math.round(e.currentTarget.duration || 10)
                             )
                             setVideoDuration(dur)
                             setTrimRange({ start: 0, end: dur })
@@ -2094,16 +2140,19 @@ export function GenjutsuWorkbench({
                               <VideoIcon className="size-4" />
                             )}
                           </span>
-                          <div className="flex flex-col gap-0.5">
+                          <div className="flex flex-col items-center gap-1">
                             <span className="text-xs font-semibold text-zinc-200">
                               {uploadingVideo
                                 ? "Uploading motion video…"
                                 : sidebarTab === "edit-video"
-                                  ? "Add a reference video to edit"
-                                  : "Add a reference video to extract motion"}
+                                  ? "Add a video (short or long) to edit"
+                                  : "Add a short or long video to swap"}
+                            </span>
+                            <span className="rounded-full border border-[#D9FF00]/35 bg-[#D9FF00]/10 px-2 py-0.5 text-[10px] font-bold text-[#D9FF00]">
+                              Long Video Ready • Auto 30s Split
                             </span>
                             <span className="text-[11px] text-zinc-500">
-                              Video duration: 4 to 30 seconds
+                              4s to multi-minute MP4 / MOV (up to 250 MB)
                             </span>
                           </div>
                         </button>
@@ -2389,13 +2438,16 @@ export function GenjutsuWorkbench({
                 </span>
                 <span className="font-mono text-[10px] text-zinc-400">
                   ${realtimeCost.usdPerSec.toFixed(3).replace(/0+$/, "").replace(/\.$/, "")}/s × {realtimeCost.billableSeconds}s
+                  {realtimeCost.isLongForm ? ` (${realtimeCost.segmentCount}×30s clips)` : ""}
                 </span>
               </div>
               <div className="flex flex-col items-end shrink-0">
                 <span className="font-mono text-xs font-bold text-[#D9FF00]">
                   {realtimeCost.credits} cr (~${realtimeCost.totalUsd.toFixed(2)})
                 </span>
-                <span className="text-[9px] text-zinc-500">Real-time estimate</span>
+                <span className="text-[9px] text-zinc-500">
+                  {realtimeCost.isLongForm ? "Auto-split & stitch" : "Real-time estimate"}
+                </span>
               </div>
             </div>
 
@@ -2900,7 +2952,10 @@ export function GenjutsuWorkbench({
                           <GenerationTile
                             key={run.id}
                             state={tileState}
-                            generatingLabel={`Processing Genjutsu (${String(Math.floor(elapsedSec / 60)).padStart(2, "0")}:${String(elapsedSec % 60).padStart(2, "0")})`}
+                            generatingLabel={
+                              run.longVideoProgressLabel ??
+                              `Processing Genjutsu (${String(Math.floor(elapsedSec / 60)).padStart(2, "0")}:${String(elapsedSec % 60).padStart(2, "0")})`
+                            }
                             failureLabel={
                               run.error ??
                               "Generation did not return a playable video."

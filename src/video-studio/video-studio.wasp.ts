@@ -5,6 +5,10 @@ import {
   createGenjutsuTask,
   getVideoTaskStatus,
   getUserVideoTasks,
+  submitLongVideoGenjutsu,
+  getLongVideoJobStatus,
+  getUserLongVideoJobs,
+  cancelLongVideoJob,
   getPublicHomepageShowcase,
   toggleVideoPublicVisibility,
   toggleFilePublicVisibility,
@@ -32,6 +36,10 @@ export const videoStudioSpec: Spec = [
   action(createGenjutsuTask, { entities: ["User", "VideoTask"] }),
   query(getVideoTaskStatus, { entities: ["User", "VideoTask"] }),
   query(getUserVideoTasks, { entities: ["User", "VideoTask"] }),
+  action(submitLongVideoGenjutsu, { entities: ["User", "LongVideoJob", "LongVideoSegment"] }),
+  query(getLongVideoJobStatus, { entities: ["User", "LongVideoJob", "LongVideoSegment"] }),
+  query(getUserLongVideoJobs, { entities: ["User", "LongVideoJob", "LongVideoSegment"] }),
+  action(cancelLongVideoJob, { entities: ["User", "LongVideoJob", "LongVideoSegment"] }),
   query(getPublicHomepageShowcase, { entities: ["VideoTask", "File"], auth: false }),
   action(toggleVideoPublicVisibility, { entities: ["User", "VideoTask"] }),
   action(toggleFilePublicVisibility, { entities: ["User", "File"] }),
@@ -47,6 +55,6 @@ export const videoStudioSpec: Spec = [
     schedule: {
       cron: "* * * * *", // Runs every minute to poll in-progress video tasks
     },
-    entities: ["User", "VideoTask", "Logs"],
+    entities: ["User", "VideoTask", "LongVideoJob", "LongVideoSegment", "Logs"],
   }),
 ];

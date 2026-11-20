@@ -1,18 +1,24 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { getUserVideoTasks } from "wasp/client/operations"
-import type { VideoTask } from "wasp/entities"
+import type { LongVideoJob, VideoTask } from "wasp/entities"
 
 import {
   cancelGeneration,
+  cancelLongVideo,
   getGenerationStatuses,
+  getLongVideoStatus,
+  listLongVideoJobs,
   submitGeneration,
+  submitLongVideo,
+  type SubmitLongVideoRequest,
 } from "../../generation/actions"
 import { getModel } from "../../generation/catalog"
 import type { GenerationPlane } from "../../generation/catalog"
 import type { GenerationStatus } from "../../generation/platform"
 import { stopWatching, watchRequest } from "../../generation/poll"
+import { formatLongVideoProgressLabel } from "../../../longVideoPlanning"
 
 import {
   aspectFromSettings,
@@ -30,6 +36,7 @@ export function useRuns(userId?: string | null) {
   const [records, setRecords] = useState<RunRecord[]>([])
   const [loadedScope, setLoadedScope] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const longPollTimersRef = useRef<Map<string, number>>(new Map())
   const currentScope = userId ?? "guest"
   const loaded = loadedScope === currentScope
 
@@ -38,6 +45,67 @@ export function useRuns(userId?: string | null) {
       current.map((r) => (r.id === id ? { ...r, ...patch } : r))
     )
   }, [])
+
+  const stopLongWatch = useCallback((jobId?: string) => {
+    if (jobId) {
+      const timer = longPollTimersRef.current.get(jobId)
+      if (timer) window.clearTimeout(timer)
+      longPollTimersRef.current.delete(jobId)
+      return
+    }
+    for (const timer of longPollTimersRef.current.values()) {
+      window.clearTimeout(timer)
+    }
+    longPollTimersRef.current.clear()
+  }, [])
+
+  const watchLongJob = useCallback(
+    (recordId: string, jobId: string) => {
+      if (longPollTimersRef.current.has(jobId)) return
+      const scheduleNext = (delayMs: number) => {
+        const timer = window.setTimeout(async () => {
+          longPollTimersRef.current.delete(jobId)
+          try {
+            const job = await getLongVideoStatus(jobId)
+            const progressLabel = formatLongVideoProgressLabel({
+              status: job.status,
+              segmentCount: job.segmentCount,
+              completedCount: job.completedCount,
+            })
+            if (job.status === "COMPLETED" && job.outputVideoUrl) {
+              update(recordId, {
+                status: "completed",
+                urls: [job.outputVideoUrl],
+                completedCount: job.segmentCount,
+                longVideoProgressLabel: progressLabel,
+                error: undefined,
+              })
+              return
+            }
+            if (job.status === "FAILED") {
+              update(recordId, {
+                status: "failed",
+                longVideoProgressLabel: progressLabel,
+                error: job.error ?? "Long video generation failed.",
+              })
+              return
+            }
+            update(recordId, {
+              completedCount: job.completedCount,
+              segmentCount: job.segmentCount,
+              longVideoProgressLabel: progressLabel,
+            })
+            scheduleNext(5000)
+          } catch {
+            scheduleNext(8000)
+          }
+        }, delayMs)
+        longPollTimersRef.current.set(jobId, timer)
+      }
+      scheduleNext(4000)
+    },
+    [update]
+  )
 
   const watch = useCallback(
     (record: RunRecord) => {
@@ -64,11 +132,50 @@ export function useRuns(userId?: string | null) {
       userId
         ? getUserVideoTasks().catch(() => [] as VideoTask[])
         : Promise.resolve([] as VideoTask[]),
-    ]).then(([stored, serverTasks]) => {
+      userId
+        ? listLongVideoJobs().catch(() => [] as LongVideoJob[])
+        : Promise.resolve([] as LongVideoJob[]),
+    ]).then(([stored, serverTasks, longJobs]) => {
       if (!alive) return
       const byRequestId = new Map<string, RunRecord>(
         stored.map((r) => [r.requestId, r])
       )
+      for (const job of longJobs) {
+        const key = `long-${job.id}`
+        const mappedStatus =
+          job.status === "COMPLETED" && job.outputVideoUrl
+            ? "completed"
+            : job.status === "FAILED"
+              ? "failed"
+              : "running"
+        const progressLabel = formatLongVideoProgressLabel({
+          status: job.status,
+          segmentCount: job.segmentCount,
+          completedCount: job.completedCount,
+        })
+        byRequestId.set(key, {
+          id: key,
+          requestId: key,
+          longVideoJobId: job.id,
+          longVideoProgressLabel: progressLabel,
+          segmentCount: job.segmentCount,
+          completedCount: job.completedCount,
+          surface: "video",
+          modelId: "genjutsu",
+          modelLabel: "Higgsfield Genjutsu",
+          prompt: job.prompt ?? "",
+          settings: {
+            resolution: job.resolution,
+            variant: job.variant,
+            duration: job.totalDurationSec,
+          },
+          aspect: 16 / 9,
+          status: mappedStatus,
+          urls: job.outputVideoUrl ? [job.outputVideoUrl] : [],
+          ...(job.error ? { error: job.error } : {}),
+          createdAt: new Date(job.createdAt).getTime(),
+        })
+      }
       for (const task of serverTasks) {
         const mappedStatus =
           task.status === "COMPLETED" && task.outputVideoUrl
@@ -116,7 +223,11 @@ export function useRuns(userId?: string | null) {
       setLoadedScope(currentScope)
       for (const record of merged) {
         if (record.status === "running") {
-          watch(record)
+          if (record.longVideoJobId) {
+            watchLongJob(record.id, record.longVideoJobId)
+          } else {
+            watch(record)
+          }
         }
       }
       // Reconcile any recent failed runs that have no output URLs in case a transient
@@ -164,8 +275,9 @@ export function useRuns(userId?: string | null) {
     return () => {
       alive = false
       stopWatching()
+      stopLongWatch()
     }
-  }, [currentScope, update, userId, watch])
+  }, [currentScope, stopLongWatch, update, userId, watch, watchLongJob])
 
   useEffect(() => {
     if (loaded) void saveHistory(records, userId)
@@ -205,18 +317,69 @@ export function useRuns(userId?: string | null) {
     [watch]
   )
 
+  const submitLong = useCallback(
+    async (
+      input: SubmitLongVideoRequest,
+      projectId?: string
+    ): Promise<RunRecord | null> => {
+      setError(null)
+      try {
+        const queued = await submitLongVideo(input)
+        const key = `long-${queued.id}`
+        const record: RunRecord = {
+          id: key,
+          requestId: key,
+          longVideoJobId: queued.id,
+          longVideoProgressLabel: formatLongVideoProgressLabel({
+            status: queued.status,
+            segmentCount: queued.segmentCount,
+            completedCount: 0,
+          }),
+          segmentCount: queued.segmentCount,
+          completedCount: 0,
+          surface: "video",
+          modelId: "genjutsu",
+          modelLabel: "Higgsfield Genjutsu",
+          prompt: input.prompt ?? "",
+          settings: {
+            resolution: input.resolution ?? "480p",
+            variant: input.variant ?? "light",
+            duration: input.totalDurationSec,
+          },
+          ...(projectId ? { projectId } : {}),
+          aspect: 16 / 9,
+          status: "running",
+          urls: [],
+          createdAt: Date.now(),
+        }
+        setRecords((current) => [record, ...current])
+        watchLongJob(record.id, queued.id)
+        return record
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : String(caught))
+        return null
+      }
+    },
+    [watchLongJob]
+  )
+
   const cancel = useCallback(
     async (id: string) => {
       const record = records.find((r) => r.id === id)
       if (!record || record.status !== "running") return
       try {
-        await cancelGeneration({ requestIds: [record.requestId] })
+        if (record.longVideoJobId) {
+          stopLongWatch(record.longVideoJobId)
+          await cancelLongVideo(record.longVideoJobId)
+        } else {
+          await cancelGeneration({ requestIds: [record.requestId] })
+        }
         update(id, { status: "failed", error: "Canceled" })
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : String(caught))
       }
     },
-    [records, update]
+    [records, stopLongWatch, update]
   )
 
   const remove = useCallback((id: string) => {
@@ -225,7 +388,17 @@ export function useRuns(userId?: string | null) {
 
   const running = records.filter((r) => r.status === "running")
 
-  return { records, running, loaded, error, submit, cancel, remove, setError }
+  return {
+    records,
+    running,
+    loaded,
+    error,
+    submit,
+    submitLong,
+    cancel,
+    remove,
+    setError,
+  }
 }
 
 function settle(status: GenerationStatus): Partial<RunRecord> {

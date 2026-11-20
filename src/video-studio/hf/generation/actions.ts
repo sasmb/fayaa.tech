@@ -1,10 +1,14 @@
 import {
+  cancelLongVideoJob,
+  getLongVideoJobStatus,
+  getUserLongVideoJobs,
   hfCancelGeneration,
   hfClearPlatformCredentials,
   hfGetGenerationStatuses,
   hfHasPlatformCredentials,
   hfSavePlatformCredentials,
   hfSubmitGeneration,
+  submitLongVideoGenjutsu,
 } from "wasp/client/operations"
 
 import type { GenerationPlane } from "./catalog/types"
@@ -40,4 +44,42 @@ export async function getGenerationStatuses(
 
 export async function cancelGeneration(data: unknown): Promise<void> {
   await hfCancelGeneration(data as { requestIds: string[] })
+}
+
+export interface SubmitLongVideoRequest {
+  sourceVideoUrl: string
+  referenceImageUrls: string[]
+  prompt?: string
+  resolution?: "480p" | "720p" | "1080p"
+  variant?: "light" | "pro"
+  trimStartSec?: number
+  totalDurationSec: number
+}
+
+export async function submitLongVideo(
+  data: SubmitLongVideoRequest
+): Promise<{
+  id: string
+  status: string
+  segmentCount: number
+  creditCost: number
+}> {
+  return (await submitLongVideoGenjutsu(data)) as unknown as {
+    id: string
+    status: string
+    segmentCount: number
+    creditCost: number
+  }
+}
+
+export async function getLongVideoStatus(jobId: string) {
+  return await getLongVideoJobStatus({ jobId })
+}
+
+export async function listLongVideoJobs() {
+  return await getUserLongVideoJobs()
+}
+
+export async function cancelLongVideo(jobId: string) {
+  return await cancelLongVideoJob({ jobId })
 }

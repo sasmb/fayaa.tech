@@ -21,6 +21,11 @@ export interface RunRecord {
   status: RunStatus
   /** Result URLs: one video or N images. */
   urls: string[]
+  /** Long-form split+stitch job tracking metadata when duration exceeds 30s. */
+  longVideoJobId?: string
+  longVideoProgressLabel?: string
+  segmentCount?: number
+  completedCount?: number
   /** Optional persisted database VideoTask id and public visibility state. */
   taskId?: string
   isPublic?: boolean
