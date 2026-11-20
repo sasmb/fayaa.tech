@@ -198,7 +198,8 @@ async function fetchExternalMedia(initialUrl: URL): Promise<globalThis.Response>
 
 export const downloadWatermarkedMedia = async (
   request: Request,
-  response: Response
+  response: Response,
+  _context?: unknown
 ): Promise<void> => {
   const rawUrl = typeof request.query.url === "string" ? request.query.url : "";
   if (!rawUrl) {
