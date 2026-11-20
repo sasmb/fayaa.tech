@@ -1,0 +1,778 @@
+import { execFile } from "node:child_process";
+import dns from "node:dns/promises";
+import { createReadStream, createWriteStream } from "node:fs";
+import fs from "node:fs/promises";
+import { createRequire } from "node:module";
+import net from "node:net";
+import os from "node:os";
+import path from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import { promisify } from "node:util";
+
+import { MAX_FILE_SIZE_BYTES } from "../file-upload/validation";
+import {
+  computeLongVideoSegments,
+  MIN_CLIP_DURATION_SEC,
+} from "./longVideoPlanning";
+import type { GenerationStatus, QueuedGeneration } from "./hf/generation/platform";
+
+const execFileAsync = promisify(execFile);
+const require = createRequire(import.meta.url);
+
+const FETCH_TIMEOUT_MS = 120_000;
+const FFMPEG_TIMEOUT_MS = 240_000;
+const MAX_CONCURRENT_SUBMISSIONS = 4;
+const MAX_LONG_JOB_DURATION_MS = 60 * 60 * 1000; // 60 minutes
+
+// In-process mutex so heavy FFmpeg split/concat work runs 1 at a time inside 1024 MB RAM.
+let ffmpegMutexChain: Promise<void> = Promise.resolve();
+
+export async function withFfmpegMutex<T>(task: () => Promise<T>): Promise<T> {
+  let release!: () => void;
+  const nextLock = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const previous = ffmpegMutexChain;
+  ffmpegMutexChain = nextLock;
+  await previous;
+  try {
+    return await task();
+  } finally {
+    release();
+  }
+}
+
+export function resolveFfmpegBinary(): string {
+  const installer = require("@ffmpeg-installer/ffmpeg") as { path?: string };
+  if (!installer?.path) {
+    throw new Error("FFmpeg binary is not available on server.");
+  }
+  return installer.path;
+}
+
+export function parseFfmpegDurationSec(stderr: string): number | null {
+  const match = /Duration:\s*(\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)/i.exec(stderr);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const seconds = Number(match[3]);
+  const total = hours * 3600 + minutes * 60 + seconds;
+  return Number.isFinite(total) && total > 0 ? total : null;
+}
+
+function isPrivateIp(ip: string): boolean {
+  if (net.isIPv4(ip)) {
+    const parts = ip.split(".").map(Number);
+    if (parts.length !== 4 || parts.some(Number.isNaN)) return true;
+    const [a, b] = parts;
+    if (a === 0 || a === 10 || a === 127) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true;
+    return false;
+  }
+  if (net.isIPv6(ip)) {
+    const norm = ip.toLowerCase();
+    if (norm === "::1" || norm === "::") return true;
+    if (norm.startsWith("fe80:") || norm.startsWith("fc") || norm.startsWith("fd")) {
+      return true;
+    }
+    if (norm.startsWith("::ffff:")) {
+      return isPrivateIp(norm.slice("::ffff:".length));
+    }
+    return false;
+  }
+  return true;
+}
+
+export async function validateExternalMediaUrl(rawUrl: string): Promise<URL> {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error("Invalid media URL.");
+  }
+  if (parsed.protocol !== "https:") {
+    throw new Error("Only https media URLs are supported.");
+  }
+  const host = parsed.hostname.toLowerCase();
+  if (
+    !host ||
+    host === "localhost" ||
+    host.endsWith(".local") ||
+    host.endsWith(".internal")
+  ) {
+    throw new Error("Disallowed media host.");
+  }
+  if (net.isIP(host)) {
+    if (isPrivateIp(host)) {
+      throw new Error("Private media host IP is not allowed.");
+    }
+    return parsed;
+  }
+  const resolved = await dns.lookup(host, { all: true });
+  if (!resolved.length || resolved.some((entry) => isPrivateIp(entry.address))) {
+    throw new Error("Resolved media host is not public.");
+  }
+  return parsed;
+}
+
+export async function downloadMediaToFile(
+  rawUrl: string,
+  destPath: string
+): Promise<void> {
+  const safeUrl = await validateExternalMediaUrl(rawUrl);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(safeUrl, {
+      redirect: "error",
+      signal: controller.signal,
+    });
+    if (!response.ok || !response.body) {
+      throw new Error(`Failed to fetch media (${response.status}).`);
+    }
+
+    const declaredLength = Number(response.headers.get("content-length") || 0);
+    if (declaredLength > MAX_FILE_SIZE_BYTES) {
+      throw new Error(
+        `Source media exceeds ${MAX_FILE_SIZE_BYTES / 1024 / 1024} MB limit.`
+      );
+    }
+
+    let totalBytes = 0;
+    const nodeStream = Readable.fromWeb(response.body as any);
+    nodeStream.on("data", (chunk: Buffer) => {
+      totalBytes += chunk.length;
+      if (totalBytes > MAX_FILE_SIZE_BYTES) {
+        nodeStream.destroy(new Error("Source media exceeded maximum size limit."));
+      }
+    });
+
+    await pipeline(nodeStream, createWriteStream(destPath));
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function probeVideoDurationSec(filePath: string): Promise<number> {
+  const ffmpeg = resolveFfmpegBinary();
+  try {
+    const { stderr } = await execFileAsync(ffmpeg, ["-i", filePath], {
+      timeout: 30_000,
+    });
+    const parsed = parseFfmpegDurationSec(stderr || "");
+    if (parsed !== null) return parsed;
+  } catch (err: any) {
+    // ffmpeg exits non-zero when -i has no output target; stderr still holds duration metadata.
+    const parsed = parseFfmpegDurationSec(String(err?.stderr ?? ""));
+    if (parsed !== null) return parsed;
+  }
+  throw new Error("Could not inspect uploaded video duration.");
+}
+
+export async function splitSegmentWithFfmpeg({
+  sourcePath,
+  outputPath,
+  startSec,
+  durationSec,
+}: {
+  sourcePath: string;
+  outputPath: string;
+  startSec: number;
+  durationSec: number;
+}): Promise<void> {
+  const ffmpeg = resolveFfmpegBinary();
+  await execFileAsync(
+    ffmpeg,
+    [
+      "-y",
+      "-ss",
+      startSec.toFixed(2),
+      "-i",
+      sourcePath,
+      "-t",
+      durationSec.toFixed(2),
+      "-threads",
+      "1",
+      "-map",
+      "0:v:0",
+      "-map",
+      "0:a:0?",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "ultrafast",
+      "-crf",
+      "20",
+      "-pix_fmt",
+      "yuv420p",
+      "-c:a",
+      "aac",
+      "-ar",
+      "44100",
+      "-ac",
+      "2",
+      "-movflags",
+      "+faststart",
+      outputPath,
+    ],
+    { timeout: FFMPEG_TIMEOUT_MS }
+  );
+}
+
+export async function stitchClipsWithFfmpeg({
+  clipPaths,
+  concatListPath,
+  outputPath,
+}: {
+  clipPaths: string[];
+  concatListPath: string;
+  outputPath: string;
+}): Promise<void> {
+  const ffmpeg = resolveFfmpegBinary();
+  const listContent = clipPaths
+    .map((p) => `file '${p.replace(/'/g, "'\\''")}'`)
+    .join("\n");
+  await fs.writeFile(concatListPath, listContent, "utf8");
+
+  // Fast, <30MB RAM stream copy concat when all Genjutsu clips match encoding parameters.
+  try {
+    await execFileAsync(
+      ffmpeg,
+      [
+        "-y",
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        concatListPath,
+        "-c",
+        "copy",
+        "-movflags",
+        "+faststart",
+        outputPath,
+      ],
+      { timeout: FFMPEG_TIMEOUT_MS }
+    );
+    return;
+  } catch {
+    // Fall back to low-memory single-thread normalization if clip stream headers diverge.
+    await execFileAsync(
+      ffmpeg,
+      [
+        "-y",
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        concatListPath,
+        "-threads",
+        "1",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "ultrafast",
+        "-crf",
+        "20",
+        "-pix_fmt",
+        "yuv420p",
+        "-c:a",
+        "aac",
+        "-ar",
+        "44100",
+        "-ac",
+        "2",
+        "-movflags",
+        "+faststart",
+        outputPath,
+      ],
+      { timeout: FFMPEG_TIMEOUT_MS * 2 }
+    );
+  }
+}
+
+export async function uploadClipFileToPlatform(
+  filePath: string,
+  createUpload: (contentType: string) => Promise<{
+    upload_url: string;
+    public_url: string;
+    upload_headers: Record<string, string>;
+  }>
+): Promise<string> {
+  const ticket = await createUpload("video/mp4");
+  const stat = await fs.stat(filePath);
+  const res = await fetch(ticket.upload_url, {
+    method: "PUT",
+    headers: {
+      ...ticket.upload_headers,
+      "Content-Length": String(stat.size),
+    },
+    body: createReadStream(filePath) as any,
+    duplex: "half",
+  } as any);
+  if (!res.ok) {
+    throw new Error(`Clip segment upload failed (${res.status}).`);
+  }
+  return ticket.public_url;
+}
+
+export interface LongVideoPlatformClient {
+  createUpload: (contentType: unknown) => Promise<{
+    upload_url: string;
+    public_url: string;
+    content_type: string;
+    upload_headers: Record<string, string>;
+  }>;
+  submit: (
+    model: string,
+    input: Record<string, unknown>
+  ) => Promise<QueuedGeneration>;
+  status: (requestId: string) => Promise<GenerationStatus>;
+  cancel: (requestId: string) => Promise<void>;
+}
+
+export interface LongVideoEntities {
+  User: {
+    update: (args: any) => Promise<any>;
+  };
+  LongVideoJob: {
+    findUnique: (args: any) => Promise<any>;
+    update: (args: any) => Promise<any>;
+    updateMany: (args: any) => Promise<{ count: number }>;
+  };
+  LongVideoSegment: {
+    findMany: (args: any) => Promise<any[]>;
+    update: (args: any) => Promise<any>;
+  };
+}
+
+export interface LongVideoMediaOps {
+  downloadToFile: (url: string, destPath: string) => Promise<void>;
+  probeDurationSec: (filePath: string) => Promise<number>;
+  splitSegment: (args: {
+    sourcePath: string;
+    outputPath: string;
+    startSec: number;
+    durationSec: number;
+  }) => Promise<void>;
+  stitchClips: (args: {
+    clipPaths: string[];
+    concatListPath: string;
+    outputPath: string;
+  }) => Promise<void>;
+  uploadClipFile: (
+    filePath: string,
+    createUpload: LongVideoPlatformClient["createUpload"]
+  ) => Promise<string>;
+  uploadFinalVideo: (args: {
+    filePath: string;
+    fileName: string;
+    contentType: string;
+    userId: string;
+  }) => Promise<{ s3Key: string; url: string }>;
+}
+
+export const defaultLongVideoMediaOps = (
+  uploadFinalVideo: LongVideoMediaOps["uploadFinalVideo"]
+): LongVideoMediaOps => ({
+  downloadToFile: downloadMediaToFile,
+  probeDurationSec: probeVideoDurationSec,
+  splitSegment: splitSegmentWithFfmpeg,
+  stitchClips: stitchClipsWithFfmpeg,
+  uploadClipFile: (filePath, createUpload) =>
+    uploadClipFileToPlatform(filePath, createUpload),
+  uploadFinalVideo,
+});
+
+export async function failAndRefundLongVideoJob({
+  jobId,
+  userId,
+  creditCost,
+  errorMessage,
+  entities,
+  activeRequestIds = [],
+  platformClient,
+}: {
+  jobId: string;
+  userId: string;
+  creditCost: number;
+  errorMessage: string;
+  entities: LongVideoEntities;
+  activeRequestIds?: string[];
+  platformClient?: Pick<LongVideoPlatformClient, "cancel">;
+}): Promise<void> {
+  if (platformClient && activeRequestIds.length > 0) {
+    await Promise.allSettled(
+      activeRequestIds.map((rid) => platformClient.cancel(rid))
+    );
+  }
+
+  await entities.LongVideoJob.update({
+    where: { id: jobId },
+    data: {
+      status: "FAILED",
+      error: errorMessage,
+    },
+  });
+
+  if (creditCost > 0) {
+    const refunded = await entities.LongVideoJob.updateMany({
+      where: { id: jobId, creditsRefunded: false },
+      data: { creditsRefunded: true },
+    });
+    if (refunded.count > 0) {
+      await entities.User.update({
+        where: { id: userId },
+        data: { credits: { increment: creditCost } },
+      });
+    }
+  }
+}
+
+/**
+ * Runs inside an async worker pass immediately after creating LongVideoJob:
+ * downloads source video, probes duration, sequentially cuts <=30s segments on
+ * 1 thread, uploads each clip, deletes temp files immediately, and submits
+ * bounded Genjutsu batches carrying the exact same prompt & reference anchors.
+ */
+export async function processLongVideoJobSplit({
+  jobId,
+  entities,
+  platformClient,
+  mediaOps,
+}: {
+  jobId: string;
+  entities: LongVideoEntities;
+  platformClient: LongVideoPlatformClient;
+  mediaOps: LongVideoMediaOps;
+}): Promise<void> {
+  const job = await entities.LongVideoJob.findUnique({
+    where: { id: jobId },
+  });
+  if (!job || job.status !== "SPLITTING") return;
+
+  const workDir = await fs.mkdtemp(path.join(os.tmpdir(), `fayaa-lv-${job.id}-`));
+  const sourcePath = path.join(workDir, "source.mp4");
+  const submittedRequestIds: string[] = [];
+
+  try {
+    await mediaOps.downloadToFile(job.sourceVideoUrl, sourcePath);
+
+    const probedDuration = await mediaOps.probeDurationSec(sourcePath);
+    const availableAfterTrim = Math.max(
+      MIN_CLIP_DURATION_SEC,
+      Number((probedDuration - (job.trimStartSec ?? 0)).toFixed(2))
+    );
+    const effectiveTotal = Math.min(job.totalDurationSec, availableAfterTrim);
+    const plannedSegments = computeLongVideoSegments(
+      effectiveTotal,
+      job.trimStartSec ?? 0
+    );
+
+    const dbSegments = await entities.LongVideoSegment.findMany({
+      where: { jobId: job.id },
+      orderBy: { index: "asc" },
+    });
+
+    const segmentsToRun = dbSegments.slice(0, plannedSegments.length);
+    const clipUrls: string[] = [];
+
+    // Split + upload sequentially with 1 thread so RAM and /tmp usage remain tiny inside 1 GB.
+    await withFfmpegMutex(async () => {
+      for (let i = 0; i < segmentsToRun.length; i++) {
+        const plan = plannedSegments[i]!;
+        const clipPath = path.join(workDir, `clip-${String(i).padStart(3, "0")}.mp4`);
+        await mediaOps.splitSegment({
+          sourcePath,
+          outputPath: clipPath,
+          startSec: plan.startSec,
+          durationSec: plan.durationSec,
+        });
+        const uploadedUrl = await mediaOps.uploadClipFile(
+          clipPath,
+          platformClient.createUpload
+        );
+        await fs.rm(clipPath, { force: true });
+        clipUrls.push(uploadedUrl);
+      }
+    });
+
+    // Free source file before upstream API queueing.
+    await fs.rm(sourcePath, { force: true });
+
+    const modelPath =
+      job.variant === "pro"
+        ? "higgsfield/genjutsu/motion-transfer/v1.0"
+        : "higgsfield/genjutsu-light/motion-transfer/v1.0";
+
+    for (
+      let offset = 0;
+      offset < segmentsToRun.length;
+      offset += MAX_CONCURRENT_SUBMISSIONS
+    ) {
+      const batch = segmentsToRun.slice(offset, offset + MAX_CONCURRENT_SUBMISSIONS);
+      await Promise.all(
+        batch.map(async (seg, batchIdx) => {
+          const segIdx = offset + batchIdx;
+          const clipSourceUrl = clipUrls[segIdx]!;
+          const queued = await platformClient.submit(modelPath, {
+            video_url: clipSourceUrl,
+            image_urls: job.referenceImageUrls,
+            resolution: job.resolution,
+            ...(job.prompt ? { prompt: job.prompt } : {}),
+          });
+          submittedRequestIds.push(queued.requestId);
+          await entities.LongVideoSegment.update({
+            where: { id: seg.id },
+            data: {
+              clipSourceUrl,
+              requestId: queued.requestId,
+              status: "PROCESSING",
+            },
+          });
+        })
+      );
+    }
+
+    await entities.LongVideoJob.update({
+      where: { id: job.id },
+      data: {
+        status: "PROCESSING_CLIPS",
+        segmentCount: segmentsToRun.length,
+      },
+    });
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error
+        ? err.message
+        : "Failed to split and queue long video segments.";
+    await failAndRefundLongVideoJob({
+      jobId: job.id,
+      userId: job.userId,
+      creditCost: job.creditCost,
+      errorMessage: message,
+      entities,
+      activeRequestIds: submittedRequestIds,
+      platformClient,
+    });
+  } finally {
+    await fs.rm(workDir, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Advances an active LongVideoJob: polls segment Genjutsu status, stitches all
+ * completed segments seamlessly via low-memory FFmpeg concat once ready, stores
+ * the final stitched video in R2/S3, or refunds atomically on timeout/failure.
+ */
+export async function syncLongVideoJob({
+  job,
+  entities,
+  platformClient,
+  mediaOps,
+}: {
+  job: any;
+  entities: LongVideoEntities;
+  platformClient: Pick<LongVideoPlatformClient, "status" | "cancel">;
+  mediaOps: LongVideoMediaOps;
+}): Promise<any> {
+  if (job.status === "COMPLETED" || job.status === "FAILED") {
+    return job;
+  }
+
+  const jobAgeMs = Date.now() - new Date(job.createdAt).getTime();
+  if (jobAgeMs > MAX_LONG_JOB_DURATION_MS) {
+    const segs = await entities.LongVideoSegment.findMany({
+      where: { jobId: job.id },
+      orderBy: { index: "asc" },
+    });
+    const activeIds = segs
+      .filter((s) => s.status === "PROCESSING" && s.requestId)
+      .map((s) => s.requestId);
+    await failAndRefundLongVideoJob({
+      jobId: job.id,
+      userId: job.userId,
+      creditCost: job.creditCost,
+      errorMessage: "Long video job timed out before finishing all clips.",
+      entities,
+      activeRequestIds: activeIds,
+      platformClient,
+    });
+    return entities.LongVideoJob.findUnique({ where: { id: job.id } });
+  }
+
+  if (job.status === "SPLITTING" || job.status === "STITCHING") {
+    return job;
+  }
+
+  const segments = await entities.LongVideoSegment.findMany({
+    where: { jobId: job.id },
+    orderBy: { index: "asc" },
+  });
+
+  const processingSegments = segments.filter(
+    (s) => s.status === "PROCESSING" && s.requestId
+  );
+
+  for (
+    let offset = 0;
+    offset < processingSegments.length;
+    offset += MAX_CONCURRENT_SUBMISSIONS
+  ) {
+    const batch = processingSegments.slice(
+      offset,
+      offset + MAX_CONCURRENT_SUBMISSIONS
+    );
+    await Promise.all(
+      batch.map(async (seg) => {
+        try {
+          const remote = await platformClient.status(seg.requestId);
+          if (remote.status === "completed") {
+            const outputUrl = remote.video?.url;
+            if (outputUrl) {
+              await entities.LongVideoSegment.update({
+                where: { id: seg.id },
+                data: { status: "COMPLETED", outputVideoUrl: outputUrl },
+              });
+              seg.status = "COMPLETED";
+              seg.outputVideoUrl = outputUrl;
+            } else {
+              await entities.LongVideoSegment.update({
+                where: { id: seg.id },
+                data: {
+                  status: "FAILED",
+                  error: "Upstream clip returned completed without a video URL.",
+                },
+              });
+              seg.status = "FAILED";
+            }
+          } else if (
+            remote.status === "failed" ||
+            remote.status === "nsfw" ||
+            remote.status === "canceled"
+          ) {
+            const detail =
+              typeof remote.error === "string"
+                ? remote.error
+                : `Segment ${seg.index + 1} failed (${remote.status}).`;
+            await entities.LongVideoSegment.update({
+              where: { id: seg.id },
+              data: { status: "FAILED", error: detail },
+            });
+            seg.status = "FAILED";
+            seg.error = detail;
+          }
+        } catch {
+          // Transient polling errors are retried on the next poll tick.
+        }
+      })
+    );
+  }
+
+  const failedSegment = segments.find((s) => s.status === "FAILED");
+  if (failedSegment) {
+    const remainingIds = segments
+      .filter((s) => s.status === "PROCESSING" && s.requestId)
+      .map((s) => s.requestId);
+    await failAndRefundLongVideoJob({
+      jobId: job.id,
+      userId: job.userId,
+      creditCost: job.creditCost,
+      errorMessage:
+        failedSegment.error ||
+        `Clip ${failedSegment.index + 1} of ${segments.length} failed.`,
+      entities,
+      activeRequestIds: remainingIds,
+      platformClient,
+    });
+    return entities.LongVideoJob.findUnique({ where: { id: job.id } });
+  }
+
+  const completedSegments = segments.filter(
+    (s) => s.status === "COMPLETED" && Boolean(s.outputVideoUrl)
+  );
+
+  if (completedSegments.length !== job.completedCount) {
+    await entities.LongVideoJob.update({
+      where: { id: job.id },
+      data: { completedCount: completedSegments.length },
+    });
+  }
+
+  if (completedSegments.length < segments.length) {
+    return entities.LongVideoJob.findUnique({ where: { id: job.id } });
+  }
+
+  // All segments completed: acquire atomic STITCHING lock.
+  const locked = await entities.LongVideoJob.updateMany({
+    where: { id: job.id, status: "PROCESSING_CLIPS" },
+    data: { status: "STITCHING", completedCount: segments.length },
+  });
+  if (locked.count === 0) {
+    return entities.LongVideoJob.findUnique({ where: { id: job.id } });
+  }
+
+  const stitchDir = await fs.mkdtemp(
+    path.join(os.tmpdir(), `fayaa-stitch-${job.id}-`)
+  );
+  try {
+    const clipPaths: string[] = [];
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i]!;
+      const localPath = path.join(
+        stitchDir,
+        `render-${String(i).padStart(3, "0")}.mp4`
+      );
+      await mediaOps.downloadToFile(seg.outputVideoUrl, localPath);
+      clipPaths.push(localPath);
+    }
+
+    const concatListPath = path.join(stitchDir, "concat-list.txt");
+    const stitchedPath = path.join(stitchDir, `final-${job.id}.mp4`);
+
+    await withFfmpegMutex(() =>
+      mediaOps.stitchClips({
+        clipPaths,
+        concatListPath,
+        outputPath: stitchedPath,
+      })
+    );
+
+    const uploaded = await mediaOps.uploadFinalVideo({
+      filePath: stitchedPath,
+      fileName: `fayaa-genjutsu-${job.id}.mp4`,
+      contentType: "video/mp4",
+      userId: job.userId,
+    });
+
+    return await entities.LongVideoJob.update({
+      where: { id: job.id },
+      data: {
+        status: "COMPLETED",
+        outputVideoUrl: uploaded.url,
+        outputStorageKey: uploaded.s3Key,
+        completedCount: segments.length,
+      },
+    });
+  } catch (err: unknown) {
+    await failAndRefundLongVideoJob({
+      jobId: job.id,
+      userId: job.userId,
+      creditCost: job.creditCost,
+      errorMessage:
+        err instanceof Error
+          ? err.message
+          : "Failed to stitch and save final long video.",
+      entities,
+    });
+    return entities.LongVideoJob.findUnique({ where: { id: job.id } });
+  } finally {
+    await fs.rm(stitchDir, { recursive: true, force: true });
+  }
+}

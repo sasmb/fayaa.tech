@@ -9,6 +9,8 @@ import {
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
+import { createReadStream } from "fs";
+import * as fsPromises from "fs/promises";
 import * as path from "path";
 import { env } from "wasp/server";
 import { MAX_FILE_SIZE_BYTES } from "./validation";
@@ -112,4 +114,38 @@ export const checkFileExistsInS3 = async ({ s3Key }: { s3Key: string }) => {
 function getS3Key(fileName: string, userId: string) {
   const ext = path.extname(fileName).slice(1);
   return `${userId}/${randomUUID()}.${ext}`;
+}
+
+/**
+ * Streams a local server-generated file (such as a stitched MP4) to R2/S3
+ * without buffering the full payload in Node memory, returning its key and URL.
+ */
+export async function uploadLocalFileToS3({
+  filePath,
+  fileName,
+  contentType,
+  userId,
+}: {
+  filePath: string;
+  fileName: string;
+  contentType: string;
+  userId: string;
+}): Promise<{ s3Key: string; url: string }> {
+  if (!env.AWS_S3_FILES_BUCKET) {
+    throw new Error("Storage bucket (AWS_S3_FILES_BUCKET) is not configured.");
+  }
+  const stat = await fsPromises.stat(filePath);
+  const s3Key = getS3Key(fileName, userId);
+  const stream = createReadStream(filePath);
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: env.AWS_S3_FILES_BUCKET,
+      Key: s3Key,
+      Body: stream,
+      ContentLength: stat.size,
+      ContentType: contentType,
+    })
+  );
+  const url = await getDownloadFileSignedURLFromS3({ s3Key });
+  return { s3Key, url };
 }

@@ -1,5 +1,17 @@
 import { HttpError } from "wasp/server";
-import type { VideoTask } from "wasp/entities";
+import type { LongVideoJob, VideoTask } from "wasp/entities";
+import {
+  getDownloadFileSignedURLFromS3,
+  uploadLocalFileToS3,
+} from "../file-upload/s3Utils";
+import { estimateLongVideoPlan } from "./longVideoPlanning";
+import {
+  defaultLongVideoMediaOps,
+  failAndRefundLongVideoJob,
+  processLongVideoJobSplit,
+  syncLongVideoJob,
+  validateExternalMediaUrl,
+} from "./longVideoProcessor";
 import { getModel, parseSettings } from "./hf/generation/catalog";
 import type { GenerationPlane } from "./hf/generation/catalog/types";
 import { urls } from "./hf/generation/catalog/mappers";
@@ -517,4 +529,286 @@ export const getUserVideoTasks = async (
     where: { userId: context.user.id },
     orderBy: { createdAt: "desc" },
   });
+};
+
+export interface SubmitLongVideoInput {
+  sourceVideoUrl: string;
+  referenceImageUrls: string[];
+  prompt?: string;
+  resolution?: "480p" | "720p" | "1080p";
+  variant?: "light" | "pro";
+  trimStartSec?: number;
+  totalDurationSec: number;
+}
+
+export interface LongVideoJobSummary {
+  id: string;
+  status: string;
+  variant: string;
+  resolution: string;
+  prompt: string | null;
+  sourceVideoUrl: string;
+  totalDurationSec: number;
+  segmentCount: number;
+  completedCount: number;
+  creditCost: number;
+  outputVideoUrl: string | null;
+  error: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+async function resolveFreshJobUrl(job: LongVideoJob): Promise<LongVideoJob> {
+  if (job.status === "COMPLETED" && job.outputStorageKey) {
+    try {
+      const signed = await getDownloadFileSignedURLFromS3({
+        s3Key: job.outputStorageKey,
+      });
+      return { ...job, outputVideoUrl: signed };
+    } catch {
+      return job;
+    }
+  }
+  return job;
+}
+
+export const submitLongVideoGenjutsu = async (
+  args: SubmitLongVideoInput,
+  context: any
+): Promise<LongVideoJobSummary> => {
+  const activeUserId = context.user?.id;
+  if (!activeUserId) {
+    throw new HttpError(
+      401,
+      "Please sign in or create an account to generate videos."
+    );
+  }
+
+  let credentials: { apiKey: string; baseUrl: string };
+  try {
+    credentials = readServerCredentials(activeUserId);
+  } catch (err: unknown) {
+    throw new HttpError(
+      401,
+      err instanceof Error ? err.message : "Connect your Higgsfield API key"
+    );
+  }
+
+  try {
+    await validateExternalMediaUrl(args.sourceVideoUrl);
+  } catch (err: unknown) {
+    throw new HttpError(
+      400,
+      err instanceof Error ? err.message : "Invalid source video URL."
+    );
+  }
+
+  if (!Array.isArray(args.referenceImageUrls) || args.referenceImageUrls.length < 1) {
+    throw new HttpError(400, "Add at least one reference image for Genjutsu.");
+  }
+
+  const totalDurationSec = Number(args.totalDurationSec);
+  if (!Number.isFinite(totalDurationSec) || totalDurationSec <= 30) {
+    throw new HttpError(
+      400,
+      "Long-video pipeline is only required when source duration exceeds 30 seconds."
+    );
+  }
+
+  const trimStartSec = Math.max(0, Number(args.trimStartSec || 0));
+  const resolution =
+    args.resolution === "1080p" || args.resolution === "720p"
+      ? args.resolution
+      : "480p";
+  const variant = args.variant === "pro" ? "pro" : "light";
+
+  const plan = estimateLongVideoPlan({
+    totalDurationSec,
+    trimStartSec,
+    resolution,
+    variant,
+  });
+
+  const dbUser = await context.entities.User.findUnique({
+    where: { id: activeUserId },
+    select: { id: true, isAdmin: true, credits: true },
+  });
+  const isAdmin = Boolean(dbUser?.isAdmin);
+
+  const { count: reserved } = await context.entities.User.updateMany({
+    where: { id: activeUserId, credits: { gte: plan.credits } },
+    data: { credits: { decrement: plan.credits } },
+  });
+
+  if (reserved === 0 && !isAdmin) {
+    throw new HttpError(
+      402,
+      `Insufficient credits (${dbUser?.credits ?? 0} available, ${plan.credits} needed for ${plan.segmentCount}×30s clips). Please upgrade or buy credits to process this video.`
+    );
+  }
+
+  const chargedCredits = reserved > 0 ? plan.credits : 0;
+
+  let createdJob: LongVideoJob;
+  try {
+    createdJob = await context.entities.LongVideoJob.create({
+      data: {
+        userId: activeUserId,
+        status: "SPLITTING",
+        variant,
+        resolution,
+        prompt: args.prompt?.trim() || null,
+        sourceVideoUrl: args.sourceVideoUrl,
+        referenceImageUrls: args.referenceImageUrls,
+        trimStartSec,
+        totalDurationSec: plan.totalDurationSec,
+        segmentCount: plan.segmentCount,
+        completedCount: 0,
+        creditCost: chargedCredits,
+        segments: {
+          create: plan.segments.map((seg) => ({
+            index: seg.index,
+            startSec: seg.startSec,
+            durationSec: seg.durationSec,
+            status: "PENDING",
+          })),
+        },
+      },
+    });
+  } catch (err: unknown) {
+    if (chargedCredits > 0) {
+      await context.entities.User.update({
+        where: { id: activeUserId },
+        data: { credits: { increment: chargedCredits } },
+      });
+    }
+    throw new HttpError(
+      500,
+      err instanceof Error ? err.message : "Failed to initialize long video job."
+    );
+  }
+
+  const platformClient = createPlatformClient(credentials);
+  const mediaOps = defaultLongVideoMediaOps(uploadLocalFileToS3);
+  void processLongVideoJobSplit({
+    jobId: createdJob.id,
+    entities: context.entities,
+    platformClient,
+    mediaOps,
+  }).catch(async (err: unknown) => {
+    await failAndRefundLongVideoJob({
+      jobId: createdJob.id,
+      userId: activeUserId,
+      creditCost: chargedCredits,
+      errorMessage:
+        err instanceof Error ? err.message : "Unexpected backend split failure.",
+      entities: context.entities,
+    }).catch(() => {});
+  });
+
+  return createdJob;
+};
+
+export const getLongVideoJobStatus = async (
+  { jobId }: { jobId: string },
+  context: any
+): Promise<LongVideoJob> => {
+  if (!context.user?.id) {
+    throw new HttpError(401, "Authentication required");
+  }
+  const job = await context.entities.LongVideoJob.findUnique({
+    where: { id: jobId },
+  });
+  if (!job) {
+    throw new HttpError(404, "Long video job not found.");
+  }
+  if (job.userId !== context.user.id && !context.user.isAdmin) {
+    throw new HttpError(403, "Forbidden");
+  }
+
+  if (job.status === "COMPLETED") {
+    return resolveFreshJobUrl(job);
+  }
+  if (job.status === "FAILED" || job.status === "SPLITTING" || job.status === "STITCHING") {
+    return job;
+  }
+
+  const timeSinceUpdateMs = Date.now() - new Date(job.updatedAt).getTime();
+  if (timeSinceUpdateMs < 5000) {
+    return job;
+  }
+
+  try {
+    const credentials = readServerCredentials(context.user.id);
+    const updated = await syncLongVideoJob({
+      job,
+      entities: context.entities,
+      platformClient: createPlatformClient(credentials),
+      mediaOps: defaultLongVideoMediaOps(uploadLocalFileToS3),
+    });
+    return resolveFreshJobUrl(updated || job);
+  } catch {
+    return job;
+  }
+};
+
+export const getUserLongVideoJobs = async (
+  _args: void,
+  context: any
+): Promise<LongVideoJob[]> => {
+  if (!context.user?.id) return [];
+  const jobs = await context.entities.LongVideoJob.findMany({
+    where: { userId: context.user.id },
+    orderBy: { createdAt: "desc" },
+    take: 30,
+  });
+  return Promise.all(jobs.map((job: LongVideoJob) => resolveFreshJobUrl(job)));
+};
+
+export const cancelLongVideoJob = async (
+  { jobId }: { jobId: string },
+  context: any
+): Promise<LongVideoJob> => {
+  if (!context.user?.id) {
+    throw new HttpError(401, "Authentication required");
+  }
+  const job = await context.entities.LongVideoJob.findUnique({
+    where: { id: jobId },
+  });
+  if (!job) {
+    throw new HttpError(404, "Long video job not found.");
+  }
+  if (job.userId !== context.user.id && !context.user.isAdmin) {
+    throw new HttpError(403, "Forbidden");
+  }
+  if (job.status === "COMPLETED" || job.status === "FAILED") {
+    return job;
+  }
+
+  const segments = await context.entities.LongVideoSegment.findMany({
+    where: { jobId: job.id },
+    orderBy: { index: "asc" },
+  });
+  const activeIds = segments
+    .filter((s: any) => s.status === "PROCESSING" && s.requestId)
+    .map((s: any) => s.requestId);
+
+  let platformClient;
+  try {
+    platformClient = createPlatformClient(readServerCredentials(context.user.id));
+  } catch {
+    platformClient = undefined;
+  }
+
+  await failAndRefundLongVideoJob({
+    jobId: job.id,
+    userId: job.userId,
+    creditCost: job.creditCost,
+    errorMessage: "Canceled",
+    entities: context.entities,
+    activeRequestIds: activeIds,
+    platformClient,
+  });
+
+  return context.entities.LongVideoJob.findUnique({ where: { id: job.id } });
 };

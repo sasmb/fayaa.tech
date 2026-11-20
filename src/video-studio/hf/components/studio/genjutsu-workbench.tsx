@@ -69,7 +69,8 @@ import { cn } from "../../lib/utils"
 import { ModelSelectorModal } from "../../../components/ModelSelectorModal"
 import { FayaaWatermark } from "../../../components/FayaaWatermark"
 import { useWatermark } from "../../../lib/watermark-store"
-import { MOTION_MODELS, calculateRealtimeVideoCost } from "../../../templates"
+import { MOTION_MODELS } from "../../../templates"
+import { estimateLongVideoPlan } from "../../../longVideoPlanning"
 import type { MotionModel, VideoQuality } from "../../../types"
 
 import { AssetLibraryModal } from "./asset-library"
@@ -524,18 +525,23 @@ export function GenjutsuWorkbench({
   }, [authUser?.id])
 
   const selectedDurationSec = useMemo(
-    () => Math.max(4, Math.min(30, Math.round((trimRange.end - trimRange.start) * 10) / 10)),
+    () => Math.max(4, Math.round((trimRange.end - trimRange.start) * 10) / 10),
     [trimRange.end, trimRange.start]
   )
 
   const realtimeCost = useMemo(
     () =>
-      calculateRealtimeVideoCost(
-        selectedMotionModel,
+      estimateLongVideoPlan({
+        totalDurationSec: selectedDurationSec,
+        trimStartSec: trimRange.start,
         resolution,
-        selectedDurationSec
-      ),
-    [selectedMotionModel, resolution, selectedDurationSec]
+        variant:
+          selectedMotionModel.id === "higgsfield/genjutsu/motion-transfer/v1.0"
+            ? "pro"
+            : "light",
+        usdPerSecByRes: selectedMotionModel.usdPerSecByRes,
+      }),
+    [selectedMotionModel, resolution, selectedDurationSec, trimRange.start]
   )
 
   const applyDurationPreset = (seconds: number) => {
@@ -822,8 +828,8 @@ export function GenjutsuWorkbench({
     if (!sourceVideo) {
       setLocalError(
         sidebarTab === "motion-control"
-          ? "Add motion to copy (4 to 30 seconds)."
-          : "Add a reference video (4 to 30 seconds) to extract motion."
+          ? "Add a source motion video (4s or longer — >30s auto-splits cleanly)."
+          : "Add a reference video (4s or longer — >30s auto-splits cleanly)."
       )
       return
     }
@@ -864,6 +870,7 @@ export function GenjutsuWorkbench({
       .filter(Boolean)
       .join(" ")
 
+    const isLongForm = selectedDurationSec > 30
     const plane: GenerationPlane = {
       model: genjutsu.id,
       prompt: { text: composedPrompt },
@@ -873,7 +880,12 @@ export function GenjutsuWorkbench({
           selectedMotionModel.id === "higgsfield/genjutsu/motion-transfer/v1.0"
             ? "pro"
             : "light",
-        duration: Math.max(4, Math.min(30, Math.round(selectedDurationSec))),
+        duration: isLongForm
+          ? selectedDurationSec
+          : Math.max(4, Math.min(30, Math.round(selectedDurationSec))),
+        ...(isLongForm
+          ? { trimStartSec: trimRange.start, longForm: true }
+          : {}),
       },
       media: {
         source: [sourceVideo],
@@ -1384,9 +1396,9 @@ export function GenjutsuWorkbench({
                           muted
                           playsInline
                           onLoadedMetadata={(e) => {
-                            const dur = Math.min(
-                              30,
-                              Math.max(4, Math.round(e.currentTarget.duration || 10))
+                            const dur = Math.max(
+                              4,
+                              Math.round(e.currentTarget.duration || 10)
                             )
                             setVideoDuration(dur)
                             setTrimRange({ start: 0, end: dur })
@@ -1485,7 +1497,7 @@ export function GenjutsuWorkbench({
                               {uploadingVideo ? "Uploading video…" : "Add motion to copy"}
                             </span>
                             <span className="text-[11px] text-zinc-500">
-                              Video duration: 4–30 seconds
+                              4s+ · &gt;30s auto-splits in 30s clips
                             </span>
                           </div>
                         </button>
@@ -1946,9 +1958,9 @@ export function GenjutsuWorkbench({
                           muted
                           playsInline
                           onLoadedMetadata={(e) => {
-                            const dur = Math.min(
-                              30,
-                              Math.max(4, Math.round(e.currentTarget.duration || 10))
+                            const dur = Math.max(
+                              4,
+                              Math.round(e.currentTarget.duration || 10)
                             )
                             setVideoDuration(dur)
                             setTrimRange({ start: 0, end: dur })
@@ -2073,7 +2085,7 @@ export function GenjutsuWorkbench({
                                   : "Add a reference video to extract motion"}
                             </span>
                             <span className="text-[11px] text-zinc-500">
-                              Video duration: 4 to 30 seconds
+                              4s+ · &gt;30s auto-splits in 30s clips
                             </span>
                           </div>
                         </button>
@@ -2359,13 +2371,16 @@ export function GenjutsuWorkbench({
                 </span>
                 <span className="font-mono text-[10px] text-zinc-400">
                   ${realtimeCost.usdPerSec.toFixed(3).replace(/0+$/, "").replace(/\.$/, "")}/s × {realtimeCost.billableSeconds}s
+                  {realtimeCost.isLongForm ? ` (${realtimeCost.segmentCount}×30s clips)` : ""}
                 </span>
               </div>
               <div className="flex flex-col items-end shrink-0">
                 <span className="font-mono text-xs font-bold text-[#D9FF00]">
                   {realtimeCost.credits} cr (~${realtimeCost.totalUsd.toFixed(2)})
                 </span>
-                <span className="text-[9px] text-zinc-500">Real-time estimate</span>
+                <span className="text-[9px] text-zinc-500">
+                  {realtimeCost.isLongForm ? "Auto-split & stitch" : "Real-time estimate"}
+                </span>
               </div>
             </div>
 
@@ -2868,7 +2883,10 @@ export function GenjutsuWorkbench({
                           <GenerationTile
                             key={run.id}
                             state={tileState}
-                            generatingLabel={`Processing Genjutsu (${String(Math.floor(elapsedSec / 60)).padStart(2, "0")}:${String(elapsedSec % 60).padStart(2, "0")})`}
+                            generatingLabel={
+                              run.longVideoProgressLabel ??
+                              `Processing Genjutsu (${String(Math.floor(elapsedSec / 60)).padStart(2, "0")}:${String(elapsedSec % 60).padStart(2, "0")})`
+                            }
                             failureLabel={
                               run.error ??
                               "Generation did not return a playable video."

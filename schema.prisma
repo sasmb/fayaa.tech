@@ -33,6 +33,7 @@ model User {
   contactFormMessages       ContactFormMessage[]
   files                     File[]
   videoTasks                VideoTask[]
+  longVideoJobs             LongVideoJob[]
 }
 
 model ProcessedWebhookEvent {
@@ -120,5 +121,51 @@ model VideoTask {
   updatedAt          DateTime  @updatedAt
 
   @@index([userId])
+  @@index([status])
+}
+
+model LongVideoJob {
+  id                 String             @id @default(uuid())
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String
+  status             String             @default("SPLITTING") // "SPLITTING" | "PROCESSING_CLIPS" | "STITCHING" | "COMPLETED" | "FAILED"
+  variant            String             @default("light")     // "light" | "pro"
+  resolution         String             @default("480p")      // "480p" | "720p" | "1080p"
+  prompt             String?
+  sourceVideoUrl     String
+  referenceImageUrls String[]
+  trimStartSec       Float              @default(0)
+  totalDurationSec   Float
+  segmentCount       Int
+  completedCount     Int                @default(0)
+  creditCost         Int
+  creditsRefunded    Boolean            @default(false)
+  outputVideoUrl     String?
+  outputStorageKey   String?
+  error              String?
+  segments           LongVideoSegment[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model LongVideoSegment {
+  id             String       @id @default(uuid())
+  job            LongVideoJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId          String
+  index          Int
+  startSec       Float
+  durationSec    Float
+  clipSourceUrl  String?
+  requestId      String?      @unique
+  status         String       @default("PENDING") // "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED"
+  outputVideoUrl String?
+  error          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([jobId, index])
   @@index([status])
 }
