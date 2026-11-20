@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Download } from "lucide-react";
 import { FayaaWatermark } from "./FayaaWatermark";
 import { useWatermark } from "../lib/watermark-store";
+import { downloadMedia } from "../hf/lib/studio/download-media";
 
 interface VideoBuzzerModalProps {
   videoUrl: string | null;
@@ -11,6 +12,7 @@ interface VideoBuzzerModalProps {
 
 export function VideoBuzzerModal({ videoUrl, onClose }: VideoBuzzerModalProps) {
   const { watermarkEnabled } = useWatermark(true);
+  const [downloading, setDownloading] = useState(false);
   React.useEffect(() => {
     if (!videoUrl) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -56,18 +58,30 @@ export function VideoBuzzerModal({ videoUrl, onClose }: VideoBuzzerModalProps) {
                 className="max-h-full max-w-full object-contain"
               />
               {watermarkEnabled && (
-                <FayaaWatermark size="large" position="bottom-right" />
+                <FayaaWatermark size="large" position="bottom-right" avoidControls />
               )}
             </div>
 
             <div className="flex items-center gap-2">
-              <a
-                href={videoUrl}
-                download="genjutsu-motion.mp4"
-                className="flex-1 py-2.5 bg-lime-400 hover:bg-lime-300 text-black font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-lime-500/20"
+              <button
+                type="button"
+                disabled={downloading}
+                onClick={() => {
+                  if (!videoUrl) return;
+                  setDownloading(true);
+                  void downloadMedia(videoUrl, "fayaa-genjutsu-motion.mp4", {
+                    watermark: watermarkEnabled,
+                  }).finally(() => setDownloading(false));
+                }}
+                className="flex-1 py-2.5 bg-lime-400 hover:bg-lime-300 text-black font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-lime-500/20 cursor-pointer disabled:opacity-60"
               >
-                <Download className="w-4 h-4" /> Download Video
-              </a>
+                <Download className="w-4 h-4" />{" "}
+                {downloading
+                  ? watermarkEnabled
+                    ? "Watermarking MP4..."
+                    : "Downloading..."
+                  : "Download Video"}
+              </button>
               <button
                 onClick={onClose}
                 className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-medium text-xs rounded-xl transition-colors"

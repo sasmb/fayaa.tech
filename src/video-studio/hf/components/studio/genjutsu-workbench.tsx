@@ -432,6 +432,12 @@ export interface GenjutsuWorkbenchProps {
   onOpenAllGenerations: () => void
 }
 
+function formatVideoAspect(width: number, height: number): string {
+  const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b))
+  const d = gcd(width, height)
+  return `${width}×${height} (${Math.round(width / d)}:${Math.round(height / d)})`
+}
+
 export function GenjutsuWorkbench({
   libraryItems,
   runs,
@@ -640,6 +646,7 @@ export function GenjutsuWorkbench({
 
   const removeSourceVideo = () => {
     setSourceVideo(null)
+    setSourceVideoAspect(null)
     setVideoDuration(10)
     setTrimRange({ start: 0, end: 5 })
   }
@@ -1393,7 +1400,7 @@ export function GenjutsuWorkbench({
                             const w = e.currentTarget.videoWidth
                             const h = e.currentTarget.videoHeight
                             if (w && h) {
-                              setSourceVideoAspect(w >= h ? `${w}×${h} (16:9)` : `${w}×${h} (9:16)`)
+                              setSourceVideoAspect(formatVideoAspect(w, h))
                             }
                           }}
                         />
@@ -1955,7 +1962,7 @@ export function GenjutsuWorkbench({
                             const w = e.currentTarget.videoWidth
                             const h = e.currentTarget.videoHeight
                             if (w && h) {
-                              setSourceVideoAspect(w >= h ? `${w}×${h} (16:9)` : `${w}×${h} (9:16)`)
+                              setSourceVideoAspect(formatVideoAspect(w, h))
                             }
                           }}
                         />
@@ -3117,7 +3124,11 @@ export function GenjutsuWorkbench({
                   />
                 )}
                 {watermarkEnabled && (
-                  <FayaaWatermark size="hero" position="bottom-right" />
+                  <FayaaWatermark
+                    size="hero"
+                    position="bottom-right"
+                    avoidControls={fullFrameMedia.type === "video"}
+                  />
                 )}
               </div>
             </div>
