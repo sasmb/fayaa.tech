@@ -983,6 +983,17 @@ export function GenjutsuWorkbench({
             >
               Pricing
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setSidebarTab("edit-video")
+                setMode("object-swap")
+              }}
+              className="hidden cursor-pointer items-center gap-1 rounded-full border border-[#D9FF00]/35 bg-[#D9FF00]/10 px-2.5 py-0.5 text-[11px] font-bold text-[#D9FF00] transition-colors hover:bg-[#D9FF00]/20 md:inline-flex"
+            >
+              <span>Also supports 2+ min videos</span>
+              <ChevronRight className="size-3" />
+            </button>
           </nav>
         </div>
 
@@ -1351,6 +1362,13 @@ export function GenjutsuWorkbench({
 
           {/* Scrollable Left Form Controls */}
           <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto p-3">
+            <div className="flex items-start gap-2 rounded-xl border border-[#D9FF00]/25 bg-[#D9FF00]/[0.06] px-2.5 py-2 text-[11px] leading-snug text-zinc-200">
+              <ChevronRight className="mt-0.5 size-3.5 shrink-0 text-[#D9FF00]" />
+              <span>
+                <strong className="text-[#D9FF00]">Videos up to 2+ min supported:</strong>{" "}
+                uploads over 30s auto-split into 30s passes and return one final video.
+              </span>
+            </div>
             {sidebarTab === "motion-control" ? (
               /* ══════════════════════════════════════════════════════════════════
                  MOTION CONTROL SIDEBAR CONTROLS (Screenshots 2 & 3)
