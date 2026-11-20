@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
-import { useAuth } from "wasp/client/auth";
+import { logout, useAuth } from "wasp/client/auth";
 import { getPublicHomepageShowcase, useQuery } from "wasp/client/operations";
 import {
   BarChart3,
   Coins,
   FolderOpen,
   Gem,
+  LogOut,
   Rocket,
   Search,
   Sparkles,
@@ -334,6 +335,16 @@ export function LandingPage() {
                     className="size-full object-cover"
                   />
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={() => void logout()}
+                  title="Log out"
+                  className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-red-500/25 bg-red-500/10 px-3 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/20 hover:text-white"
+                >
+                  <LogOut className="size-3.5" />
+                  <span className="hidden sm:inline">Log Out</span>
+                </button>
               </>
             )}
           </div>

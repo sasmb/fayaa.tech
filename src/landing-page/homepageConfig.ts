@@ -66,7 +66,8 @@ export const HERO_SHOWCASE_CARDS: HeroShowcaseCardConfig[] = [
   {
     id: "fayaa-genjutsu",
     title: "FAYAA GENJUTSU",
-    subtitle: "Motion transfer, object swap & video restyle — live in Studio.",
+    subtitle:
+      "Motion transfer, object swap & video editing — also supports videos up to 2+ minutes ›",
     highlightTitle: true,
     kind: "genjutsu",
     badgeText: "LIVE NOW",
@@ -296,7 +297,8 @@ export const BENTO_TOOLS: BentoToolConfig[] = [
     title: "FAYAA Genjutsu",
     badge: "LIVE",
     available: true,
-    description: "Motion transfer, object swap & video restyle (Light & Pro)",
+    description:
+      "Motion transfer, object swap & video restyle — edit videos from 4s up to 2+ minutes ›",
     iconKey: "wand-sparkles",
     gradient: "teal",
     href: "/studio",
@@ -354,9 +356,9 @@ export const BENTO_TOOLS: BentoToolConfig[] = [
 ];
 
 export const HOMEPAGE_ANNOUNCEMENT = {
-  badgeLabel: "Live in Studio",
+  badgeLabel: "2+ Min Videos >",
   message:
-    "FAYAA Genjutsu Light & Pro — Motion Transfer, Object Swap & Video Restyle up to 1080p. Save 20% on Annual Plans.",
+    "FAYAA Genjutsu Light & Pro — Edit videos up to 2+ minutes (auto-split into seamless 30s passes) up to 1080p. Save 20% on Annual Plans.",
   ctaLabel: "View Plans & Credits",
   ctaHref: "/pricing",
 };
@@ -368,7 +370,7 @@ export const HOMEPAGE_PROMO_CONFIG = {
     headingPrimary: "CREATE WITH FAYAA",
     headingAccent: "GENJUTSU V1.0",
     bullets: [
-      "Genjutsu Light & Pro motion transfer, object swap, and video restyle presets up to 1080p",
+      "Edit & restyle short clips OR videos up to 2+ minutes — we auto-split >30s videos into uniform 30s passes",
       "Multi-image character & product reference lock — save 20% on annual plans or top up credits anytime",
     ],
     ctaLabel: "Sign up & start creating",
@@ -376,9 +378,9 @@ export const HOMEPAGE_PROMO_CONFIG = {
   },
   loggedIn: {
     headingPrimary: "GENJUTSU LIGHT & PRO",
-    headingSecondary: "SAVE 20% ON ANNUAL PLANS",
+    headingSecondary: "EDIT VIDEOS UP TO 2+ MIN ›",
     description:
-      "Transfer motion from any 4s–30s video, swap characters or objects, and apply Restyle presets starting from 8 credits per 5s clip.",
+      "Upload short clips or videos up to 2+ minutes (>30s auto-splits every 30s into one seamless final MP4), starting from 8 credits per 5s clip.",
     primaryCtaLabel: "Open Genjutsu Studio",
     primaryCtaHref: "/studio",
     secondaryCtaLabel: "Plans & Credits",
