@@ -1,4 +1,4 @@
-import { action, job, page, query, route, type Spec } from "@wasp.sh/spec";
+import { action, api, job, page, query, route, type Spec } from "@wasp.sh/spec";
 
 import { VideoStudioPage } from "./VideoStudioPage" with { type: "ref" };
 import {
@@ -17,6 +17,7 @@ import {
   hfCreateUploadTicket,
 } from "./operations" with { type: "ref" };
 import { checkVideoTasksJob } from "./jobs" with { type: "ref" };
+import { downloadWatermarkedMedia } from "./watermarkDownload" with { type: "ref" };
 
 export const videoStudioSpec: Spec = [
   route(
@@ -24,6 +25,10 @@ export const videoStudioSpec: Spec = [
     "/studio",
     page(VideoStudioPage)
   ),
+  api("GET", "/api/video/download", downloadWatermarkedMedia, {
+    entities: ["User"],
+    auth: false,
+  }),
   action(createGenjutsuTask, { entities: ["User", "VideoTask"] }),
   query(getVideoTaskStatus, { entities: ["User", "VideoTask"] }),
   query(getUserVideoTasks, { entities: ["User", "VideoTask"] }),

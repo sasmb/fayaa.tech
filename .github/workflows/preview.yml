@@ -1,0 +1,223 @@
+name: PR Preview Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  deployments: write
+  statuses: write
+
+jobs:
+  pr-preview:
+    name: Cloudflare Workers PR Preview
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install Dependencies & CLIs
+        run: |
+          npm ci || npm install --legacy-peer-deps
+          npm install -g @wasp.sh/wasp-cli@0.26.0 cf
+
+      - name: Compile Wasp Project
+        run: wasp compile
+
+      - name: Run Automated Tests
+        env:
+          REACT_APP_API_URL: http://localhost:3001
+          REACT_APP_PADDLE_CLIENT_TOKEN: test_ci
+          REACT_APP_PADDLE_SANDBOX_MODE: "true"
+        run: npx vitest run --passWithNoTests --environment node
+
+      - name: Build Frontend SPA Bundle
+        env:
+          REACT_APP_API_URL: ${{ vars.STAGING_API_URL || secrets.STAGING_API_URL || 'https://fayaa-studio-server.fly.dev' }}
+          REACT_APP_PADDLE_CLIENT_TOKEN: ${{ vars.STAGING_PADDLE_CLIENT_TOKEN || secrets.STAGING_PADDLE_CLIENT_TOKEN || 'test_preview' }}
+          REACT_APP_PADDLE_SANDBOX_MODE: ${{ vars.STAGING_PADDLE_SANDBOX_MODE || 'true' }}
+        run: npx vite build
+
+      - name: Check Cloudflare Credentials
+        id: check_cf
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$CF_TOKEN" ] && [ -n "$CF_ACCOUNT" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Prepare & Deploy Cloudflare Worker Preview
+        id: cf_preview
+        if: steps.check_cf.outputs.configured == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PR_NUMBER: ${{ github.event.pull_request.number || 'manual' }}
+          BRANCH_SLUG: ${{ github.head_ref || github.ref_name }}
+        run: |
+          node scripts/cf-prepare-preview.mjs
+          if [ "$PR_NUMBER" != "manual" ]; then
+            PREVIEW_NAME="pr-${PR_NUMBER}"
+          else
+            PREVIEW_NAME=$(echo "$BRANCH_SLUG" | tr '[:upper:]/_' '[:lower:]--' | cut -c1-48)
+          fi
+          cf previews deploy --prebuilt "$PREVIEW_NAME" > cf-preview.json
+          cat cf-preview.json
+          PREVIEW_URL=$(node -e '
+            const fs = require("fs");
+            const raw = fs.readFileSync("cf-preview.json", "utf8").replace(/\x1b\[[0-9;]*m/g, "");
+            const objs = [];
+            let start = -1, depth = 0, inStr = false, esc = false;
+            for (let i = 0; i < raw.length; i++) {
+              const ch = raw[i];
+              if (inStr) {
+                if (esc) { esc = false; }
+                else if (ch === "\\") { esc = true; }
+                else if (ch === "\"") { inStr = false; }
+                continue;
+              }
+              if (ch === "\"") { inStr = true; continue; }
+              if (ch === "{") { if (depth === 0) start = i; depth++; }
+              else if (ch === "}") {
+                depth--;
+                if (depth === 0 && start !== -1) {
+                  try { objs.push(JSON.parse(raw.slice(start, i + 1))); } catch {}
+                  start = -1;
+                }
+              }
+            }
+            let base = "";
+            for (const o of objs) {
+              base = (o.preview_urls && o.preview_urls[0]) || (o.preview && o.preview.urls && o.preview.urls[0]) || (o.deployment_urls && o.deployment_urls[0]) || base;
+            }
+            if (!base) process.exit(1);
+            process.stdout.write(base.replace(/\/$/, "") + "/studio");
+          ')
+          echo "url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Validate Cloudflare Build Output (Dry Run)
+        if: steps.check_cf.outputs.configured != 'true'
+        run: |
+          CLOUDFLARE_PREVIEW_BUILD=false node scripts/cf-prepare-preview.mjs
+          cf deploy --prebuilt --dry-run
+
+      - name: Register GitHub Deployment
+        if: steps.check_cf.outputs.configured == 'true' && steps.cf_preview.outputs.url != ''
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.cf_preview.outputs.url }}
+        with:
+          script: |
+            const previewUrl = process.env.PREVIEW_URL;
+            const ref = context.payload.pull_request
+              ? context.payload.pull_request.head.ref
+              : context.ref;
+            const prNum = context.issue?.number || 'manual';
+
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref,
+              environment: 'Preview',
+              description: `Cloudflare Worker Preview for #${prNum}`,
+              required_contexts: [],
+              auto_merge: false,
+            });
+
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.data.id,
+              state: 'success',
+              environment_url: previewUrl,
+              description: 'Cloudflare Worker Preview ready',
+              auto_inactive: true,
+            });
+
+      - name: Post or Update Sticky PR Comment
+        if: github.event.pull_request != null
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_CONFIGURED: ${{ steps.check_cf.outputs.configured }}
+          PREVIEW_URL: ${{ steps.cf_preview.outputs.url }}
+          STAGING_API: ${{ vars.STAGING_API_URL || secrets.STAGING_API_URL || 'https://fayaa-studio-server.fly.dev' }}
+        with:
+          script: |
+            const prNumber = context.issue.number;
+            const configured = process.env.PREVIEW_CONFIGURED === 'true';
+            const previewUrl = process.env.PREVIEW_URL;
+            const stagingApi = process.env.STAGING_API;
+            const branchName = context.payload.pull_request.head.ref;
+            const sha = context.payload.pull_request.head.sha.substring(0, 7);
+
+            const commentBody = configured && previewUrl
+              ? [
+                  '### 🚀 FAYAA Cloudflare PR Preview Ready',
+                  '',
+                  '| Resource | Value |',
+                  '| :--- | :--- |',
+                  `| **Live Studio Preview** | [Open Studio Preview](${previewUrl}) |`,
+                  `| **Fly.io Staging API** | \`${stagingApi}\` |`,
+                  `| **Branch** | \`${branchName}\` (\`${sha}\`) |`,
+                  '| **Status** | ✅ **Deployed on Cloudflare Workers** |',
+                  '',
+                  '---',
+                  '1. Click **[Open Studio Preview](' + previewUrl + ')** or **"View deployment"** above.',
+                  '2. When satisfied, click **Merge pull request** directly on GitHub.'
+                ].join('\n')
+              : [
+                  '### ⚙️ FAYAA PR Build Verified (Cloudflare Secrets Needed for Live URL)',
+                  '',
+                  '| Check | Status |',
+                  '| :--- | :--- |',
+                  '| **Wasp Compile + Vite SPA + Tests** | ✅ Passed |',
+                  '| **Cloudflare Static Assets Dry Run** | ✅ Validated (`cf deploy --prebuilt --dry-run`) |',
+                  `| **Target Fly.io Staging API** | \`${stagingApi}\` |`,
+                  `| **Branch** | \`${branchName}\` (\`${sha}\`) |`,
+                  '',
+                  'Add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in **Settings → Secrets and variables → Actions** to publish live `*.workers.dev` preview URLs automatically on every PR.'
+                ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const botComment = comments.find(
+              (c) =>
+                c.body &&
+                (c.body.includes('### 🚀 FAYAA Cloudflare PR Preview Ready') ||
+                  c.body.includes('### 🚀 FAYAA Studio PR Preview Ready') ||
+                  c.body.includes('### ⚙️ FAYAA PR Build Verified'))
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: commentBody,
+              });
+            }

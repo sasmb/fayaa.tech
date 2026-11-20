@@ -10,6 +10,7 @@
     "@aws-sdk/s3-presigned-post": "^3.750.0",
     "@aws-sdk/s3-request-presigner": "^3.523.0",
     "@base-ui/react": "^1.9.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@google-analytics/data": "4.1.0",
     "@hookform/resolvers": "^5.1.1",
     "@lemonsqueezy/lemonsqueezy.js": "^3.2.0",

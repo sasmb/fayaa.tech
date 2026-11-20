@@ -5,6 +5,7 @@ import { VideoTask } from "wasp/entities";
 import { RefreshCw, Film, AlertCircle, Download, Globe, Lock } from "lucide-react";
 import { FayaaWatermark } from "./FayaaWatermark";
 import { useWatermark } from "../lib/watermark-store";
+import { downloadMedia } from "../hf/lib/studio/download-media";
 
 interface RenderHistoryProps {
   tasks: VideoTask[];
@@ -16,6 +17,7 @@ export function RenderHistory({ tasks, onRefresh }: RenderHistoryProps) {
   const canPublishPublic = Boolean(authUser?.canPublishPublic || authUser?.isAdmin);
   const { watermarkEnabled } = useWatermark(true);
   const [togglingTaskId, setTogglingTaskId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const handleTogglePublic = async (task: VideoTask) => {
     if (!canPublishPublic || togglingTaskId === task.id) return;
@@ -81,7 +83,7 @@ export function RenderHistory({ tasks, onRefresh }: RenderHistoryProps) {
                     className="max-h-full max-w-full object-contain"
                   />
                   {watermarkEnabled && (
-                    <FayaaWatermark size="large" position="bottom-right" />
+                    <FayaaWatermark size="large" position="bottom-right" avoidControls />
                   )}
                 </div>
               ) : (
@@ -128,15 +130,27 @@ export function RenderHistory({ tasks, onRefresh }: RenderHistoryProps) {
                     </button>
                   )}
                   {task.outputVideoUrl && (
-                    <a
-                      href={task.outputVideoUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      download
-                      className="text-lime-400 hover:underline flex items-center gap-1 font-semibold"
+                    <button
+                      type="button"
+                      disabled={downloadingId === task.id}
+                      onClick={() => {
+                        if (!task.outputVideoUrl) return;
+                        setDownloadingId(task.id);
+                        void downloadMedia(
+                          task.outputVideoUrl,
+                          `fayaa-${task.id}.mp4`,
+                          { watermark: watermarkEnabled }
+                        ).finally(() => setDownloadingId(null));
+                      }}
+                      className="text-lime-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer disabled:opacity-60"
                     >
-                      <Download className="w-3 h-3" /> Download MP4
-                    </a>
+                      <Download className="w-3 h-3" />{" "}
+                      {downloadingId === task.id
+                        ? watermarkEnabled
+                          ? "Watermarking..."
+                          : "Downloading..."
+                        : "Download MP4"}
+                    </button>
                   )}
                 </div>
               </div>

@@ -6,7 +6,9 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { Copy, Download, Share2, X } from "lucide-react"
 
 import { Button } from "../ui/button"
+import { FayaaWatermark } from "../../../components/FayaaWatermark"
 import { downloadMedia } from "../../lib/studio/download-media"
+import { useWatermark } from "../../../lib/watermark-store"
 import { cn } from "../../lib/utils"
 
 /**
@@ -73,6 +75,8 @@ export function GenerationDetailModal({
 }: GenerationDetailModalProps) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const { watermarkEnabled, toggleWatermark } = useWatermark(true)
   const isVideo = generation.mediaType === "video"
   const backdrop = isVideo ? generation.poster : generation.src
   const detailRows = rows ?? defaultRows(generation)
@@ -98,34 +102,65 @@ export function GenerationDetailModal({
             />
           ) : null}
           <div className="relative flex min-h-0 flex-1 items-center justify-center p-4 md:p-8">
-            {isVideo ? (
-              <video
-                src={generation.src}
-                poster={generation.poster}
-                controls
-                autoPlay
-                loop
-                playsInline
-                className="max-h-full max-w-full rounded-xl shadow-2xl"
-              />
-            ) : (
-              <img
-                src={generation.src}
-                alt={generation.prompt ?? ""}
-                className="max-h-full max-w-full rounded-xl object-contain shadow-2xl"
-              />
-            )}
+            <div className="relative inline-flex max-h-full max-w-full items-center justify-center">
+              {isVideo ? (
+                <video
+                  src={generation.src}
+                  poster={generation.poster}
+                  controls
+                  autoPlay
+                  loop
+                  playsInline
+                  className="max-h-full max-w-full rounded-xl object-contain shadow-2xl"
+                />
+              ) : (
+                <img
+                  src={generation.src}
+                  alt={generation.prompt ?? ""}
+                  className="max-h-full max-w-full rounded-xl object-contain shadow-2xl"
+                />
+              )}
+              {watermarkEnabled && (
+                <FayaaWatermark
+                  size="hero"
+                  position="bottom-right"
+                  avoidControls={isVideo}
+                />
+              )}
+            </div>
           </div>
           <aside className="relative flex w-full shrink-0 flex-col gap-4 border-t border-white/10 bg-background/70 p-4 backdrop-blur-xl md:m-4 md:w-[360px] md:rounded-2xl md:border">
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-semibold">Generation</span>
-              <DialogPrimitive.Close
-                render={
-                  <Button variant="ghost" size="icon-sm" aria-label="Close" />
-                }
-              >
-                <X />
-              </DialogPrimitive.Close>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={toggleWatermark}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-semibold transition-colors",
+                    watermarkEnabled
+                      ? "border-[#D9FF00]/40 bg-[#D9FF00]/10 text-white"
+                      : "border-white/10 bg-white/5 text-muted-foreground hover:text-white"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full",
+                      watermarkEnabled
+                        ? "bg-[#D9FF00] shadow-[0_0_6px_#D9FF00]"
+                        : "bg-zinc-600"
+                    )}
+                  />
+                  <span>Watermark: {watermarkEnabled ? "ON" : "OFF"}</span>
+                </button>
+                <DialogPrimitive.Close
+                  render={
+                    <Button variant="ghost" size="icon-sm" aria-label="Close" />
+                  }
+                >
+                  <X />
+                </DialogPrimitive.Close>
+              </div>
             </div>
             {generation.prompt ? (
               <div className="flex flex-col gap-1">
@@ -156,9 +191,20 @@ export function GenerationDetailModal({
                 <>
                   <Button
                     className="flex-1"
-                    onClick={() => void downloadMedia(generation.src)}
+                    disabled={downloading}
+                    onClick={() => {
+                      setDownloading(true)
+                      void downloadMedia(generation.src, undefined, {
+                        watermark: watermarkEnabled,
+                      }).finally(() => setDownloading(false))
+                    }}
                   >
-                    <Download /> Download
+                    <Download />{" "}
+                    {downloading
+                      ? watermarkEnabled
+                        ? "Stamping watermark..."
+                        : "Downloading..."
+                      : "Download"}
                   </Button>
                   {generation.prompt ? (
                     <Button
