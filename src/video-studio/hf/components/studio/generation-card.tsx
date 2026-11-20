@@ -152,7 +152,7 @@ export function CardActions({
   const inline = overflow ? actions.slice(0, max - 1) : actions
   const extra = overflow ? actions.slice(max - 1) : []
   return (
-    <div className="pointer-events-none absolute top-2 right-2 z-[2] flex flex-col items-center gap-1.5 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100">
+    <div className="pointer-events-none absolute top-2 right-2 z-[2] flex flex-col items-center gap-1.5 opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100">
       {inline.map((action) => (
         <button
           key={action.id}

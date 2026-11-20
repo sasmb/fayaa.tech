@@ -1,5 +1,8 @@
 import type { PublicShowcaseItem, ShowcaseCategory } from "../video-studio/showcaseService";
 
+export const DEFAULT_SHOWCASE_VIDEO_URL =
+  "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
+
 export type HomepageSectionId =
   | "hero-showcase"
   | "tools-bento"
@@ -72,8 +75,7 @@ export const HERO_SHOWCASE_CARDS: HeroShowcaseCardConfig[] = [
     kind: "genjutsu",
     badgeText: "LIVE NOW",
     comingSoon: false,
-    videoUrl:
-      "https://d3u0tzju9qaucj.cloudfront.net/4f337d0a-8b91-49a0-a8a1-b1231e0187fe/01a193ff-30aa-7895-a568-97ee1d417087/1a93cb6a-1214-48db-b8ec-e903f2efccc3.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
     inputImage:
       "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&q=80",
     outputImage:
@@ -108,8 +110,7 @@ export const HERO_SHOWCASE_CARDS: HeroShowcaseCardConfig[] = [
     kind: "factory",
     badgeText: "COMING SOON",
     comingSoon: true,
-    videoUrl:
-      "https://d3u0tzju9qaucj.cloudfront.net/4f337d0a-8b91-49a0-a8a1-b1231e0187fe/01a193ff-30aa-7895-a568-97ee1d417087/1a93cb6a-1214-48db-b8ec-e903f2efccc3.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
     inputImage:
       "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80",
     outputImage:
@@ -144,8 +145,7 @@ export const COMMUNITY_GENJUTSU_SHOTS: CommunityShotConfig[] = [
     creator: "@kuro_vfx",
     aspect: "landscape",
     src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=80",
-    videoUrl:
-      "https://d3u0tzju9qaucj.cloudfront.net/4f337d0a-8b91-49a0-a8a1-b1231e0187fe/01a193ff-30aa-7895-a568-97ee1d417087/1a93cb6a-1214-48db-b8ec-e903f2efccc3.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
     sourceVideoUrl:
       "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     referenceImageUrl:
@@ -160,8 +160,7 @@ export const COMMUNITY_GENJUTSU_SHOTS: CommunityShotConfig[] = [
     creator: "@neoviral.ai",
     aspect: "portrait",
     src: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=700&q=80",
-    videoUrl:
-      "https://d3u0tzju9qaucj.cloudfront.net/4f337d0a-8b91-49a0-a8a1-b1231e0187fe/01a193ff-30aa-7895-a568-97ee1d417087/1a93cb6a-1214-48db-b8ec-e903f2efccc3.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
     sourceVideoUrl:
       "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     referenceImageUrl:
@@ -190,8 +189,7 @@ export const COMMUNITY_GENJUTSU_SHOTS: CommunityShotConfig[] = [
     creator: "@mira.motion",
     aspect: "landscape",
     src: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=700&q=80",
-    videoUrl:
-      "https://d3u0tzju9qaucj.cloudfront.net/4f337d0a-8b91-49a0-a8a1-b1231e0187fe/01a193ff-30aa-7895-a568-97ee1d417087/1a93cb6a-1214-48db-b8ec-e903f2efccc3.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
     sourceVideoUrl:
       "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     referenceImageUrl:
