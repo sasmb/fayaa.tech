@@ -70,6 +70,8 @@ import { cn } from "../../lib/utils"
 import { ModelSelectorModal } from "../../../components/ModelSelectorModal"
 import { FayaaWatermark } from "../../../components/FayaaWatermark"
 import { useWatermark } from "../../../lib/watermark-store"
+import { downloadMedia } from "../../lib/studio/download-media"
+import { DEFAULT_SHOWCASE_VIDEO_URL } from "../../../../landing-page/homepageConfig"
 import { MOTION_MODELS } from "../../../templates"
 import { estimateLongVideoPlan } from "../../../longVideoPlanning"
 import type { MotionModel, VideoQuality } from "../../../types"
@@ -200,8 +202,7 @@ const COMMUNITY_MASONRY: CommunityExample[] = [
     author: "@fayaa_official",
     category: "trending",
     aspect: "landscape",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-man-dancing-under-changing-lights-1240-large.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
     sourceVideoUrl:
       "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     posterUrl:
@@ -226,8 +227,7 @@ const COMMUNITY_MASONRY: CommunityExample[] = [
     author: "@kora.motion",
     category: "trending",
     aspect: "landscape",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-dancing-40033-large.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
     sourceVideoUrl:
       "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     posterUrl:
@@ -252,8 +252,7 @@ const COMMUNITY_MASONRY: CommunityExample[] = [
     author: "@lux_reels",
     category: "trending",
     aspect: "portrait",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-woman-modeling-in-a-studio-with-colored-lights-42407-large.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
     sourceVideoUrl:
       "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     posterUrl:
@@ -278,8 +277,7 @@ const COMMUNITY_MASONRY: CommunityExample[] = [
     author: "@fayaa_official",
     category: "fayaa",
     aspect: "landscape",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-fashion-model-posing-in-neon-light-39879-large.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
     sourceVideoUrl:
       "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     posterUrl:
@@ -304,8 +302,7 @@ const COMMUNITY_MASONRY: CommunityExample[] = [
     author: "@pitch_vfx",
     category: "trending",
     aspect: "square",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-man-dancing-under-changing-lights-1240-large.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
     sourceVideoUrl:
       "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     posterUrl:
@@ -330,8 +327,7 @@ const COMMUNITY_MASONRY: CommunityExample[] = [
     author: "@fayaa_official",
     category: "new",
     aspect: "landscape",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-dancing-40033-large.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
     sourceVideoUrl:
       "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     posterUrl:
@@ -367,8 +363,7 @@ const MOTION_CONTROL_SAMPLES: MotionControlSample[] = [
     author: "@chloe.dance",
     posterUrl:
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&q=80",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-dancing-40033-large.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
   },
   {
     id: "motion-parking-freestyle",
@@ -376,8 +371,7 @@ const MOTION_CONTROL_SAMPLES: MotionControlSample[] = [
     author: "@marcus_moves",
     posterUrl:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-man-dancing-under-changing-lights-1240-large.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
   },
   {
     id: "motion-living-room-flex",
@@ -385,8 +379,7 @@ const MOTION_CONTROL_SAMPLES: MotionControlSample[] = [
     author: "@tasha_flow",
     posterUrl:
       "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&q=80",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-woman-modeling-in-a-studio-with-colored-lights-42407-large.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
   },
   {
     id: "motion-night-park-groove",
@@ -394,8 +387,7 @@ const MOTION_CONTROL_SAMPLES: MotionControlSample[] = [
     author: "@jaylen_step",
     posterUrl:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-fashion-model-posing-in-neon-light-39879-large.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
   },
   {
     id: "motion-hallway-runway",
@@ -403,8 +395,7 @@ const MOTION_CONTROL_SAMPLES: MotionControlSample[] = [
     author: "@hailey_vogue",
     posterUrl:
       "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&q=80",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-dancing-40033-large.mp4",
+    videoUrl: DEFAULT_SHOWCASE_VIDEO_URL,
   },
 ]
 
@@ -475,11 +466,21 @@ export function GenjutsuWorkbench({
       setTogglingPublicId(null)
     }
   }
-  // Navigation & Mode states
-  const [sidebarTab, setSidebarTab] = useState<TopSidebarTab>("create-video")
-  const [mode, setMode] = useState<GenjutsuMode>("motion-transfer")
+  // Navigation & Mode states (honors ?tab=edit-video|motion-control|create-video)
+  const [sidebarTab, setSidebarTab] = useState<TopSidebarTab>(() => {
+    if (typeof window === "undefined") return "create-video"
+    const tab = new URLSearchParams(window.location.search).get("tab")
+    if (tab === "edit-video" || tab === "motion-control") return tab
+    return "create-video"
+  })
+  const [mode, setMode] = useState<GenjutsuMode>(() => {
+    if (typeof window === "undefined") return "motion-transfer"
+    const tab = new URLSearchParams(window.location.search).get("tab")
+    return tab === "edit-video" ? "object-swap" : "motion-transfer"
+  })
   const [stageTab, setStageTab] = useState<StageTab>("motion-library")
   const [feedFilter, setFeedFilter] = useState<FeedFilter>("trending")
+  const [testingWatermark, setTestingWatermark] = useState<boolean>(false)
 
   // Model selection modal
   const [isModelModalOpen, setIsModelModalOpen] = useState<boolean>(false)
@@ -514,6 +515,15 @@ export function GenjutsuWorkbench({
   } | null>(null)
   const [sourceVideoAspect, setSourceVideoAspect] = useState<string | null>(null)
   const { watermarkEnabled, toggleWatermark } = useWatermark(true)
+
+  const handleTestWatermarkDownload = () => {
+    setTestingWatermark(true)
+    void downloadMedia(
+      DEFAULT_SHOWCASE_VIDEO_URL,
+      watermarkEnabled ? "fayaa-watermark-test.mp4" : "fayaa-clean-test.mp4",
+      { watermark: watermarkEnabled }
+    ).finally(() => setTestingWatermark(false))
+  }
 
   useEffect(() => {
     if (!fullFrameMedia) return
@@ -1027,8 +1037,8 @@ export function GenjutsuWorkbench({
           </nav>
         </div>
 
-        {/* Right Global Actions: Search | Upgrade 30% OFF | Enterprise | Assets | Credits & User */}
-        <div className="flex shrink-0 items-center gap-2">
+        {/* Right Global Actions: Watermark | Search | Upgrade | Assets | Credits & Auth */}
+        <div className="flex min-w-0 shrink-0 items-center gap-2 overflow-x-auto no-scrollbar">
 
           {/* Watermark Toggle (Available for Test & Paying Users) */}
           <button
@@ -1040,10 +1050,10 @@ export function GenjutsuWorkbench({
                 : "Watermark OFF: Click to enable watermark"
             }
             className={cn(
-              "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-all select-none",
+              "inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold whitespace-nowrap transition-all select-none",
               watermarkEnabled
-                ? "border-[#D9FF00]/40 bg-[#D9FF00]/10 text-white hover:bg-[#D9FF00]/20"
-                : "border-white/10 bg-white/[0.03] text-zinc-400 hover:bg-white/[0.08] hover:text-white"
+                ? "border-[#D9FF00]/50 bg-[#D9FF00]/15 text-white hover:bg-[#D9FF00]/25"
+                : "border-white/15 bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08] hover:text-white"
             )}
           >
             <span
@@ -1052,8 +1062,8 @@ export function GenjutsuWorkbench({
                 watermarkEnabled ? "bg-[#D9FF00] shadow-[0_0_8px_#D9FF00]" : "bg-zinc-600"
               )}
             />
-            <span className="font-mono text-[11px] hidden sm:inline">Watermark:</span>
-            <span className={watermarkEnabled ? "text-[#D9FF00] font-bold font-mono text-[11px]" : "text-zinc-400 font-mono text-[11px]"}>
+            <span className="font-mono text-[11px]">Watermark:</span>
+            <span className={watermarkEnabled ? "text-[#D9FF00] font-bold font-mono text-[11px]" : "text-zinc-300 font-bold font-mono text-[11px]"}>
               {watermarkEnabled ? "ON" : "OFF"}
             </span>
           </button>
@@ -1062,14 +1072,14 @@ export function GenjutsuWorkbench({
             type="button"
             onClick={() => setIsModelModalOpen(true)}
             aria-label="Search models and motion library"
-            className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-zinc-400 transition-colors hover:bg-white/[0.08] hover:text-white"
+            className="hidden size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-zinc-400 transition-colors hover:bg-white/[0.08] hover:text-white lg:flex"
           >
             <Search className="size-3.5" />
           </button>
 
           <Link
             to={routes.PricingPageRoute.to}
-            className="relative inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.05] px-3 text-xs font-semibold text-white transition-colors hover:bg-white/[0.1]"
+            className="relative hidden h-8 shrink-0 items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.05] px-3 text-xs font-semibold text-white transition-colors hover:bg-white/[0.1] md:inline-flex"
           >
             <Rocket className="size-3.5 text-[#D9FF00]" />
             <span>Upgrade</span>
@@ -1182,16 +1192,16 @@ export function GenjutsuWorkbench({
                 type="button"
                 onClick={() => void logout()}
                 title="Log out"
-                className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-lg border border-red-500/25 bg-red-500/10 px-2.5 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/20 hover:text-white"
+                className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-red-500/50 bg-red-500/20 px-3 text-xs font-bold whitespace-nowrap text-red-100 transition-colors hover:bg-red-500/35 hover:text-white"
               >
                 <LogOut className="size-3.5" />
-                <span className="hidden sm:inline">Log Out</span>
+                <span>Log Out</span>
               </button>
             </div>
           ) : (
             <Link
               to={routes.LoginRoute.to}
-              className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-[#C8FF00] px-3 text-xs font-bold text-black transition-transform hover:scale-105 hover:bg-[#d8ff3e]"
+              className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-[#C8FF00] px-3.5 text-xs font-extrabold whitespace-nowrap text-black transition-transform hover:scale-105 hover:bg-[#d8ff3e]"
             >
               <LogIn className="size-3.5" />
               <span>Log In</span>
@@ -2477,6 +2487,51 @@ export function GenjutsuWorkbench({
                 </>
               )}
             </Button>
+
+            {/* Always-Visible Account / Log Out Footer inside Studio Sidebar */}
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] bg-[#141417] px-2.5 py-2">
+              {authUser ? (
+                <>
+                  <Link
+                    to={routes.AccountRoute.to}
+                    className="flex min-w-0 flex-1 items-center gap-2 text-xs font-medium text-zinc-200 hover:text-white"
+                  >
+                    <img
+                      src={getUserAvatarUrl(authUser)}
+                      alt="User avatar"
+                      className="size-6 shrink-0 rounded-full bg-white object-cover"
+                    />
+                    <span className="truncate">
+                      {authUser.email || authUser.username || "Profile"}
+                    </span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => void logout()}
+                    className="inline-flex h-7 shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-red-500/50 bg-red-500/20 px-2.5 text-[11px] font-bold text-red-100 transition-colors hover:bg-red-500/35 hover:text-white"
+                  >
+                    <LogOut className="size-3" />
+                    <span>Log Out</span>
+                  </button>
+                </>
+              ) : (
+                <div className="flex w-full items-center gap-2">
+                  <Link
+                    to={routes.LoginRoute.to}
+                    className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#D9FF00] text-xs font-extrabold text-black hover:bg-[#e3ff38]"
+                  >
+                    <LogIn className="size-3.5" />
+                    <span>Log In</span>
+                  </Link>
+                  <Link
+                    to={routes.SignupRoute.to}
+                    className="inline-flex h-8 flex-1 items-center justify-center rounded-lg border border-white/15 bg-white/[0.06] text-xs font-bold text-white hover:bg-white/[0.12]"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </aside>
 
@@ -2567,26 +2622,48 @@ export function GenjutsuWorkbench({
               )}
             </Tabs>
 
-            {/* Active In-Flight Telemetry Pill */}
-            {activeGeneratingRun ? (
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#D9FF00]/30 bg-[#D9FF00]/10 px-3 py-1 text-xs font-medium text-[#D9FF00]">
-                <Loader2 className="size-3.5 animate-spin" />
+            {/* Active In-Flight Telemetry & Instant Watermark Test Actions */}
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                disabled={testingWatermark}
+                onClick={handleTestWatermarkDownload}
+                className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-2.5 text-[11px] font-bold text-white transition-colors hover:border-[#D9FF00]/50 hover:bg-white/[0.1] disabled:opacity-60"
+              >
+                {testingWatermark ? (
+                  <Loader2 className="size-3 animate-spin text-[#D9FF00]" />
+                ) : (
+                  <Download className="size-3 text-[#D9FF00]" />
+                )}
                 <span>
-                  Status: Processing Video •{" "}
-                  {String(Math.floor(elapsedSec / 60)).padStart(2, "0")}:
-                  {String(elapsedSec % 60).padStart(2, "0")}
+                  {testingWatermark
+                    ? "Stamping MP4…"
+                    : watermarkEnabled
+                      ? "Test Watermark MP4"
+                      : "Download Clean Sample"}
                 </span>
-                <button
-                  type="button"
-                  disabled={canceling}
-                  onClick={onCancelGenerating}
-                  aria-label="Cancel generation"
-                  className="ml-1 inline-flex cursor-pointer items-center rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-zinc-200 transition-colors hover:bg-red-500/80 hover:text-white disabled:opacity-50"
-                >
-                  {canceling ? "Canceling…" : "Cancel"}
-                </button>
-              </div>
-            ) : null}
+              </button>
+
+              {activeGeneratingRun ? (
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#D9FF00]/30 bg-[#D9FF00]/10 px-3 py-1 text-xs font-medium text-[#D9FF00]">
+                  <Loader2 className="size-3.5 animate-spin" />
+                  <span>
+                    Status: Processing Video •{" "}
+                    {String(Math.floor(elapsedSec / 60)).padStart(2, "0")}:
+                    {String(elapsedSec % 60).padStart(2, "0")}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={canceling}
+                    onClick={onCancelGenerating}
+                    aria-label="Cancel generation"
+                    className="ml-1 inline-flex cursor-pointer items-center rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-zinc-200 transition-colors hover:bg-red-500/80 hover:text-white disabled:opacity-50"
+                  >
+                    {canceling ? "Canceling…" : "Cancel"}
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
 
           {/* Scrollable Stage Content Area */}
@@ -3026,8 +3103,17 @@ export function GenjutsuWorkbench({
                                     : []),
                                   {
                                     id: "download",
-                                    label: "Download MP4",
+                                    label: watermarkEnabled
+                                      ? "Download MP4 (Watermarked)"
+                                      : "Download MP4 (Clean)",
                                     icon: Download,
+                                    onSelect: () => {
+                                      void downloadMedia(
+                                        videoUrl,
+                                        `fayaa-${run.id}.mp4`,
+                                        { watermark: watermarkEnabled }
+                                      )
+                                    },
                                   },
                                 ]
                                 : undefined

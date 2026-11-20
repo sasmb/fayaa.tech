@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { ArrowRight, Download, Play, WandSparkles } from "lucide-react";
+import { ArrowRight, Download, Loader2, Play, WandSparkles } from "lucide-react";
 
 import type { CommunityShotConfig } from "../../homepageConfig";
-import { HOMEPAGE_COMMUNITY_CONFIG } from "../../homepageConfig";
+import {
+  DEFAULT_SHOWCASE_VIDEO_URL,
+  HOMEPAGE_COMMUNITY_CONFIG,
+} from "../../homepageConfig";
+import { FayaaWatermark } from "../../../video-studio/components/FayaaWatermark";
+import { useWatermark } from "../../../video-studio/lib/watermark-store";
+import { downloadMedia } from "../../../video-studio/hf/lib/studio/download-media";
 import type { ShowcaseCategory } from "../../../video-studio/showcaseService";
 import { Button } from "../../../video-studio/hf/components/ui/button";
 import {
@@ -18,6 +24,8 @@ interface CommunityShowcaseSectionProps {
   shots: CommunityShotConfig[];
   onNavigateStudio: () => void;
   onRemixShot: (shot: CommunityShotConfig) => void;
+  watermarkEnabled?: boolean;
+  onToggleWatermark?: () => void;
   ariaLabel?: string;
 }
 
@@ -29,15 +37,31 @@ export function CommunityShowcaseSection({
   shots,
   onNavigateStudio,
   onRemixShot,
+  watermarkEnabled: controlledWatermarkEnabled,
+  onToggleWatermark,
   ariaLabel = "FAYAA Genjutsu by Community",
 }: CommunityShowcaseSectionProps) {
   const [communityFilter, setCommunityFilter] =
     useState<ShowcaseCategory>("all");
+  const [downloadingSample, setDownloadingSample] = useState(false);
+  const localWatermark = useWatermark(true);
+  const watermarkEnabled =
+    controlledWatermarkEnabled ?? localWatermark.watermarkEnabled;
+  const toggleWatermark = onToggleWatermark ?? localWatermark.toggleWatermark;
 
   const filteredShots =
     communityFilter === "all"
       ? shots
       : shots.filter((s) => s.category === communityFilter);
+
+  const handleSampleWatermarkDownload = () => {
+    setDownloadingSample(true);
+    void downloadMedia(
+      DEFAULT_SHOWCASE_VIDEO_URL,
+      watermarkEnabled ? "fayaa-watermark-sample.mp4" : "fayaa-clean-sample.mp4",
+      { watermark: watermarkEnabled }
+    ).finally(() => setDownloadingSample(false));
+  };
 
   return (
     <section
@@ -72,8 +96,8 @@ export function CommunityShowcaseSection({
         </div>
       </div>
 
-      {/* Category Filter Tabs */}
-      <div className="flex items-center justify-between gap-4">
+      {/* Category Filter Tabs & Watermark Tester */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs
           value={communityFilter}
           onValueChange={(v) => setCommunityFilter(v as ShowcaseCategory)}
@@ -87,62 +111,124 @@ export function CommunityShowcaseSection({
           </TabsList>
         </Tabs>
 
-        <Link
-          to="/studio"
-          className="hidden items-center gap-1.5 text-xs font-semibold text-[#C8FF00] hover:underline sm:inline-flex"
-        >
-          <span>{HOMEPAGE_COMMUNITY_CONFIG.workbenchLinkLabel}</span>
-          <ArrowRight className="size-3.5" />
-        </Link>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={toggleWatermark}
+            className={cn(
+              "inline-flex h-9 cursor-pointer items-center gap-2 rounded-xl border px-3 text-xs font-bold transition-colors",
+              watermarkEnabled
+                ? "border-[#C8FF00]/50 bg-[#C8FF00]/15 text-white hover:bg-[#C8FF00]/25"
+                : "border-white/15 bg-[#141417] text-zinc-300 hover:border-white/30"
+            )}
+          >
+            <span
+              className={cn(
+                "size-2 rounded-full",
+                watermarkEnabled
+                  ? "bg-[#C8FF00] shadow-[0_0_8px_#C8FF00]"
+                  : "bg-zinc-600"
+              )}
+            />
+            <span>Watermark: {watermarkEnabled ? "ON" : "OFF"}</span>
+          </button>
+
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={downloadingSample}
+            onClick={handleSampleWatermarkDownload}
+            className="h-9 rounded-xl border-white/20 bg-[#141417] px-3.5 text-xs font-bold text-white hover:border-[#C8FF00]/60 hover:bg-[#1C1C22]"
+          >
+            {downloadingSample ? (
+              <Loader2 className="size-3.5 animate-spin text-[#C8FF00]" />
+            ) : (
+              <Download className="size-3.5 text-[#C8FF00]" />
+            )}
+            <span>
+              {downloadingSample
+                ? watermarkEnabled
+                  ? "Stamping Watermark MP4…"
+                  : "Downloading MP4…"
+                : watermarkEnabled
+                  ? "Test Watermarked MP4"
+                  : "Download Clean Sample MP4"}
+            </span>
+          </Button>
+
+          <Link
+            to="/studio"
+            className="hidden items-center gap-1.5 text-xs font-semibold text-[#C8FF00] hover:underline sm:inline-flex"
+          >
+            <span>{HOMEPAGE_COMMUNITY_CONFIG.workbenchLinkLabel}</span>
+            <ArrowRight className="size-3.5" />
+          </Link>
+        </div>
       </div>
 
       {/* 6-Column Community Masonry Grid */}
       <div className="columns-1 gap-3.5 space-y-3.5 sm:columns-2 md:columns-3 lg:columns-6">
-        {filteredShots.map((shot) => (
-          <div
-            key={shot.id}
-            className="break-inside-avoid overflow-hidden rounded-2xl border border-white/10 bg-[#141417]"
-          >
-            <GenerationTile
-              state="ready"
-              src={shot.src}
-              alt={shot.title}
-              title={`${shot.title} • ${shot.creator}`}
-              generation={{
-                src: shot.videoUrl ?? shot.src,
-                mediaType: shot.videoUrl ? "video" : "image",
-                poster: shot.src || undefined,
-                prompt: shot.prompt,
-                model: "Higgsfield Genjutsu V1.0",
-                aspectRatio: shot.aspect === "portrait" ? 9 / 16 : 16 / 9,
-              }}
-              actions={[
-                {
-                  id: "remix",
-                  label: "Remix in Studio",
-                  icon: WandSparkles,
-                  onSelect: () => onRemixShot(shot),
-                },
-                {
-                  id: "download",
-                  label: "Download",
-                  icon: Download,
-                },
-              ]}
-              className={cn(
-                "w-full",
-                shot.aspect === "portrait" ? "aspect-[9/14]" : "aspect-[16/10]"
-              )}
+        {filteredShots.map((shot) => {
+          const mediaDownloadUrl = shot.videoUrl ?? shot.src;
+          return (
+            <div
+              key={shot.id}
+              className="break-inside-avoid overflow-hidden rounded-2xl border border-white/10 bg-[#141417]"
             >
-              <div className="pointer-events-none absolute top-2.5 left-2.5 z-[2] flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-1 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-bold text-[#C8FF00] backdrop-blur-xs">
-                  <Play className="size-2.5 fill-current" />
-                  {shot.isFromStorage ? "Community" : "Genjutsu"}
-                </span>
-              </div>
-            </GenerationTile>
-          </div>
-        ))}
+              <GenerationTile
+                state="ready"
+                src={shot.src}
+                alt={shot.title}
+                title={`${shot.title} • ${shot.creator}`}
+                generation={{
+                  src: mediaDownloadUrl,
+                  mediaType: shot.videoUrl ? "video" : "image",
+                  poster: shot.src || undefined,
+                  prompt: shot.prompt,
+                  model: "Higgsfield Genjutsu V1.0",
+                  aspectRatio: shot.aspect === "portrait" ? 9 / 16 : 16 / 9,
+                }}
+                actions={[
+                  {
+                    id: "remix",
+                    label: "Remix in Studio",
+                    icon: WandSparkles,
+                    onSelect: () => onRemixShot(shot),
+                  },
+                  {
+                    id: "download",
+                    label: watermarkEnabled
+                      ? "Download with Watermark"
+                      : "Download Clean",
+                    icon: Download,
+                    onSelect: () => {
+                      void downloadMedia(
+                        mediaDownloadUrl,
+                        `fayaa-${shot.id}.${shot.videoUrl ? "mp4" : "jpg"}`,
+                        { watermark: watermarkEnabled }
+                      );
+                    },
+                  },
+                ]}
+                className={cn(
+                  "w-full",
+                  shot.aspect === "portrait" ? "aspect-[9/14]" : "aspect-[16/10]"
+                )}
+              >
+                <div className="pointer-events-none absolute top-2.5 left-2.5 z-[2] flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-bold text-[#C8FF00] backdrop-blur-xs">
+                    <Play className="size-2.5 fill-current" />
+                    {shot.isFromStorage ? "Community" : "Genjutsu"}
+                  </span>
+                </div>
+                {watermarkEnabled ? (
+                  <FayaaWatermark size="default" position="bottom-right" />
+                ) : null}
+              </GenerationTile>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

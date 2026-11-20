@@ -226,7 +226,7 @@ export function AccountPage({ user }: AccountPageProps) {
           <button
             type="button"
             onClick={() => void logout()}
-            className="flex items-center gap-1.5 bg-[#141417] border border-[#2b2b35] hover:border-red-500/40 text-zinc-300 hover:text-red-400 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap bg-red-500/20 border border-red-500/50 hover:bg-red-500/35 text-red-100 hover:text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all cursor-pointer"
             title="Log out of your account"
           >
             <LogOut className="w-3.5 h-3.5" />
