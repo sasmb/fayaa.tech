@@ -36,6 +36,7 @@ import {
 } from "lucide-react"
 
 import { logout, useAuth } from "wasp/client/auth"
+import { toggleVideoPublicVisibility } from "wasp/client/operations"
 import { routes } from "wasp/client/router"
 
 import { getUserAvatarUrl } from "../../../../user/defaultAvatar"
@@ -451,6 +452,28 @@ export function GenjutsuWorkbench({
   onCancelGenerating,
 }: GenjutsuWorkbenchProps) {
   const { data: authUser } = useAuth()
+  const canPublishPublic = Boolean(authUser?.canPublishPublic || authUser?.isAdmin)
+  const [publicOverrides, setPublicOverrides] = useState<Record<string, boolean>>({})
+  const [togglingPublicId, setTogglingPublicId] = useState<string | null>(null)
+
+  const handleToggleRunPublic = async (run: RunRecord) => {
+    if (!canPublishPublic || !run.taskId || togglingPublicId === run.taskId) return
+    const currentlyPublic = publicOverrides[run.id] ?? Boolean(run.isPublic)
+    const nextPublic = !currentlyPublic
+    setTogglingPublicId(run.taskId)
+    setPublicOverrides((prev) => ({ ...prev, [run.id]: nextPublic }))
+    try {
+      await toggleVideoPublicVisibility({
+        taskId: run.taskId,
+        isPublic: nextPublic,
+        publicCategory: "ugc",
+      })
+    } catch {
+      setPublicOverrides((prev) => ({ ...prev, [run.id]: currentlyPublic }))
+    } finally {
+      setTogglingPublicId(null)
+    }
+  }
   // Navigation & Mode states
   const [sidebarTab, setSidebarTab] = useState<TopSidebarTab>("create-video")
   const [mode, setMode] = useState<GenjutsuMode>("motion-transfer")
@@ -2865,6 +2888,8 @@ export function GenjutsuWorkbench({
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       {genjutsuRuns.map((run) => {
                         const videoUrl = run.urls?.[0]
+                        const isPublicRun =
+                          publicOverrides[run.id] ?? Boolean(run.isPublic)
                         const tileState =
                           run.status === "completed"
                             ? "ready"
@@ -2905,6 +2930,11 @@ export function GenjutsuWorkbench({
                                     playsInline
                                     className="size-full object-contain"
                                   />
+                                  {isPublicRun && (
+                                    <span className="pointer-events-none absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-[#C8FF00] px-2 py-0.5 text-[10px] font-black text-black uppercase shadow">
+                                      <Globe className="size-3" /> Public
+                                    </span>
+                                  )}
                                   {watermarkEnabled && (
                                     <FayaaWatermark size="default" position="bottom-right" />
                                   )}
@@ -2923,6 +2953,22 @@ export function GenjutsuWorkbench({
                                       setPromptEnabled(true)
                                     },
                                   },
+                                  ...(canPublishPublic &&
+                                  run.taskId &&
+                                  run.status === "completed"
+                                    ? [
+                                        {
+                                          id: "toggle-public",
+                                          label: isPublicRun
+                                            ? "Make Private"
+                                            : "Publish to Showcase",
+                                          icon: Globe,
+                                          onSelect: () => {
+                                            void handleToggleRunPublic(run)
+                                          },
+                                        },
+                                      ]
+                                    : []),
                                   {
                                     id: "download",
                                     label: "Download MP4",

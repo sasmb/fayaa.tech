@@ -21,6 +21,9 @@ export interface RunRecord {
   status: RunStatus
   /** Result URLs: one video or N images. */
   urls: string[]
+  /** Optional persisted database VideoTask id and public visibility state. */
+  taskId?: string
+  isPublic?: boolean
   error?: string
   createdAt: number
 }

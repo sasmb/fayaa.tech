@@ -81,6 +81,8 @@ export function useRuns(userId?: string | null) {
           byRequestId.set(task.requestId, {
             id: task.requestId,
             requestId: task.requestId,
+            taskId: task.id,
+            isPublic: Boolean(task.isPublic),
             surface: "video",
             modelId: "genjutsu",
             modelLabel: "Higgsfield Genjutsu",
@@ -92,12 +94,18 @@ export function useRuns(userId?: string | null) {
             ...(task.error ? { error: task.error } : {}),
             createdAt: new Date(task.createdAt).getTime(),
           })
-        } else if (mappedStatus === "completed" && existing.status !== "completed") {
+        } else {
           byRequestId.set(task.requestId, {
             ...existing,
-            status: "completed",
-            urls: [task.outputVideoUrl!],
-            error: undefined,
+            taskId: task.id,
+            isPublic: Boolean(task.isPublic),
+            ...(mappedStatus === "completed" && existing.status !== "completed"
+              ? {
+                  status: "completed",
+                  urls: [task.outputVideoUrl!],
+                  error: undefined,
+                }
+              : {}),
           })
         }
       }

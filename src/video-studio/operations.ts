@@ -1,5 +1,7 @@
 import { HttpError } from "wasp/server";
-import type { VideoTask } from "wasp/entities";
+import type { File, VideoTask } from "wasp/entities";
+import { getDownloadFileSignedURLFromS3 } from "../file-upload/s3Utils";
+import { getCuratedHomepageStorageKeys } from "../landing-page/homepageConfig";
 import { getModel, parseSettings } from "./hf/generation/catalog";
 import type { GenerationPlane } from "./hf/generation/catalog/types";
 import { urls } from "./hf/generation/catalog/mappers";
@@ -18,6 +20,14 @@ import {
   requireUploadContentType,
   type UploadTicket,
 } from "./hf/generation/upload-contract";
+import {
+  resolvePublicHomepageShowcase,
+  setFilePublicVisibility,
+  setVideoTaskPublicVisibility,
+  type PublicHomepageShowcasePayload,
+  type ToggleFilePublicInput,
+  type ToggleVideoPublicInput,
+} from "./showcaseService";
 import { creditCostForResolution, syncVideoTaskStatus } from "./taskSync";
 
 const DEFAULT_HF_BASE_URL = "https://api.higgsfield.ai";
@@ -479,6 +489,12 @@ export const createGenjutsuTask = async (
     resolution,
     status: "PROCESSING",
     error: null,
+    isPublic: false,
+    featuredOnHome: false,
+    publicTitle: null,
+    publicCategory: null,
+    storageKey: null,
+    posterUrl: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -516,5 +532,40 @@ export const getUserVideoTasks = async (
   return context.entities.VideoTask.findMany({
     where: { userId: context.user.id },
     orderBy: { createdAt: "desc" },
+  });
+};
+
+export const getPublicHomepageShowcase = async (
+  _args: void,
+  context: any
+): Promise<PublicHomepageShowcasePayload> => {
+  return resolvePublicHomepageShowcase({
+    entities: context.entities,
+    curatedStorageKeys: getCuratedHomepageStorageKeys(),
+    resolveStorageKey: (s3Key) => getDownloadFileSignedURLFromS3({ s3Key }),
+  });
+};
+
+export const toggleVideoPublicVisibility = async (
+  args: ToggleVideoPublicInput,
+  context: any
+): Promise<VideoTask> => {
+  return setVideoTaskPublicVisibility({
+    args,
+    user: context.user,
+    entities: context.entities,
+    createHttpError: (status, message) => new HttpError(status, message),
+  });
+};
+
+export const toggleFilePublicVisibility = async (
+  args: ToggleFilePublicInput,
+  context: any
+): Promise<File> => {
+  return setFilePublicVisibility({
+    args,
+    user: context.user,
+    entities: context.entities,
+    createHttpError: (status, message) => new HttpError(status, message),
   });
 };
