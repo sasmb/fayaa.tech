@@ -14,6 +14,7 @@ model User {
   email                     String?         @unique
   username                  String?         @unique
   isAdmin                   Boolean         @default(false)
+  canPublishPublic          Boolean         @default(false)
 
   name                      String?
   showNamePublicly          Boolean         @default(false)
@@ -54,6 +55,9 @@ model File {
   name                      String
   type                      String
   s3Key                     String
+  isPublic                  Boolean         @default(false)
+
+  @@index([isPublic])
 }
 
 model DailyStats {
@@ -117,11 +121,18 @@ model VideoTask {
   resolution         String    @default("720p") // "480p" | "720p" | "1080p"
   status             String    @default("PENDING") // "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED"
   error              String?
+  isPublic           Boolean   @default(false)
+  featuredOnHome     Boolean   @default(false)
+  publicTitle        String?
+  publicCategory     String?
+  storageKey         String?
+  posterUrl          String?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
   @@index([userId])
   @@index([status])
+  @@index([isPublic, featuredOnHome])
 }
 
 model LongVideoJob {

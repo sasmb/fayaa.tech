@@ -26,6 +26,9 @@ export interface RunRecord {
   longVideoProgressLabel?: string
   segmentCount?: number
   completedCount?: number
+  /** Optional persisted database VideoTask id and public visibility state. */
+  taskId?: string
+  isPublic?: boolean
   error?: string
   createdAt: number
 }

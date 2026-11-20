@@ -3,6 +3,8 @@ import React from "react"
 export interface FayaaWatermarkProps {
   position?: "bottom-right" | "bottom-left" | "top-right" | "top-left"
   size?: "default" | "large" | "hero"
+  /** Lift bottom anchors above native HTML5 <video controls> bars. */
+  avoidControls?: boolean
   className?: string
 }
 
@@ -13,11 +15,14 @@ export interface FayaaWatermarkProps {
 export function FayaaWatermark({
   position = "bottom-right",
   size = "large",
+  avoidControls = false,
   className = "",
 }: FayaaWatermarkProps) {
+  const bottomOffset = avoidControls ? "bottom-12 sm:bottom-14" : "bottom-3 sm:bottom-4"
+
   const positionClasses = {
-    "bottom-right": "bottom-3 right-3 sm:bottom-4 sm:right-4",
-    "bottom-left": "bottom-3 left-3 sm:bottom-4 sm:left-4",
+    "bottom-right": `${bottomOffset} right-3 sm:right-4`,
+    "bottom-left": `${bottomOffset} left-3 sm:left-4`,
     "top-right": "top-3 right-3 sm:top-4 sm:right-4",
     "top-left": "top-3 left-3 sm:top-4 sm:left-4",
   }[position]

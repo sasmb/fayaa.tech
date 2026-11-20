@@ -1,4 +1,4 @@
-import { action, job, page, query, route, type Spec } from "@wasp.sh/spec";
+import { action, api, job, page, query, route, type Spec } from "@wasp.sh/spec";
 
 import { VideoStudioPage } from "./VideoStudioPage" with { type: "ref" };
 import {
@@ -9,6 +9,9 @@ import {
   getLongVideoJobStatus,
   getUserLongVideoJobs,
   cancelLongVideoJob,
+  getPublicHomepageShowcase,
+  toggleVideoPublicVisibility,
+  toggleFilePublicVisibility,
   hfSubmitGeneration,
   hfGetGenerationStatuses,
   hfCancelGeneration,
@@ -18,6 +21,7 @@ import {
   hfCreateUploadTicket,
 } from "./operations" with { type: "ref" };
 import { checkVideoTasksJob } from "./jobs" with { type: "ref" };
+import { downloadWatermarkedMedia } from "./watermarkDownload" with { type: "ref" };
 
 export const videoStudioSpec: Spec = [
   route(
@@ -25,6 +29,10 @@ export const videoStudioSpec: Spec = [
     "/studio",
     page(VideoStudioPage)
   ),
+  api("GET", "/api/video/download", downloadWatermarkedMedia, {
+    entities: ["User"],
+    auth: false,
+  }),
   action(createGenjutsuTask, { entities: ["User", "VideoTask"] }),
   query(getVideoTaskStatus, { entities: ["User", "VideoTask"] }),
   query(getUserVideoTasks, { entities: ["User", "VideoTask"] }),
@@ -32,6 +40,9 @@ export const videoStudioSpec: Spec = [
   query(getLongVideoJobStatus, { entities: ["User", "LongVideoJob", "LongVideoSegment"] }),
   query(getUserLongVideoJobs, { entities: ["User", "LongVideoJob", "LongVideoSegment"] }),
   action(cancelLongVideoJob, { entities: ["User", "LongVideoJob", "LongVideoSegment"] }),
+  query(getPublicHomepageShowcase, { entities: ["VideoTask", "File"], auth: false }),
+  action(toggleVideoPublicVisibility, { entities: ["User", "VideoTask"] }),
+  action(toggleFilePublicVisibility, { entities: ["User", "File"] }),
   action(hfSubmitGeneration, { entities: ["User", "VideoTask"] }),
   action(hfGetGenerationStatuses, { entities: ["User", "VideoTask"] }),
   action(hfCancelGeneration, { entities: ["User", "VideoTask"] }),

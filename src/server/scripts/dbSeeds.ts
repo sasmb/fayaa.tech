@@ -43,6 +43,7 @@ function generateMockUserData(): MockUserData {
     username: faker.internet.userName({ firstName, lastName }),
     createdAt,
     isAdmin: false,
+    canPublishPublic: false,
     name: `${firstName} ${lastName}`,
     showNamePublicly: false,
     avatarUrl: null,
