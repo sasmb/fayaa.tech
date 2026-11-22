@@ -1,6 +1,10 @@
 import { useEffect } from "react";
-import { StudioSubscriptionPanel } from "../video-studio/hf/components/studio/subscription-panel";
+import {
+  StudioSubscriptionPanel,
+  getVisiblePricingOffers,
+} from "../video-studio/hf/components/studio/subscription-panel";
 import { PaymentPlanId, prettyPaymentPlanName } from "./plans";
+import { buildPricingOfferCatalog } from "./pricingSchema";
 
 interface PaymentPlanCard {
   name: string;
@@ -51,6 +55,7 @@ export const paymentPlanCards: Partial<Record<PaymentPlanId, PaymentPlanCard>> =
 };
 
 export function PricingPage() {
+  const offers = getVisiblePricingOffers();
   useEffect(() => {
     const html = document.documentElement;
     const prevTheme = html.getAttribute("data-theme");
@@ -66,6 +71,9 @@ export function PricingPage() {
 
   return (
     <div className="min-h-dvh bg-background">
+      <script type="application/ld+json">
+        {JSON.stringify(buildPricingOfferCatalog(offers))}
+      </script>
       <StudioSubscriptionPanel />
     </div>
   );

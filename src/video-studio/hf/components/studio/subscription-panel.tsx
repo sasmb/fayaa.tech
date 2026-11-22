@@ -169,6 +169,31 @@ const FIXED_CREDIT_PACKS: FixedCreditPack[] = [
   },
 ]
 
+/** Schema prices mirror the pricing page's default visible selections. */
+export function getVisiblePricingOffers() {
+  const plusMonthlyEquivalent = 39
+  const ultraMonthlyEquivalent = ULTRA_TIERS["3k"].yearlyMonthlyPrice
+  return [
+    {
+      name: "FAYAA Plus (Annual)",
+      price: plusMonthlyEquivalent * 12,
+      priceCurrency: "USD",
+      billingDuration: "P1Y",
+    },
+    {
+      name: "FAYAA Ultra (Annual)",
+      price: ultraMonthlyEquivalent * 12,
+      priceCurrency: "USD",
+      billingDuration: "P1Y",
+    },
+    ...FIXED_CREDIT_PACKS.map((pack) => ({
+      name: `${pack.credits.toLocaleString("en-US")} Credit Pack`,
+      price: Number(pack.price.replace(/[^0-9.]/g, "")),
+      priceCurrency: "USD",
+    })),
+  ]
+}
+
 const EXTRA_UNLIMITED_MODELS = [
   "FAYAA Genjutsu Light 720p",
   "FAYAA Genjutsu Light 1080p",
