@@ -9,6 +9,7 @@ import {
   marketingNavigationItems,
 } from "./components/NavBar/constants";
 import { CookieConsentBanner } from "./components/cookie-consent/Banner";
+import { RouteMetadata } from "./RouteMetadata";
 
 /**
  * use this component to wrap all child components
@@ -58,6 +59,7 @@ export function App() {
 
   return (
     <>
+      <RouteMetadata path={location.pathname} />
       <div className="bg-background text-foreground min-h-screen">
         {isAdminDashboard ? (
           <Outlet />
@@ -66,7 +68,13 @@ export function App() {
             {shouldDisplayAppNavBar && (
               <NavBar navigationItems={navigationItems} />
             )}
-            <div className={shouldDisplayAppNavBar ? "max-w-(--breakpoint-2xl) mx-auto" : "w-full"}>
+            <div
+              className={
+                shouldDisplayAppNavBar
+                  ? "max-w-(--breakpoint-2xl) mx-auto"
+                  : "w-full"
+              }
+            >
               <Outlet />
             </div>
           </>

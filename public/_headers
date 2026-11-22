@@ -1,0 +1,29 @@
+/studio
+  X-Robots-Tag: noindex, follow
+
+/login
+  X-Robots-Tag: noindex, follow
+
+/signup
+  X-Robots-Tag: noindex, follow
+
+/request-password-reset
+  X-Robots-Tag: noindex, follow
+
+/password-reset
+  X-Robots-Tag: noindex, follow
+
+/email-verification
+  X-Robots-Tag: noindex, follow
+
+/account
+  X-Robots-Tag: noindex, nofollow
+
+/checkout
+  X-Robots-Tag: noindex, nofollow
+
+/admin
+  X-Robots-Tag: noindex, nofollow
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow
