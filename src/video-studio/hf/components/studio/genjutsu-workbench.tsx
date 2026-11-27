@@ -71,7 +71,10 @@ import { ModelSelectorModal } from "../../../components/ModelSelectorModal"
 import { FayaaWatermark } from "../../../components/FayaaWatermark"
 import { useWatermark } from "../../../lib/watermark-store"
 import { MOTION_MODELS } from "../../../templates"
-import { estimateLongVideoPlan } from "../../../longVideoPlanning"
+import {
+  estimateLongVideoPlan,
+  maxClipDurationSec,
+} from "../../../longVideoPlanning"
 import type { MotionModel, VideoQuality } from "../../../types"
 
 import { AssetLibraryModal } from "./asset-library"
@@ -687,7 +690,7 @@ export function GenjutsuWorkbench({
       const uploaded = await handleAssetUpload(file)
       if (uploaded.kind !== "video") {
         throw new Error(
-          "Please upload an MP4, MOV, or WebM video (4s to 30s)."
+          "Please upload an MP4, MOV, or WebM video (4s or longer)."
         )
       }
       applyVideoSelection(uploaded)
@@ -858,8 +861,8 @@ export function GenjutsuWorkbench({
     if (!sourceVideo) {
       setLocalError(
         sidebarTab === "motion-control"
-          ? "Add a source motion video (4s or longer — >30s auto-splits cleanly)."
-          : "Add a reference video (4s or longer — >30s auto-splits cleanly)."
+          ? "Add a source motion video (4s or longer, long videos auto-split cleanly)."
+          : "Add a reference video (4s or longer, long videos auto-split cleanly)."
       )
       return
     }
@@ -900,19 +903,27 @@ export function GenjutsuWorkbench({
       .filter(Boolean)
       .join(" ")
 
-    const isLongForm = selectedDurationSec > 30
+    const variant =
+      selectedMotionModel.id === "higgsfield/genjutsu/motion-transfer/v1.0"
+        ? "pro"
+        : "light"
+    // Light renders at most 15s per request and Pro 30s. Anything longer is split into
+    // clips and stitched on the server, otherwise the model silently cuts the output.
+    const clipLimitSec = maxClipDurationSec(variant)
+    // A trimmed selection is also cut on the server: the single-request path always
+    // sends the whole file, so the chosen start/end would otherwise be ignored.
+    const isTrimmed =
+      trimRange.start > 0.05 || trimRange.end < videoDuration - 0.05
+    const isLongForm = selectedDurationSec > clipLimitSec || isTrimmed
     const plane: GenerationPlane = {
       model: genjutsu.id,
       prompt: { text: composedPrompt },
       settings: {
         resolution,
-        variant:
-          selectedMotionModel.id === "higgsfield/genjutsu/motion-transfer/v1.0"
-            ? "pro"
-            : "light",
+        variant,
         duration: isLongForm
           ? selectedDurationSec
-          : Math.max(4, Math.min(30, Math.round(selectedDurationSec))),
+          : Math.max(4, Math.min(clipLimitSec, Math.round(selectedDurationSec))),
         ...(isLongForm
           ? { trimStartSec: trimRange.start, longForm: true }
           : {}),
@@ -1396,7 +1407,7 @@ export function GenjutsuWorkbench({
               <ChevronRight className="mt-0.5 size-3.5 shrink-0 text-[#D9FF00]" />
               <span>
                 <strong className="text-[#D9FF00]">Videos up to 2+ min supported:</strong>{" "}
-                uploads over 30s auto-split into 30s passes and return one final video.
+                long uploads auto-split into 15s (Light) or 30s (Pro) passes and return one final video.
               </span>
             </div>
             {sidebarTab === "motion-control" ? (
@@ -1457,9 +1468,10 @@ export function GenjutsuWorkbench({
                           muted
                           playsInline
                           onLoadedMetadata={(e) => {
+                            // Keep one decimal so a 15.4s upload is not mistaken for 15s.
                             const dur = Math.max(
                               4,
-                              Math.round(e.currentTarget.duration || 10)
+                              Math.round((e.currentTarget.duration || 10) * 10) / 10
                             )
                             setVideoDuration(dur)
                             setTrimRange({ start: 0, end: dur })
@@ -1558,7 +1570,7 @@ export function GenjutsuWorkbench({
                               {uploadingVideo ? "Uploading video…" : "Add motion or long video"}
                             </span>
                             <span className="rounded-full border border-[#D9FF00]/35 bg-[#D9FF00]/10 px-2 py-0.5 text-[10px] font-bold text-[#D9FF00]">
-                              Long Video Ready • Auto 30s Split
+                              Long Video Ready • Auto Split
                             </span>
                             <span className="text-[11px] text-zinc-500">
                               4s to multi-minute MP4 / MOV (up to 250 MB)
@@ -2022,9 +2034,10 @@ export function GenjutsuWorkbench({
                           muted
                           playsInline
                           onLoadedMetadata={(e) => {
+                            // Keep one decimal so a 15.4s upload is not mistaken for 15s.
                             const dur = Math.max(
                               4,
-                              Math.round(e.currentTarget.duration || 10)
+                              Math.round((e.currentTarget.duration || 10) * 10) / 10
                             )
                             setVideoDuration(dur)
                             setTrimRange({ start: 0, end: dur })
@@ -2149,7 +2162,7 @@ export function GenjutsuWorkbench({
                                   : "Add a short or long video to swap"}
                             </span>
                             <span className="rounded-full border border-[#D9FF00]/35 bg-[#D9FF00]/10 px-2 py-0.5 text-[10px] font-bold text-[#D9FF00]">
-                              Long Video Ready • Auto 30s Split
+                              Long Video Ready • Auto Split
                             </span>
                             <span className="text-[11px] text-zinc-500">
                               4s to multi-minute MP4 / MOV (up to 250 MB)
@@ -2438,7 +2451,7 @@ export function GenjutsuWorkbench({
                 </span>
                 <span className="font-mono text-[10px] text-zinc-400">
                   ${realtimeCost.usdPerSec.toFixed(3).replace(/0+$/, "").replace(/\.$/, "")}/s × {realtimeCost.billableSeconds}s
-                  {realtimeCost.isLongForm ? ` (${realtimeCost.segmentCount}×30s clips)` : ""}
+                  {realtimeCost.segmentCount > 1 ? ` (${realtimeCost.segmentCount} clips)` : ""}
                 </span>
               </div>
               <div className="flex flex-col items-end shrink-0">
@@ -2446,7 +2459,7 @@ export function GenjutsuWorkbench({
                   {realtimeCost.credits} cr (~${realtimeCost.totalUsd.toFixed(2)})
                 </span>
                 <span className="text-[9px] text-zinc-500">
-                  {realtimeCost.isLongForm ? "Auto-split & stitch" : "Real-time estimate"}
+                  {realtimeCost.segmentCount > 1 ? "Auto-split & stitch" : "Real-time estimate"}
                 </span>
               </div>
             </div>
@@ -3071,7 +3084,7 @@ export function GenjutsuWorkbench({
                         01
                       </span>
                       <h3 className="text-sm font-bold text-white">
-                        1. Upload Motion Video (4s–30s)
+                        1. Upload Motion Video (4s or longer)
                       </h3>
                       <p className="text-xs leading-relaxed text-zinc-400">
                         Drop any MP4, MOV, or WebM clip into the first slot. Use

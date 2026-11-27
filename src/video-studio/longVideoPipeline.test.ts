@@ -4,11 +4,13 @@ import {
   computeLongVideoSegments,
   estimateLongVideoPlan,
   formatLongVideoProgressLabel,
+  maxClipDurationSec,
 } from "./longVideoPlanning";
 import {
   parseFfmpegDurationSec,
   processLongVideoJobSplit,
   syncLongVideoJob,
+  STALE_STITCHING_MS,
   validateExternalMediaUrl,
   withFfmpegMutex,
   type LongVideoEntities,
@@ -60,6 +62,38 @@ describe("longVideoPlanning segment splitting & dynamic credit estimation", () =
     }
   });
 
+  it("caps Light clips at 15s and Pro clips at 30s", () => {
+    expect(maxClipDurationSec("light")).toBe(15);
+    expect(maxClipDurationSec("higgsfield/genjutsu-light/motion-transfer/v1.0")).toBe(15);
+    expect(maxClipDurationSec("pro")).toBe(30);
+    expect(maxClipDurationSec("higgsfield/genjutsu/motion-transfer/v1.0")).toBe(30);
+  });
+
+  it("splits a 25s Light video into two clips instead of letting Light cut it at 15s", () => {
+    const plan = estimateLongVideoPlan({ totalDurationSec: 25, variant: "light" });
+    expect(plan.isLongForm).toBe(true);
+    expect(plan.segments).toEqual([
+      { index: 0, startSec: 0, durationSec: 15 },
+      { index: 1, startSec: 15, durationSec: 10 },
+    ]);
+    for (const seg of plan.segments) {
+      expect(seg.durationSec).toBeLessThanOrEqual(15);
+    }
+  });
+
+  it("keeps a 15s Light video and a 25s Pro video as one clip", () => {
+    expect(estimateLongVideoPlan({ totalDurationSec: 15, variant: "light" }).segmentCount).toBe(1);
+    expect(estimateLongVideoPlan({ totalDurationSec: 25, variant: "pro" }).segmentCount).toBe(1);
+  });
+
+  it("covers every second of a 2-minute Light video with 15s clips", () => {
+    const segs = computeLongVideoSegments(120, 0, 15);
+    expect(segs).toHaveLength(8);
+    const covered = segs.reduce((sum, s) => sum + s.durationSec, 0);
+    expect(covered).toBe(120);
+    segs.forEach((s, i) => expect(s.startSec).toBe(i * 15));
+  });
+
   it("calculates upfront credits across all segments based on resolution and variant", () => {
     const plan480Light = estimateLongVideoPlan({
       totalDurationSec: 165,
@@ -67,10 +101,10 @@ describe("longVideoPlanning segment splitting & dynamic credit estimation", () =
       variant: "light",
     });
     expect(plan480Light.isLongForm).toBe(true);
-    expect(plan480Light.segmentCount).toBe(6);
+    expect(plan480Light.segmentCount).toBe(11);
     expect(plan480Light.billableSeconds).toBe(165);
-    // 5 * ceil(30*0.025*30=22.5 -> 23) + 1 * ceil(15*0.025*30=11.25 -> 12) = 127
-    expect(plan480Light.credits).toBe(127);
+    // 11 * ceil(15*0.025*30=11.25 -> 12) = 132
+    expect(plan480Light.credits).toBe(132);
 
     const plan720Pro = estimateLongVideoPlan({
       totalDurationSec: 120,
@@ -132,12 +166,14 @@ describe("FFmpeg duration parser, SSRF guard, and low-RAM mutex", () => {
 });
 
 describe("backend split, uniform Genjutsu submission, stitch, and atomic refunds", () => {
-  function createMockState(overrides?: Partial<{ status: string; segmentCount: number }>) {
+  function createMockState(
+    overrides?: Partial<{ status: string; segmentCount: number; variant: string }>
+  ) {
     const job: any = {
       id: "job-1",
       userId: "user-1",
       status: overrides?.status ?? "SPLITTING",
-      variant: "light",
+      variant: overrides?.variant ?? "pro",
       resolution: "720p",
       prompt: "Swap subject into anime knight @Image1",
       sourceVideoUrl: "https://cdn.example.com/2min.mp4",
@@ -152,6 +188,7 @@ describe("backend split, uniform Genjutsu submission, stitch, and atomic refunds
       outputStorageKey: null,
       error: null,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     const segments = Array.from({ length: job.segmentCount }, (_, index) => ({
@@ -206,7 +243,7 @@ describe("backend split, uniform Genjutsu submission, stitch, and atomic refunds
     return { job, segments, entities, userCredits };
   }
 
-  it("cuts source into 4×30s clips and submits identical prompt & references across every clip", async () => {
+  it("cuts source into 4×30s Pro clips and submits identical prompt & references across every clip", async () => {
     const { job, segments, entities } = createMockState();
     let seq = 0;
 
@@ -244,7 +281,7 @@ describe("backend split, uniform Genjutsu submission, stitch, and atomic refunds
     for (let i = 0; i < 4; i++) {
       expect(platformClient.submit).toHaveBeenNthCalledWith(
         i + 1,
-        "higgsfield/genjutsu-light/motion-transfer/v1.0",
+        "higgsfield/genjutsu/motion-transfer/v1.0",
         expect.objectContaining({
           prompt: "Swap subject into anime knight @Image1",
           image_urls: ["https://cdn.example.com/ref1.png"],
@@ -393,5 +430,97 @@ describe("backend split, uniform Genjutsu submission, stitch, and atomic refunds
     expect(result.error).toContain("Safety check failed");
     expect(userCredits.count).toBe(200);
     expect(platformClient.cancel).toHaveBeenCalledTimes(3);
+  });
+  it("cuts a Light job into 15s clips so Light never truncates a clip", async () => {
+    const { job, segments, entities } = createMockState({
+      variant: "light",
+      segmentCount: 8,
+    });
+    let seq = 0;
+    const platformClient: LongVideoPlatformClient = {
+      createUpload: vi.fn(),
+      submit: vi.fn(async () => ({
+        status: "queued",
+        requestId: `req-${++seq}`,
+        statusUrl: "s",
+        cancelUrl: "c",
+      })),
+      status: vi.fn(),
+      cancel: vi.fn(),
+    };
+    const mediaOps: LongVideoMediaOps = {
+      downloadToFile: vi.fn(async () => {}),
+      probeDurationSec: vi.fn(async () => 120),
+      splitSegment: vi.fn(async () => {}),
+      uploadClipFile: vi.fn(async () => "https://upload.hf/clip.mp4"),
+      stitchClips: vi.fn(),
+      uploadFinalVideo: vi.fn(),
+    };
+
+    await processLongVideoJobSplit({ jobId: job.id, entities, platformClient, mediaOps });
+
+    expect(mediaOps.splitSegment).toHaveBeenCalledTimes(8);
+    for (const call of (mediaOps.splitSegment as any).mock.calls) {
+      expect(call[0].durationSec).toBeLessThanOrEqual(15);
+    }
+    expect(platformClient.submit).toHaveBeenCalledWith(
+      "higgsfield/genjutsu-light/motion-transfer/v1.0",
+      expect.anything()
+    );
+    expect(segments.every((s) => s.status === "PROCESSING")).toBe(true);
+    expect(job.status).toBe("PROCESSING_CLIPS");
+  });
+
+  it("skips planned segments past the real end of a shorter source so the job can finish", async () => {
+    const { job, segments, entities } = createMockState();
+    const platformClient: LongVideoPlatformClient = {
+      createUpload: vi.fn(),
+      submit: vi.fn(async () => ({ status: "queued", requestId: `req-${Math.random()}`, statusUrl: "s", cancelUrl: "c" })),
+      status: vi.fn(),
+      cancel: vi.fn(),
+    };
+    const mediaOps: LongVideoMediaOps = {
+      downloadToFile: vi.fn(async () => {}),
+      probeDurationSec: vi.fn(async () => 60),
+      splitSegment: vi.fn(async () => {}),
+      uploadClipFile: vi.fn(async () => "https://upload.hf/clip.mp4"),
+      stitchClips: vi.fn(),
+      uploadFinalVideo: vi.fn(),
+    };
+
+    await processLongVideoJobSplit({ jobId: job.id, entities, platformClient, mediaOps });
+
+    expect(platformClient.submit).toHaveBeenCalledTimes(2);
+    expect(segments.map((s) => s.status)).toEqual([
+      "PROCESSING",
+      "PROCESSING",
+      "SKIPPED",
+      "SKIPPED",
+    ]);
+    expect(job.segmentCount).toBe(2);
+  });
+
+  it("refunds a job left in STITCHING after a server restart", async () => {
+    const { job, entities, userCredits } = createMockState({ status: "STITCHING" });
+    job.updatedAt = new Date(Date.now() - STALE_STITCHING_MS - 1000);
+    const platformClient = { status: vi.fn(), cancel: vi.fn() };
+    const mediaOps = {} as LongVideoMediaOps;
+
+    const result = await syncLongVideoJob({ job, entities, platformClient, mediaOps });
+
+    expect(result.status).toBe("FAILED");
+    expect(job.creditsRefunded).toBe(true);
+    expect(userCredits.count).toBe(200);
+  });
+
+  it("leaves a job that is actively stitching alone", async () => {
+    const { job, entities, userCredits } = createMockState({ status: "STITCHING" });
+    const platformClient = { status: vi.fn(), cancel: vi.fn() };
+    const mediaOps = {} as LongVideoMediaOps;
+
+    const result = await syncLongVideoJob({ job, entities, platformClient, mediaOps });
+
+    expect(result.status).toBe("STITCHING");
+    expect(userCredits.count).toBe(20);
   });
 });

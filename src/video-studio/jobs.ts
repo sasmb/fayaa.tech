@@ -56,7 +56,8 @@ export const checkVideoTasksJob: CheckVideoTasksJob<never, void> = async (
     const activeLongJobs = await context.entities.LongVideoJob.findMany({
       where: {
         status: {
-          in: ["SPLITTING", "PROCESSING_CLIPS"],
+          // STITCHING is included so jobs interrupted mid-stitch get refunded.
+          in: ["SPLITTING", "PROCESSING_CLIPS", "STITCHING"],
         },
       },
       orderBy: {

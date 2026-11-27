@@ -171,7 +171,7 @@ model LongVideoSegment {
   durationSec    Float
   clipSourceUrl  String?
   requestId      String?      @unique
-  status         String       @default("PENDING") // "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED"
+  status         String       @default("PENDING") // "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "SKIPPED"
   outputVideoUrl String?
   error          String?
   createdAt      DateTime     @default(now())

@@ -5,7 +5,7 @@ import {
   uploadLocalFileToS3,
 } from "../file-upload/s3Utils";
 import { getCuratedHomepageStorageKeys } from "../landing-page/homepageConfig";
-import { estimateLongVideoPlan } from "./longVideoPlanning";
+import { estimateLongVideoPlan, MIN_CLIP_DURATION_SEC } from "./longVideoPlanning";
 import {
   defaultLongVideoMediaOps,
   failAndRefundLongVideoJob,
@@ -623,10 +623,12 @@ export const submitLongVideoGenjutsu = async (
   }
 
   const totalDurationSec = Number(args.totalDurationSec);
-  if (!Number.isFinite(totalDurationSec) || totalDurationSec <= 30) {
+  // This pipeline handles both multi-clip videos (longer than the model's clip limit)
+  // and single trimmed clips, since it cuts the chosen range on the server.
+  if (!Number.isFinite(totalDurationSec) || totalDurationSec < MIN_CLIP_DURATION_SEC) {
     throw new HttpError(
       400,
-      "Long-video pipeline is only required when source duration exceeds 30 seconds."
+      `Select at least ${MIN_CLIP_DURATION_SEC} seconds of video.`
     );
   }
 
@@ -658,7 +660,7 @@ export const submitLongVideoGenjutsu = async (
   if (reserved === 0 && !isAdmin) {
     throw new HttpError(
       402,
-      `Insufficient credits (${dbUser?.credits ?? 0} available, ${plan.credits} needed for ${plan.segmentCount}×30s clips). Please upgrade or buy credits to process this video.`
+      `Insufficient credits (${dbUser?.credits ?? 0} available, ${plan.credits} needed for ${plan.segmentCount} clip${plan.segmentCount === 1 ? "" : "s"}). Please upgrade or buy credits to process this video.`
     );
   }
 

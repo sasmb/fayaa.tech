@@ -336,7 +336,7 @@ export function StudioTemplate({
       const variant = plane.settings.variant === "pro" ? "pro" : "light"
       const durationSec = Number(plane.settings.duration ?? 5)
       const trimStartSec = Number(plane.settings.trimStartSec ?? 0)
-      const isLongForm = Boolean(plane.settings.longForm) && durationSec > 30
+      const isLongForm = Boolean(plane.settings.longForm)
       const cost = isLongForm
         ? estimateLongVideoPlan({
             totalDurationSec: durationSec,

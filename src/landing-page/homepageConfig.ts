@@ -358,7 +358,7 @@ export const BENTO_TOOLS: BentoToolConfig[] = [
 export const HOMEPAGE_ANNOUNCEMENT = {
   badgeLabel: "2+ Min Videos >",
   message:
-    "FAYAA Genjutsu Light & Pro — Edit videos up to 2+ minutes (auto-split into seamless 30s passes) up to 1080p. Save 20% on Annual Plans.",
+    "FAYAA Genjutsu Light & Pro — Edit videos up to 2+ minutes (auto-split into seamless passes) up to 1080p. Save 20% on Annual Plans.",
   ctaLabel: "View Plans & Credits",
   ctaHref: "/pricing",
 };
@@ -370,7 +370,7 @@ export const HOMEPAGE_PROMO_CONFIG = {
     headingPrimary: "CREATE WITH FAYAA",
     headingAccent: "GENJUTSU V1.0",
     bullets: [
-      "Edit & restyle short clips OR videos up to 2+ minutes — we auto-split >30s videos into uniform 30s passes",
+      "Edit & restyle short clips OR videos up to 2+ minutes — we auto-split long videos into uniform passes",
       "Multi-image character & product reference lock — save 20% on annual plans or top up credits anytime",
     ],
     ctaLabel: "Sign up & start creating",

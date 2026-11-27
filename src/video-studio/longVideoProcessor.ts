@@ -13,6 +13,7 @@ import { promisify } from "node:util";
 import { MAX_FILE_SIZE_BYTES } from "../file-upload/validation";
 import {
   computeLongVideoSegments,
+  maxClipDurationSec,
   MIN_CLIP_DURATION_SEC,
 } from "./longVideoPlanning";
 import type { GenerationStatus, QueuedGeneration } from "./hf/generation/platform";
@@ -24,6 +25,9 @@ const FETCH_TIMEOUT_MS = 120_000;
 const FFMPEG_TIMEOUT_MS = 240_000;
 const MAX_CONCURRENT_SUBMISSIONS = 4;
 const MAX_LONG_JOB_DURATION_MS = 60 * 60 * 1000; // 60 minutes
+// A stitch (download clips + ffmpeg concat + upload) finishes well within this window.
+// A job still marked STITCHING after it was most likely interrupted by a server restart.
+export const STALE_STITCHING_MS = 20 * 60 * 1000; // 20 minutes
 
 // In-process mutex so heavy FFmpeg split/concat work runs 1 at a time inside 1024 MB RAM.
 let ffmpegMutexChain: Promise<void> = Promise.resolve();
@@ -437,7 +441,8 @@ export async function failAndRefundLongVideoJob({
 
 /**
  * Runs inside an async worker pass immediately after creating LongVideoJob:
- * downloads source video, probes duration, sequentially cuts <=30s segments on
+ * downloads source video, probes duration, sequentially cuts segments (<=15s for
+ * Light, <=30s for Pro) on
  * 1 thread, uploads each clip, deletes temp files immediately, and submits
  * bounded Genjutsu batches carrying the exact same prompt & reference anchors.
  */
@@ -472,7 +477,8 @@ export async function processLongVideoJobSplit({
     const effectiveTotal = Math.min(job.totalDurationSec, availableAfterTrim);
     const plannedSegments = computeLongVideoSegments(
       effectiveTotal,
-      job.trimStartSec ?? 0
+      job.trimStartSec ?? 0,
+      maxClipDurationSec(job.variant)
     );
 
     const dbSegments = await entities.LongVideoSegment.findMany({
@@ -481,6 +487,15 @@ export async function processLongVideoJobSplit({
     });
 
     const segmentsToRun = dbSegments.slice(0, plannedSegments.length);
+
+    // If the real source is shorter than the requested span, the extra planned
+    // segments are never rendered. Mark them SKIPPED so the job can still finish.
+    for (const extra of dbSegments.slice(plannedSegments.length)) {
+      await entities.LongVideoSegment.update({
+        where: { id: extra.id },
+        data: { status: "SKIPPED" },
+      });
+    }
     const clipUrls: string[] = [];
 
     // Split + upload sequentially with 1 thread so RAM and /tmp usage remain tiny inside 1 GB.
@@ -586,6 +601,30 @@ export async function syncLongVideoJob({
     return job;
   }
 
+  if (job.status === "STITCHING") {
+    const sinceUpdateMs =
+      Date.now() - new Date(job.updatedAt ?? job.createdAt).getTime();
+    if (sinceUpdateMs <= STALE_STITCHING_MS) {
+      return job;
+    }
+    // Stitching was interrupted (e.g. the server restarted mid-concat). Fail it once,
+    // atomically, so a stitch that is still finishing elsewhere keeps its result.
+    const claimed = await entities.LongVideoJob.updateMany({
+      where: { id: job.id, status: "STITCHING" },
+      data: { status: "FAILED", error: "Stitching was interrupted. Credits refunded." },
+    });
+    if (claimed.count > 0) {
+      await failAndRefundLongVideoJob({
+        jobId: job.id,
+        userId: job.userId,
+        creditCost: job.creditCost,
+        errorMessage: "Stitching was interrupted. Credits refunded.",
+        entities,
+      });
+    }
+    return entities.LongVideoJob.findUnique({ where: { id: job.id } });
+  }
+
   const jobAgeMs = Date.now() - new Date(job.createdAt).getTime();
   if (jobAgeMs > MAX_LONG_JOB_DURATION_MS) {
     const segs = await entities.LongVideoSegment.findMany({
@@ -607,14 +646,16 @@ export async function syncLongVideoJob({
     return entities.LongVideoJob.findUnique({ where: { id: job.id } });
   }
 
-  if (job.status === "SPLITTING" || job.status === "STITCHING") {
+  if (job.status === "SPLITTING") {
     return job;
   }
 
-  const segments = await entities.LongVideoSegment.findMany({
-    where: { jobId: job.id },
-    orderBy: { index: "asc" },
-  });
+  const segments = (
+    await entities.LongVideoSegment.findMany({
+      where: { jobId: job.id },
+      orderBy: { index: "asc" },
+    })
+  ).filter((s) => s.status !== "SKIPPED");
 
   const processingSegments = segments.filter(
     (s) => s.status === "PROCESSING" && s.requestId
