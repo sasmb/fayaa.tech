@@ -2,10 +2,11 @@
 import type { ModelEntry } from "./types"
 
 import m0 from "./models/genjutsu"
+import m1 from "./models/seedance"
 
 const LAST = Number.MAX_SAFE_INTEGER
 
-const installed: (ModelEntry | ModelEntry[])[] = [m0]
+const installed: (ModelEntry | ModelEntry[])[] = [m0, m1]
 
 export const MODELS: readonly ModelEntry[] = installed
   .flat()

@@ -9,6 +9,7 @@ import {
   hfSavePlatformCredentials,
   hfSubmitGeneration,
   submitLongVideoGenjutsu,
+  submitSeedanceVideo,
 } from "wasp/client/operations"
 
 import type { GenerationPlane } from "./catalog/types"
@@ -65,6 +66,29 @@ export async function submitLongVideo(
   creditCost: number
 }> {
   return (await submitLongVideoGenjutsu(data)) as unknown as {
+    id: string
+    status: string
+    segmentCount: number
+    creditCost: number
+  }
+}
+
+export interface SubmitSeedanceRequest {
+  prompt: string
+  totalDurationSec: number
+  resolution?: "480p" | "720p" | "1080p"
+  aspectRatio?: string
+}
+
+export async function submitSeedance(
+  data: SubmitSeedanceRequest
+): Promise<{
+  id: string
+  status: string
+  segmentCount: number
+  creditCost: number
+}> {
+  return (await submitSeedanceVideo(data)) as unknown as {
     id: string
     status: string
     segmentCount: number

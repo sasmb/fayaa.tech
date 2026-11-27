@@ -140,7 +140,8 @@ model LongVideoJob {
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId             String
   status             String             @default("SPLITTING") // "SPLITTING" | "PROCESSING_CLIPS" | "STITCHING" | "COMPLETED" | "FAILED"
-  variant            String             @default("light")     // "light" | "pro"
+  variant            String             @default("light")     // "light" | "pro" | "seedance"
+  aspectRatio        String?                                  // Seedance only, e.g. "16:9"
   resolution         String             @default("480p")      // "480p" | "720p" | "1080p"
   prompt             String?
   sourceVideoUrl     String
