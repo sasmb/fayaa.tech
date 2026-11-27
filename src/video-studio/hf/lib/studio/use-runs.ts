@@ -5,8 +5,10 @@ import { getUserVideoTasks } from "wasp/client/operations"
 import type { LongVideoJob as LongVideoJobEntity, VideoTask } from "wasp/entities"
 
 import {
+  approveLongVideo,
   cancelGeneration,
   cancelLongVideo,
+  keepLongVideoPreviewOnly,
   getGenerationStatuses,
   getLongVideoStatus,
   listLongVideoJobs,
@@ -19,11 +21,23 @@ import type { GenerationPlane } from "../../generation/catalog"
 import type { GenerationStatus } from "../../generation/platform"
 import { stopWatching, watchRequest } from "../../generation/poll"
 import {
+  estimateLongVideoPlan,
   formatLongVideoProgressLabel,
   type LongVideoPieceState,
 } from "../../../longVideoPlanning"
 
 type LongVideoJob = LongVideoJobEntity & { pieces?: LongVideoPieceState[] }
+
+/** Credits still owed for a preview-first job: full price minus what was charged. */
+function remainingCreditsFor(job: LongVideoJob): number {
+  const full = estimateLongVideoPlan({
+    totalDurationSec: job.totalDurationSec,
+    trimStartSec: job.trimStartSec,
+    resolution: job.resolution,
+    variant: job.variant,
+  }).credits
+  return Math.max(0, full - job.creditCost)
+}
 
 import {
   aspectFromSettings,
@@ -84,6 +98,16 @@ export function useRuns(userId?: string | null) {
                 completedCount: job.segmentCount,
                 longVideoProgressLabel: progressLabel,
                 error: undefined,
+              })
+              return
+            }
+            if (job.status === "AWAITING_APPROVAL" && job.previewVideoUrl) {
+              update(recordId, {
+                status: "completed",
+                urls: [job.previewVideoUrl],
+                completedCount: 1,
+                longVideoProgressLabel: "Preview ready",
+                awaitingApproval: { remainingCredits: remainingCreditsFor(job) },
               })
               return
             }
@@ -148,8 +172,10 @@ export function useRuns(userId?: string | null) {
       )
       for (const job of longJobs) {
         const key = `long-${job.id}`
+        const awaiting =
+          job.status === "AWAITING_APPROVAL" && Boolean(job.previewVideoUrl)
         const mappedStatus =
-          job.status === "COMPLETED" && job.outputVideoUrl
+          (job.status === "COMPLETED" && job.outputVideoUrl) || awaiting
             ? "completed"
             : job.status === "FAILED"
               ? "failed"
@@ -178,7 +204,14 @@ export function useRuns(userId?: string | null) {
           },
           aspect: 16 / 9,
           status: mappedStatus,
-          urls: job.outputVideoUrl ? [job.outputVideoUrl] : [],
+          urls: awaiting
+            ? [job.previewVideoUrl!]
+            : job.outputVideoUrl
+              ? [job.outputVideoUrl]
+              : [],
+          ...(awaiting
+            ? { awaitingApproval: { remainingCredits: remainingCreditsFor(job) } }
+            : {}),
           ...(job.error ? { error: job.error } : {}),
           createdAt: new Date(job.createdAt).getTime(),
         })
@@ -389,6 +422,49 @@ export function useRuns(userId?: string | null) {
     [records, stopLongWatch, update]
   )
 
+  const approvePreview = useCallback(
+    async (id: string) => {
+      const record = records.find((r) => r.id === id)
+      if (!record?.longVideoJobId || !record.awaitingApproval) return
+      setError(null)
+      try {
+        await approveLongVideo(record.longVideoJobId)
+        update(id, {
+          status: "running",
+          urls: [],
+          awaitingApproval: undefined,
+          longVideoProgressLabel: "Rendering the rest of your video…",
+        })
+        watchLongJob(id, record.longVideoJobId)
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : String(caught))
+      }
+    },
+    [records, update, watchLongJob]
+  )
+
+  const keepPreview = useCallback(
+    async (id: string) => {
+      const record = records.find((r) => r.id === id)
+      if (!record?.longVideoJobId || !record.awaitingApproval) return
+      setError(null)
+      try {
+        const job = (await keepLongVideoPreviewOnly(record.longVideoJobId)) as {
+          outputVideoUrl?: string | null
+        }
+        update(id, {
+          status: "completed",
+          awaitingApproval: undefined,
+          longVideoProgressLabel: "Final video ready",
+          ...(job?.outputVideoUrl ? { urls: [job.outputVideoUrl] } : {}),
+        })
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : String(caught))
+      }
+    },
+    [records, update]
+  )
+
   const remove = useCallback((id: string) => {
     setRecords((current) => current.filter((r) => r.id !== id))
   }, [])
@@ -403,6 +479,8 @@ export function useRuns(userId?: string | null) {
     submit,
     submitLong,
     cancel,
+    approvePreview,
+    keepPreview,
     remove,
     setError,
   }

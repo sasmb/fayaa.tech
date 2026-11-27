@@ -74,6 +74,7 @@ import { MOTION_MODELS } from "../../../templates"
 import {
   estimateLongVideoPlan,
   maxClipDurationSec,
+  segmentCredits,
 } from "../../../longVideoPlanning"
 import { LongVideoPieces } from "./long-video-pieces"
 import type { MotionModel, VideoQuality } from "../../../types"
@@ -434,6 +435,10 @@ export interface GenjutsuWorkbenchProps {
   errorMessage?: string
   onSubmitPlane: (plane: GenerationPlane) => void
   onCancelGenerating: () => void
+  /** Preview-first long videos: pay for and render the rest. */
+  onApprovePreview?: (runId: string) => void
+  /** Preview-first long videos: keep the first piece as the final video. */
+  onKeepPreview?: (runId: string) => void
   onOpenSubscriptions: () => void
   onOpenAllGenerations: () => void
 }
@@ -455,6 +460,8 @@ export function GenjutsuWorkbench({
   errorMessage: studioError,
   onSubmitPlane,
   onCancelGenerating,
+  onApprovePreview,
+  onKeepPreview,
 }: GenjutsuWorkbenchProps) {
   const { data: authUser } = useAuth()
   const canPublishPublic = Boolean(authUser?.canPublishPublic || authUser?.isAdmin)
@@ -538,6 +545,8 @@ export function GenjutsuWorkbench({
 
   const [referenceImages, setReferenceImages] = useState<MediaItem[]>([])
   const [promptEnabled, setPromptEnabled] = useState<boolean>(false)
+  // Long videos: render and pay for piece 1 first, then decide on the rest.
+  const [previewFirst, setPreviewFirst] = useState<boolean>(false)
   const [prompt, setPrompt] = useState<string>("")
   const [resolution, setResolution] = useState<VideoQuality>("480p")
 
@@ -926,7 +935,13 @@ export function GenjutsuWorkbench({
           ? selectedDurationSec
           : Math.max(4, Math.min(clipLimitSec, Math.round(selectedDurationSec))),
         ...(isLongForm
-          ? { trimStartSec: trimRange.start, longForm: true }
+          ? {
+              trimStartSec: trimRange.start,
+              longForm: true,
+              ...(previewFirst && realtimeCost.segmentCount > 1
+                ? { previewFirst: true }
+                : {}),
+            }
           : {}),
       },
       media: {
@@ -2465,6 +2480,31 @@ export function GenjutsuWorkbench({
               </div>
             </div>
 
+            {realtimeCost.segmentCount > 1 ? (
+              <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-white/[0.08] bg-[#141417] px-2.5 py-1.5 text-[11px] text-zinc-300">
+                <input
+                  type="checkbox"
+                  checked={previewFirst}
+                  onChange={(e) => setPreviewFirst(e.target.checked)}
+                  className="mt-0.5 accent-[#D9FF00]"
+                />
+                <span>
+                  <strong className="text-zinc-100">Preview the first piece first</strong>
+                  <span className="block text-[10px] text-zinc-500">
+                    Pay{" "}
+                    {segmentCredits(
+                      realtimeCost.segments[0]!.durationSec,
+                      resolution,
+                      selectedMotionModel.id === "higgsfield/genjutsu/motion-transfer/v1.0"
+                        ? "pro"
+                        : "light"
+                    )}{" "}
+                    cr now, then approve the rest or keep just the preview.
+                  </span>
+                </span>
+              </label>
+            ) : null}
+
             <Button
               size="lg"
               onClick={() => void handleGenerate()}
@@ -3052,7 +3092,31 @@ export function GenjutsuWorkbench({
                                 : undefined
                             }
                             className="aspect-video overflow-hidden rounded-2xl border border-white/10 bg-[#121215]"
-                          />
+                          >
+                            {run.awaitingApproval ? (
+                              <div className="absolute inset-x-3 bottom-3 z-[3] flex flex-col gap-2 rounded-xl bg-black/75 p-2.5 backdrop-blur-md">
+                                <span className="text-[11px] font-semibold text-zinc-100">
+                                  Preview of piece 1 is ready. Happy with it?
+                                </span>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => onApprovePreview?.(run.id)}
+                                    className="flex-1 rounded-lg bg-[#D9FF00] px-2 py-1.5 text-[11px] font-bold text-black hover:bg-[#e3ff38]"
+                                  >
+                                    Render the rest ({run.awaitingApproval.remainingCredits} cr)
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => onKeepPreview?.(run.id)}
+                                    className="rounded-lg border border-white/20 px-2 py-1.5 text-[11px] font-semibold text-zinc-200 hover:bg-white/10"
+                                  >
+                                    Keep preview only
+                                  </button>
+                                </div>
+                              </div>
+                            ) : null}
+                          </GenerationTile>
                         )
                       })}
                     </div>

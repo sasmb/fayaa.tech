@@ -139,7 +139,7 @@ model LongVideoJob {
   id                 String             @id @default(uuid())
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId             String
-  status             String             @default("SPLITTING") // "SPLITTING" | "PROCESSING_CLIPS" | "STITCHING" | "COMPLETED" | "FAILED"
+  status             String             @default("SPLITTING") // "SPLITTING" | "PROCESSING_CLIPS" | "AWAITING_APPROVAL" | "STITCHING" | "COMPLETED" | "FAILED"
   variant            String             @default("light")     // "light" | "pro"
   resolution         String             @default("480p")      // "480p" | "720p" | "1080p"
   prompt             String?
@@ -151,6 +151,11 @@ model LongVideoJob {
   completedCount     Int                @default(0)
   creditCost         Int
   creditsRefunded    Boolean            @default(false)
+  // Preview-first: only piece 1 is rendered and charged, then the job waits in
+  // AWAITING_APPROVAL until the user approves (and pays for) the rest.
+  previewFirst       Boolean            @default(false)
+  previewVideoUrl    String?
+  approvedAt         DateTime?
   outputVideoUrl     String?
   outputStorageKey   String?
   error              String?

@@ -9,7 +9,7 @@ import {
   SubscriptionStatus,
   prettyPaymentPlanName,
 } from "../../../payment/plans"
-import { estimateLongVideoPlan } from "../../longVideoPlanning"
+import { estimateLongVideoPlan, segmentCredits } from "../../longVideoPlanning"
 import { creditCostForResolution } from "../../taskSync"
 import { GenjutsuWorkbench } from "../components/studio/genjutsu-workbench"
 import {
@@ -337,13 +337,20 @@ export function StudioTemplate({
       const durationSec = Number(plane.settings.duration ?? 5)
       const trimStartSec = Number(plane.settings.trimStartSec ?? 0)
       const isLongForm = Boolean(plane.settings.longForm)
-      const cost = isLongForm
+      const previewFirst = isLongForm && Boolean(plane.settings.previewFirst)
+      const longPlan = isLongForm
         ? estimateLongVideoPlan({
             totalDurationSec: durationSec,
             trimStartSec,
             resolution: res,
             variant,
-          }).credits
+          })
+        : null
+      // Preview-first only charges piece 1 up front.
+      const cost = longPlan
+        ? previewFirst && longPlan.segmentCount > 1
+          ? segmentCredits(longPlan.segments[0]!.durationSec, res, variant)
+          : longPlan.credits
         : creditCostForResolution(res, variant, durationSec)
       if (user.credits < cost && !user.isAdmin) {
         setLocalError(
@@ -370,6 +377,7 @@ export function StudioTemplate({
               variant,
               trimStartSec,
               totalDurationSec: durationSec,
+              ...(previewFirst ? { previewFirst: true } : {}),
             },
             projectId
           )
@@ -528,6 +536,8 @@ export function StudioTemplate({
               errorMessage={localError ?? runs.error ?? undefined}
               onSubmitPlane={handleSubmitPlane}
               onCancelGenerating={handleCancel}
+              onApprovePreview={(id) => void runs.approvePreview(id)}
+              onKeepPreview={(id) => void runs.keepPreview(id)}
               onOpenSubscriptions={() => setView({ kind: "subscription" })}
               onOpenAllGenerations={() => setView({ kind: "all" })}
             />

@@ -6,10 +6,13 @@ import {
   formatLongVideoProgressLabel,
   maxClipDurationSec,
   summarizeLongVideoPieces,
+  segmentCredits,
 } from "./longVideoPlanning";
 import {
   ffmpegListingHasAudio,
+  keepLongVideoPreviewOnly,
   parseFfmpegDurationSec,
+  submitRemainingLongVideoSegments,
   processLongVideoJobSplit,
   syncLongVideoJob,
   MAX_SEGMENT_ATTEMPTS,
@@ -690,5 +693,132 @@ describe("backend split, uniform Genjutsu submission, stitch, and atomic refunds
     expect(result.status).toBe("FAILED");
     expect(result.error).toContain("Upstream hiccup");
     expect(userCredits.count).toBe(200);
+  });
+
+  describe("preview first piece", () => {
+    function queuedClient() {
+      let seq = 0;
+      return {
+        createUpload: vi.fn(),
+        submit: vi.fn(async () => ({
+          status: "queued",
+          requestId: `req-${++seq}`,
+          statusUrl: "s",
+          cancelUrl: "c",
+        })),
+        status: vi.fn(),
+        cancel: vi.fn(async () => {}),
+      } satisfies LongVideoPlatformClient;
+    }
+
+    it("cuts every piece but renders only the first", async () => {
+      const { job, segments, entities } = createMockState();
+      job.previewFirst = true;
+      const platformClient = queuedClient();
+      const mediaOps: LongVideoMediaOps = {
+        downloadToFile: vi.fn(async () => {}),
+        probeDurationSec: vi.fn(async () => 120),
+        splitSegment: vi.fn(async () => {}),
+        uploadClipFile: vi.fn(async (p) => `https://upload.hf/${p.split("/").pop()}`),
+        stitchClips: vi.fn(),
+        uploadFinalVideo: vi.fn(),
+      };
+
+      await processLongVideoJobSplit({ jobId: job.id, entities, platformClient, mediaOps });
+
+      expect(mediaOps.splitSegment).toHaveBeenCalledTimes(4);
+      expect(platformClient.submit).toHaveBeenCalledTimes(1);
+      expect(segments[0]!.status).toBe("PROCESSING");
+      for (const seg of segments.slice(1)) {
+        expect(seg.status).toBe("PENDING");
+        expect(seg.requestId).toBeNull();
+        expect(seg.clipSourceUrl).toMatch(/^https:\/\/upload\.hf\/clip-/);
+      }
+    });
+
+    it("pauses for approval once the first piece is ready", async () => {
+      const { job, segments, entities } = createMockState({ status: "PROCESSING_CLIPS" });
+      job.previewFirst = true;
+      segments[0]!.status = "PROCESSING";
+      segments[0]!.requestId = "req-0";
+      const platformClient = {
+        status: vi.fn(async (requestId: string) => ({
+          status: "completed",
+          requestId,
+          video: { url: "https://hf.cdn/piece-1.mp4" },
+        })),
+        cancel: vi.fn(),
+      };
+
+      const result = await syncLongVideoJob({
+        job,
+        entities,
+        platformClient,
+        mediaOps: {} as LongVideoMediaOps,
+      });
+
+      expect(result.status).toBe("AWAITING_APPROVAL");
+      expect(result.previewVideoUrl).toBe("https://hf.cdn/piece-1.mp4");
+    });
+
+    it("renders the remaining pieces after approval", async () => {
+      const { job, segments, entities } = createMockState({ status: "AWAITING_APPROVAL" });
+      segments[0]!.status = "COMPLETED";
+      segments.slice(1).forEach((s, i) => (s.clipSourceUrl = `https://upload.hf/clip-${i + 1}.mp4`));
+      const platformClient = queuedClient();
+
+      await submitRemainingLongVideoSegments({ job, entities, platformClient });
+
+      expect(platformClient.submit).toHaveBeenCalledTimes(3);
+      expect(job.status).toBe("PROCESSING_CLIPS");
+      expect(job.approvedAt).toBeInstanceOf(Date);
+      expect(segments.slice(1).every((s) => s.status === "PROCESSING")).toBe(true);
+    });
+
+    it("rolls back a partly submitted approval", async () => {
+      const { job, segments, entities } = createMockState({ status: "AWAITING_APPROVAL" });
+      segments[0]!.status = "COMPLETED";
+      segments.slice(1).forEach((s, i) => (s.clipSourceUrl = `https://upload.hf/clip-${i + 1}.mp4`));
+      const platformClient = queuedClient();
+      let calls = 0;
+      platformClient.submit.mockImplementation(async () => {
+        calls += 1;
+        if (calls === 3) throw new Error("quota");
+        return { status: "queued", requestId: `req-${calls}`, statusUrl: "s", cancelUrl: "c" };
+      });
+
+      await expect(
+        submitRemainingLongVideoSegments({ job, entities, platformClient })
+      ).rejects.toThrow("quota");
+      expect(platformClient.cancel).toHaveBeenCalledTimes(2);
+      expect(segments.slice(1).every((s) => s.status === "PENDING" && !s.requestId)).toBe(true);
+    });
+
+    it("keeps the preview as the final video when the user declines the rest", async () => {
+      const { job, entities } = createMockState({ status: "AWAITING_APPROVAL" });
+      job.previewVideoUrl = "https://hf.cdn/piece-1.mp4";
+      const mediaOps = {
+        downloadToFile: vi.fn(async () => {}),
+        uploadFinalVideo: vi.fn(async () => ({ s3Key: "k", url: "https://r2/k" })),
+      };
+
+      const result = await keepLongVideoPreviewOnly({ job, entities, mediaOps });
+
+      expect(mediaOps.downloadToFile).toHaveBeenCalledWith(
+        "https://hf.cdn/piece-1.mp4",
+        expect.any(String)
+      );
+      expect(result.status).toBe("COMPLETED");
+      expect(result.outputStorageKey).toBe("k");
+    });
+
+    it("prices each piece the same way as the upfront estimate", () => {
+      const plan = estimateLongVideoPlan({ totalDurationSec: 50, resolution: "720p", variant: "light" });
+      const sum = plan.segments.reduce(
+        (acc, seg) => acc + segmentCredits(seg.durationSec, "720p", "light"),
+        0
+      );
+      expect(sum).toBe(plan.credits);
+    });
   });
 });

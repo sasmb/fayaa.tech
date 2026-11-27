@@ -29,6 +29,8 @@ export interface RunRecord {
   completedCount?: number
   /** Per-piece render progress for a running long-video job. */
   pieces?: LongVideoPieceState[]
+  /** Set while a preview-first long video waits for the user to approve the rest. */
+  awaitingApproval?: { remainingCredits: number }
   /** Optional persisted database VideoTask id and public visibility state. */
   taskId?: string
   isPublic?: boolean

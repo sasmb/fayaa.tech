@@ -113,6 +113,20 @@ export function computeLongVideoSegments(
   return segments;
 }
 
+function billableSegmentSeconds(durationSec: number, maxClip: number): number {
+  return Math.max(MIN_CLIP_DURATION_SEC, Math.min(maxClip, Math.ceil(durationSec)));
+}
+
+/** Credits for rendering one piece, priced the same way as the upfront estimate. */
+export function segmentCredits(
+  durationSec: number,
+  resolution: string,
+  variant: string
+): number {
+  const sec = billableSegmentSeconds(durationSec, maxClipDurationSec(variant));
+  return creditCostForResolution(resolution, normalizeGenjutsuVariant(variant), sec);
+}
+
 /**
  * Estimates upfront credits and segment count for both single-clip and
  * multi-clip long-form Genjutsu workflows. The clip length follows the variant:
@@ -148,12 +162,8 @@ export function estimateLongVideoPlan({
   let billableSeconds = 0;
 
   for (const seg of segments) {
-    const segSec = Math.max(
-      MIN_CLIP_DURATION_SEC,
-      Math.min(maxClip, Math.ceil(seg.durationSec))
-    );
-    billableSeconds += segSec;
-    credits += creditCostForResolution(resKey, modelKey, segSec);
+    billableSeconds += billableSegmentSeconds(seg.durationSec, maxClip);
+    credits += segmentCredits(seg.durationSec, resKey, modelKey);
   }
 
   const totalUsd = Number((billableSeconds * usdPerSec).toFixed(2));

@@ -10,11 +10,14 @@ import {
   MIN_CLIP_DURATION_SEC,
   summarizeLongVideoPieces,
   type LongVideoPieceState,
+  segmentCredits,
 } from "./longVideoPlanning";
 import {
   defaultLongVideoMediaOps,
   failAndRefundLongVideoJob,
+  keepLongVideoPreviewOnly,
   processLongVideoJobSplit,
+  submitRemainingLongVideoSegments,
   syncLongVideoJob,
   validateExternalMediaUrl,
 } from "./longVideoProcessor";
@@ -559,6 +562,8 @@ export interface SubmitLongVideoInput {
   variant?: "light" | "pro";
   trimStartSec?: number;
   totalDurationSec: number;
+  /** Render and charge only piece 1 first, then wait for approval of the rest. */
+  previewFirst?: boolean;
 }
 
 export interface LongVideoJobSummary {
@@ -677,19 +682,26 @@ export const submitLongVideoGenjutsu = async (
   });
   const isAdmin = Boolean(dbUser?.isAdmin);
 
+  // Preview-first only makes sense with more than one piece. It charges piece 1 now
+  // and the rest when the user approves (see approveLongVideoPreview).
+  const previewFirst = Boolean(args.previewFirst) && plan.segmentCount > 1;
+  const upfrontCredits = previewFirst
+    ? segmentCredits(plan.segments[0]!.durationSec, resolution, variant)
+    : plan.credits;
+
   const { count: reserved } = await context.entities.User.updateMany({
-    where: { id: activeUserId, credits: { gte: plan.credits } },
-    data: { credits: { decrement: plan.credits } },
+    where: { id: activeUserId, credits: { gte: upfrontCredits } },
+    data: { credits: { decrement: upfrontCredits } },
   });
 
   if (reserved === 0 && !isAdmin) {
     throw new HttpError(
       402,
-      `Insufficient credits (${dbUser?.credits ?? 0} available, ${plan.credits} needed for ${plan.segmentCount} clip${plan.segmentCount === 1 ? "" : "s"}). Please upgrade or buy credits to process this video.`
+      `Insufficient credits (${dbUser?.credits ?? 0} available, ${upfrontCredits} needed for ${previewFirst ? "the preview clip" : `${plan.segmentCount} clip${plan.segmentCount === 1 ? "" : "s"}`}). Please upgrade or buy credits to process this video.`
     );
   }
 
-  const chargedCredits = reserved > 0 ? plan.credits : 0;
+  const chargedCredits = reserved > 0 ? upfrontCredits : 0;
 
   let createdJob: LongVideoJob;
   try {
@@ -707,6 +719,7 @@ export const submitLongVideoGenjutsu = async (
         segmentCount: plan.segmentCount,
         completedCount: 0,
         creditCost: chargedCredits,
+        previewFirst,
         segments: {
           create: plan.segments.map((seg) => ({
             index: seg.index,
@@ -834,6 +847,14 @@ export const cancelLongVideoJob = async (
   if (job.status === "COMPLETED" || job.status === "FAILED") {
     return job;
   }
+  // Canceling at the preview step keeps the rendered (and paid-for) first piece.
+  if (job.status === "AWAITING_APPROVAL") {
+    return keepLongVideoPreviewOnly({
+      job,
+      entities: context.entities,
+      mediaOps: defaultLongVideoMediaOps(uploadLocalFileToS3),
+    });
+  }
 
   const segments = await context.entities.LongVideoSegment.findMany({
     where: { jobId: job.id },
@@ -861,6 +882,134 @@ export const cancelLongVideoJob = async (
   });
 
   return context.entities.LongVideoJob.findUnique({ where: { id: job.id } });
+};
+
+async function loadOwnedLongVideoJob(jobId: string, context: any) {
+  if (!context.user?.id) {
+    throw new HttpError(401, "Authentication required");
+  }
+  const job = await context.entities.LongVideoJob.findUnique({
+    where: { id: jobId },
+  });
+  if (!job) {
+    throw new HttpError(404, "Long video job not found.");
+  }
+  if (job.userId !== context.user.id && !context.user.isAdmin) {
+    throw new HttpError(403, "Forbidden");
+  }
+  return job;
+}
+
+/** Credits still owed to render every piece after the preview. */
+async function remainingPreviewCredits(job: any, context: any): Promise<number> {
+  const segments = await context.entities.LongVideoSegment.findMany({
+    where: { jobId: job.id },
+    orderBy: { index: "asc" },
+  });
+  return segments
+    .filter((s: any) => s.status === "PENDING")
+    .reduce(
+      (sum: number, s: any) =>
+        sum + segmentCredits(s.durationSec, job.resolution, job.variant),
+      0
+    );
+}
+
+/**
+ * Approves a preview-first long video: charges the remaining pieces and renders them.
+ */
+export const approveLongVideoPreview = async (
+  { jobId }: { jobId: string },
+  context: any
+): Promise<LongVideoJob> => {
+  const job = await loadOwnedLongVideoJob(jobId, context);
+  if (job.status !== "AWAITING_APPROVAL") {
+    throw new HttpError(409, "This preview is no longer waiting for approval.");
+  }
+
+  let credentials: { apiKey: string; baseUrl: string };
+  try {
+    credentials = readServerCredentials(context.user.id);
+  } catch (err: unknown) {
+    throw new HttpError(
+      401,
+      err instanceof Error ? err.message : "Connect your Higgsfield API key"
+    );
+  }
+
+  const remaining = await remainingPreviewCredits(job, context);
+  const dbUser = await context.entities.User.findUnique({
+    where: { id: context.user.id },
+    select: { credits: true, isAdmin: true },
+  });
+  const { count: reserved } = await context.entities.User.updateMany({
+    where: { id: context.user.id, credits: { gte: remaining } },
+    data: { credits: { decrement: remaining } },
+  });
+  if (reserved === 0 && !dbUser?.isAdmin) {
+    throw new HttpError(
+      402,
+      `Insufficient credits (${dbUser?.credits ?? 0} available, ${remaining} needed for the rest of this video). Top up to continue, or keep the preview.`
+    );
+  }
+  const charged = reserved > 0 ? remaining : 0;
+
+  try {
+    // Record the charge first so a later failure refunds preview + remainder together.
+    await context.entities.LongVideoJob.update({
+      where: { id: job.id },
+      data: { creditCost: { increment: charged } },
+    });
+    await submitRemainingLongVideoSegments({
+      job,
+      entities: context.entities,
+      platformClient: createPlatformClient(credentials),
+    });
+  } catch (err: unknown) {
+    // Put the job back so the user can retry or keep the preview, and refund the remainder.
+    await context.entities.LongVideoJob.update({
+      where: { id: job.id },
+      data: {
+        status: "AWAITING_APPROVAL",
+        approvedAt: null,
+        creditCost: { decrement: charged },
+      },
+    });
+    if (charged > 0) {
+      await context.entities.User.update({
+        where: { id: context.user.id },
+        data: { credits: { increment: charged } },
+      });
+    }
+    throw new HttpError(
+      502,
+      err instanceof Error ? err.message : "Could not start the rest of the video."
+    );
+  }
+
+  return context.entities.LongVideoJob.findUnique({ where: { id: job.id } });
+};
+
+/**
+ * Ends a preview-first long video at the preview: piece 1 becomes the final video.
+ */
+export const keepLongVideoPreview = async (
+  { jobId }: { jobId: string },
+  context: any
+): Promise<LongVideoJob> => {
+  const job = await loadOwnedLongVideoJob(jobId, context);
+  try {
+    return await keepLongVideoPreviewOnly({
+      job,
+      entities: context.entities,
+      mediaOps: defaultLongVideoMediaOps(uploadLocalFileToS3),
+    });
+  } catch (err: unknown) {
+    throw new HttpError(
+      409,
+      err instanceof Error ? err.message : "Could not keep the preview."
+    );
+  }
 };
 
 export const getPublicHomepageShowcase = async (
