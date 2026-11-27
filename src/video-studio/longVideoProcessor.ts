@@ -27,6 +27,12 @@ const MAX_CONCURRENT_SUBMISSIONS = 4;
 const MAX_LONG_JOB_DURATION_MS = 60 * 60 * 1000; // 60 minutes
 // A stitch (download clips + ffmpeg concat + upload) finishes well within this window.
 // A job still marked STITCHING after it was most likely interrupted by a server restart.
+export function genjutsuModelPath(variant?: string | null): string {
+  return variant === "pro"
+    ? "higgsfield/genjutsu/motion-transfer/v1.0"
+    : "higgsfield/genjutsu-light/motion-transfer/v1.0";
+}
+
 export const STALE_STITCHING_MS = 20 * 60 * 1000; // 20 minutes
 
 // In-process mutex so heavy FFmpeg split/concat work runs 1 at a time inside 1024 MB RAM.
@@ -521,17 +527,27 @@ export async function processLongVideoJobSplit({
     // Free source file before upstream API queueing.
     await fs.rm(sourcePath, { force: true });
 
-    const modelPath =
-      job.variant === "pro"
-        ? "higgsfield/genjutsu/motion-transfer/v1.0"
-        : "higgsfield/genjutsu-light/motion-transfer/v1.0";
+    const modelPath = genjutsuModelPath(job.variant);
+
+    // Preview-first jobs render only piece 1 now. The other pieces are already cut
+    // and uploaded, and wait (PENDING, with their clip URL) for the user's approval.
+    const submitNow =
+      job.previewFirst && segmentsToRun.length > 1
+        ? segmentsToRun.slice(0, 1)
+        : segmentsToRun;
+    for (let i = submitNow.length; i < segmentsToRun.length; i++) {
+      await entities.LongVideoSegment.update({
+        where: { id: segmentsToRun[i]!.id },
+        data: { clipSourceUrl: clipUrls[i]! },
+      });
+    }
 
     for (
       let offset = 0;
-      offset < segmentsToRun.length;
+      offset < submitNow.length;
       offset += MAX_CONCURRENT_SUBMISSIONS
     ) {
-      const batch = segmentsToRun.slice(offset, offset + MAX_CONCURRENT_SUBMISSIONS);
+      const batch = submitNow.slice(offset, offset + MAX_CONCURRENT_SUBMISSIONS);
       await Promise.all(
         batch.map(async (seg, batchIdx) => {
           const segIdx = offset + batchIdx;
@@ -625,7 +641,13 @@ export async function syncLongVideoJob({
     return entities.LongVideoJob.findUnique({ where: { id: job.id } });
   }
 
-  const jobAgeMs = Date.now() - new Date(job.createdAt).getTime();
+  if (job.status === "AWAITING_APPROVAL") {
+    return job;
+  }
+
+  // Preview-first jobs restart the clock when the user approves the rest.
+  const jobAgeMs =
+    Date.now() - new Date(job.approvedAt ?? job.createdAt).getTime();
   if (jobAgeMs > MAX_LONG_JOB_DURATION_MS) {
     const segs = await entities.LongVideoSegment.findMany({
       where: { jobId: job.id },
@@ -746,6 +768,22 @@ export async function syncLongVideoJob({
     });
   }
 
+  // Preview-first: once piece 1 is ready (and nothing else was started), pause and
+  // let the user decide whether to pay for the rest.
+  if (job.previewFirst && !job.approvedAt && segments.length > 1) {
+    const first = segments[0]!;
+    const restUntouched = segments
+      .slice(1)
+      .every((s) => s.status === "PENDING" && !s.requestId);
+    if (first.status === "COMPLETED" && first.outputVideoUrl && restUntouched) {
+      await entities.LongVideoJob.updateMany({
+        where: { id: job.id, status: "PROCESSING_CLIPS" },
+        data: { status: "AWAITING_APPROVAL", previewVideoUrl: first.outputVideoUrl },
+      });
+      return entities.LongVideoJob.findUnique({ where: { id: job.id } });
+    }
+  }
+
   if (completedSegments.length < segments.length) {
     return entities.LongVideoJob.findUnique({ where: { id: job.id } });
   }
@@ -815,5 +853,120 @@ export async function syncLongVideoJob({
     return entities.LongVideoJob.findUnique({ where: { id: job.id } });
   } finally {
     await fs.rm(stitchDir, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Approves a preview-first job: queues every remaining piece (already cut and
+ * uploaded) and moves the job back to PROCESSING_CLIPS. The caller charges the
+ * remaining credits before calling this, and refunds them if it throws.
+ */
+export async function submitRemainingLongVideoSegments({
+  job,
+  entities,
+  platformClient,
+}: {
+  job: any;
+  entities: LongVideoEntities;
+  platformClient: Pick<LongVideoPlatformClient, "submit" | "cancel">;
+}): Promise<void> {
+  const claimed = await entities.LongVideoJob.updateMany({
+    where: { id: job.id, status: "AWAITING_APPROVAL" },
+    data: { status: "PROCESSING_CLIPS", approvedAt: new Date() },
+  });
+  if (claimed.count === 0) {
+    throw new Error("This preview is no longer waiting for approval.");
+  }
+
+  const segments = (
+    await entities.LongVideoSegment.findMany({
+      where: { jobId: job.id },
+      orderBy: { index: "asc" },
+    })
+  ).filter((s) => s.status === "PENDING" && s.clipSourceUrl);
+
+  const submitted: string[] = [];
+  const queuedSegmentIds: string[] = [];
+  try {
+    for (
+      let offset = 0;
+      offset < segments.length;
+      offset += MAX_CONCURRENT_SUBMISSIONS
+    ) {
+      const batch = segments.slice(offset, offset + MAX_CONCURRENT_SUBMISSIONS);
+      await Promise.all(
+        batch.map(async (seg) => {
+          const queued = await platformClient.submit(genjutsuModelPath(job.variant), {
+            video_url: seg.clipSourceUrl,
+            image_urls: job.referenceImageUrls,
+            resolution: job.resolution,
+            ...(job.prompt ? { prompt: job.prompt } : {}),
+          });
+          submitted.push(queued.requestId);
+          queuedSegmentIds.push(seg.id);
+          await entities.LongVideoSegment.update({
+            where: { id: seg.id },
+            data: { requestId: queued.requestId, status: "PROCESSING" },
+          });
+        })
+      );
+    }
+  } catch (err) {
+    // Undo the partial submission so the job can go back to waiting for approval.
+    await Promise.allSettled(submitted.map((rid) => platformClient.cancel(rid)));
+    await Promise.allSettled(
+      queuedSegmentIds.map((id) =>
+        entities.LongVideoSegment.update({
+          where: { id },
+          data: { requestId: null, status: "PENDING" },
+        })
+      )
+    );
+    throw err;
+  }
+}
+
+/**
+ * Declines the rest of a preview-first job: the rendered first piece becomes the
+ * final result, stored like any finished long video. Nothing more is charged.
+ */
+export async function keepLongVideoPreviewOnly({
+  job,
+  entities,
+  mediaOps,
+}: {
+  job: any;
+  entities: LongVideoEntities;
+  mediaOps: Pick<LongVideoMediaOps, "downloadToFile" | "uploadFinalVideo">;
+}): Promise<any> {
+  if (job.status !== "AWAITING_APPROVAL" || !job.previewVideoUrl) {
+    throw new Error("This preview is no longer waiting for approval.");
+  }
+  const workDir = await fs.mkdtemp(path.join(os.tmpdir(), `fayaa-preview-${job.id}-`));
+  try {
+    const localPath = path.join(workDir, "preview.mp4");
+    await mediaOps.downloadToFile(job.previewVideoUrl, localPath);
+    const uploaded = await mediaOps.uploadFinalVideo({
+      filePath: localPath,
+      fileName: `fayaa-genjutsu-${job.id}-preview.mp4`,
+      contentType: "video/mp4",
+      userId: job.userId,
+    });
+    const claimed = await entities.LongVideoJob.updateMany({
+      where: { id: job.id, status: "AWAITING_APPROVAL" },
+      data: {
+        status: "COMPLETED",
+        outputVideoUrl: uploaded.url,
+        outputStorageKey: uploaded.s3Key,
+        completedCount: 1,
+        segmentCount: 1,
+      },
+    });
+    if (claimed.count === 0) {
+      throw new Error("This preview is no longer waiting for approval.");
+    }
+    return entities.LongVideoJob.findUnique({ where: { id: job.id } });
+  } finally {
+    await fs.rm(workDir, { recursive: true, force: true });
   }
 }

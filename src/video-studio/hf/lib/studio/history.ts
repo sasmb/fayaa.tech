@@ -26,6 +26,8 @@ export interface RunRecord {
   longVideoProgressLabel?: string
   segmentCount?: number
   completedCount?: number
+  /** Set while a preview-first long video waits for the user to approve the rest. */
+  awaitingApproval?: { remainingCredits: number }
   /** Optional persisted database VideoTask id and public visibility state. */
   taskId?: string
   isPublic?: boolean

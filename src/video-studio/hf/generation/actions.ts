@@ -1,5 +1,7 @@
 import {
+  approveLongVideoPreview,
   cancelLongVideoJob,
+  keepLongVideoPreview,
   getLongVideoJobStatus,
   getUserLongVideoJobs,
   hfCancelGeneration,
@@ -54,6 +56,7 @@ export interface SubmitLongVideoRequest {
   variant?: "light" | "pro"
   trimStartSec?: number
   totalDurationSec: number
+  previewFirst?: boolean
 }
 
 export async function submitLongVideo(
@@ -82,4 +85,14 @@ export async function listLongVideoJobs() {
 
 export async function cancelLongVideo(jobId: string) {
   return await cancelLongVideoJob({ jobId })
+}
+
+/** Pays for and renders the rest of a preview-first long video. */
+export async function approveLongVideo(jobId: string) {
+  return await approveLongVideoPreview({ jobId })
+}
+
+/** Ends a preview-first long video with the first piece as the final video. */
+export async function keepLongVideoPreviewOnly(jobId: string) {
+  return await keepLongVideoPreview({ jobId })
 }
