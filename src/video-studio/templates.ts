@@ -1,3 +1,4 @@
+import { usdToCredits } from "./pricing";
 import { MotionModel, MotionTemplate, VideoQuality } from "./types";
 
 export const MOTION_MODELS: MotionModel[] = [
@@ -54,8 +55,8 @@ export function calculateRealtimeVideoCost(
   const rates = model.usdPerSecByRes ?? fallbackRates;
   const usdPerSec = rates[resolution] ?? rates["720p"];
   const totalUsd = Number((billableSeconds * usdPerSec).toFixed(2));
-  // 30 credits = $1.00 USD (minimum 2 credits)
-  const credits = Math.max(2, Math.ceil(totalUsd * 30));
+  // Provider cost x markup, at 30 credits per $1 (see pricing.ts).
+  const credits = usdToCredits(totalUsd);
   return {
     billableSeconds,
     usdPerSec,

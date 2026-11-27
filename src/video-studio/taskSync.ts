@@ -1,4 +1,5 @@
 import type { VideoTask } from "wasp/entities";
+import { usdToCredits } from "./pricing";
 import { MOTION_MODELS } from "./templates";
 
 interface MuApiPollingResponse {
@@ -65,8 +66,8 @@ export function creditCostForResolution(
   ) as "480p" | "720p" | "1080p";
   const usdPerSec = rates[resKey] ?? rates["720p"];
   const totalUsd = Number((sec * usdPerSec).toFixed(2));
-  // Standard FAYAA rate: 30 credits = $1.00 USD (minimum 2 credits)
-  return Math.max(2, Math.ceil(totalUsd * 30));
+  // Provider cost x markup, at 30 credits per $1 (see pricing.ts).
+  return usdToCredits(totalUsd);
 }
 
 function formatProviderError(error: unknown, fallback: string): string {
@@ -96,7 +97,9 @@ export async function syncVideoTaskStatus(
     return task;
   }
 
-  const refundAmount = creditCostForResolution(task.resolution, task.model);
+  // Refund what was actually charged when it was recorded; older tasks fall back to an estimate.
+  const refundAmount =
+    task.creditsCharged ?? creditCostForResolution(task.resolution, task.model);
 
   // 1. Check for stale/timed-out tasks (e.g. 30+ minutes stuck in PROCESSING)
   const taskAgeMs = Date.now() - new Date(task.createdAt).getTime();

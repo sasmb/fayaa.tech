@@ -61,7 +61,7 @@ export function TermsPage() {
         </h2>
         <ul className="list-disc pl-5 space-y-2 text-[#a1a1aa]">
           <li>
-            <strong>Credit Economics:</strong> FAYAA computes video generation costs using compute credits (standard rate: 30 credits = $1.00 USD). Video synthesis deducts credits based on model variant (Genjutsu Light or Pro), output resolution (480p, 720p, 1080p), and duration in billable seconds.
+            <strong>Credit Economics:</strong> FAYAA charges video generation in credits. Each render deducts credits based on the model (such as Genjutsu Light, Genjutsu Pro or Seedance), output resolution (480p, 720p, 1080p) and duration in billable seconds. The cost is shown before you generate, and failed renders are refunded.
           </li>
           <li>
             <strong>Subscription Cycles:</strong> Subscriptions (such as FAYAA Plus and FAYAA Ultra) are billed in advance on a recurring monthly or annual basis depending on your selection.

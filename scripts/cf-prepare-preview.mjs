@@ -3,7 +3,8 @@ import path from "node:path";
 
 const rootDir = process.cwd();
 const clientBuildDir = path.join(rootDir, ".wasp", "out", "web-app", "build");
-const outputRoot = path.join(rootDir, ".cloudflare", "output", "v0");
+// Build Output Specification v1 (cf 1.0.0-rc and later reject the old v0 directory).
+const outputRoot = path.join(rootDir, ".cloudflare", "output", "v1");
 const defaultWorkerDir = path.join(outputRoot, "workers", "default");
 const assetsDir = path.join(defaultWorkerDir, "assets");
 

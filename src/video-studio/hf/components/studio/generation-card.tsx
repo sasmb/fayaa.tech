@@ -43,6 +43,8 @@ export interface GenerationCardProps {
   media?: ReactNode
   title?: ReactNode
   generatingLabel?: ReactNode
+  /** Extra progress shown along the bottom while generating (e.g. long-video pieces). */
+  generatingDetail?: ReactNode
   failureLabel?: ReactNode
   children?: ReactNode
   className?: string
@@ -58,6 +60,7 @@ export function GenerationCard({
   media,
   title,
   generatingLabel = "Generating",
+  generatingDetail,
   failureLabel = "The generation did not produce previewable media.",
   className,
   children,
@@ -106,6 +109,7 @@ export function GenerationCard({
               {generatingLabel}
             </span>
           </span>
+          {generatingDetail}
         </span>
       ) : null}
       {state === "failed" ? (
@@ -204,6 +208,7 @@ export interface GenerationTileProps {
   media?: ReactNode
   title?: ReactNode
   generatingLabel?: ReactNode
+  generatingDetail?: ReactNode
   failureLabel?: ReactNode
   actions?: CardAction[]
   children?: ReactNode
@@ -225,6 +230,7 @@ export function GenerationTile({
   media,
   title,
   generatingLabel = "Generating",
+  generatingDetail,
   failureLabel,
   actions,
   children,
@@ -242,6 +248,7 @@ export function GenerationTile({
       <GenerationCard
         state={state}
         generatingLabel={generatingLabel}
+        generatingDetail={generatingDetail}
         failureLabel={failureLabel}
         className={className}
         style={style}

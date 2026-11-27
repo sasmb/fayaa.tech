@@ -13,6 +13,7 @@ import { promisify } from "node:util";
 import { MAX_FILE_SIZE_BYTES } from "../file-upload/validation";
 import {
   computeLongVideoSegments,
+  maxClipDurationSec,
   MIN_CLIP_DURATION_SEC,
 } from "./longVideoPlanning";
 import type { GenerationStatus, QueuedGeneration } from "./hf/generation/platform";
@@ -24,6 +25,46 @@ const FETCH_TIMEOUT_MS = 120_000;
 const FFMPEG_TIMEOUT_MS = 240_000;
 const MAX_CONCURRENT_SUBMISSIONS = 4;
 const MAX_LONG_JOB_DURATION_MS = 60 * 60 * 1000; // 60 minutes
+// A clip that fails upstream is re-rendered automatically before the job is failed,
+// so one flaky clip doesn't throw away (and refund) every other finished clip.
+export const MAX_SEGMENT_ATTEMPTS = 3;
+// Content-filter rejections and user cancels won't change on a retry.
+const NON_RETRYABLE_SEGMENT_STATUSES = new Set(["nsfw", "canceled"]);
+
+export function genjutsuModelPath(variant?: string | null): string {
+  return variant === "pro"
+    ? "higgsfield/genjutsu/motion-transfer/v1.0"
+    : "higgsfield/genjutsu-light/motion-transfer/v1.0";
+}
+
+/** Genjutsu accepts up to 4 reference images per request. */
+export const MAX_GENJUTSU_REFERENCES = 4;
+// Carryover renders pieces one after another, so allow more time per piece.
+const CARRYOVER_MS_PER_PIECE = 15 * 60 * 1000;
+
+/** Whether new long-video jobs should use experimental frame carryover. */
+export function frameCarryoverEnabled(): boolean {
+  return process.env.LONG_VIDEO_FRAME_CARRYOVER?.trim().toLowerCase() === "true";
+}
+
+/**
+ * Reference images for piece N under frame carryover: the user's references stay
+ * first (prompts point at @Image1), then the previous piece's last frame if a slot
+ * is free.
+ */
+export function carryoverReferenceImages(
+  references: string[],
+  previousFrameUrl: string | null | undefined
+): string[] {
+  if (!previousFrameUrl || references.length >= MAX_GENJUTSU_REFERENCES) {
+    return references;
+  }
+  return [...references, previousFrameUrl];
+}
+
+// A stitch (download clips + ffmpeg concat + upload) finishes well within this window.
+// A job still marked STITCHING after it was most likely interrupted by a server restart.
+export const STALE_STITCHING_MS = 20 * 60 * 1000; // 20 minutes
 
 // In-process mutex so heavy FFmpeg split/concat work runs 1 at a time inside 1024 MB RAM.
 let ffmpegMutexChain: Promise<void> = Promise.resolve();
@@ -224,6 +265,111 @@ export async function splitSegmentWithFfmpeg({
   );
 }
 
+/** True when ffmpeg's stream listing (stderr of `ffmpeg -i`) contains an audio stream. */
+export function ffmpegListingHasAudio(stderr: string): boolean {
+  return /Stream #\d+:\d+[^\n]*: Audio:/.test(stderr);
+}
+
+async function fileHasAudioStream(filePath: string): Promise<boolean> {
+  const ffmpeg = resolveFfmpegBinary();
+  try {
+    const { stderr } = await execFileAsync(ffmpeg, ["-i", filePath], {
+      timeout: 30_000,
+    });
+    return ffmpegListingHasAudio(stderr || "");
+  } catch (err: any) {
+    // ffmpeg exits non-zero when -i has no output target; stderr still lists streams.
+    return ffmpegListingHasAudio(String(err?.stderr ?? ""));
+  }
+}
+
+/**
+ * Lays the original source audio (from the same trimmed range the clips were cut
+ * from) over the stitched video. Genjutsu re-renders the picture, so without this
+ * the final long video loses the music or voice of the upload.
+ * Returns false and leaves `outputPath` unwritten when the source has no audio.
+ */
+export async function muxSourceAudioWithFfmpeg({
+  videoPath,
+  sourcePath,
+  startSec,
+  durationSec,
+  outputPath,
+}: {
+  videoPath: string;
+  sourcePath: string;
+  startSec: number;
+  durationSec: number;
+  outputPath: string;
+}): Promise<boolean> {
+  if (!(await fileHasAudioStream(sourcePath))) return false;
+  const ffmpeg = resolveFfmpegBinary();
+  await execFileAsync(
+    ffmpeg,
+    [
+      "-y",
+      "-i",
+      videoPath,
+      "-ss",
+      Math.max(0, startSec).toFixed(2),
+      "-t",
+      durationSec.toFixed(2),
+      "-i",
+      sourcePath,
+      "-threads",
+      "1",
+      "-map",
+      "0:v:0",
+      "-map",
+      "1:a:0",
+      "-c:v",
+      "copy",
+      "-c:a",
+      "aac",
+      "-ar",
+      "44100",
+      "-ac",
+      "2",
+      "-shortest",
+      "-movflags",
+      "+faststart",
+      outputPath,
+    ],
+    { timeout: FFMPEG_TIMEOUT_MS }
+  );
+  return true;
+}
+
+/** Saves the final frame of a video as a PNG (used for frame carryover between pieces). */
+export async function extractLastFrameWithFfmpeg({
+  videoPath,
+  outputPath,
+}: {
+  videoPath: string;
+  outputPath: string;
+}): Promise<void> {
+  const ffmpeg = resolveFfmpegBinary();
+  await execFileAsync(
+    ffmpeg,
+    [
+      "-y",
+      "-sseof",
+      "-0.5",
+      "-i",
+      videoPath,
+      "-threads",
+      "1",
+      "-update",
+      "1",
+      "-frames:v",
+      "1",
+      outputPath,
+    ],
+    { timeout: 60_000 }
+  );
+  await fs.access(outputPath);
+}
+
 export async function stitchClipsWithFfmpeg({
   clipPaths,
   concatListPath,
@@ -303,9 +449,10 @@ export async function uploadClipFileToPlatform(
     upload_url: string;
     public_url: string;
     upload_headers: Record<string, string>;
-  }>
+  }>,
+  contentType = "video/mp4"
 ): Promise<string> {
-  const ticket = await createUpload("video/mp4");
+  const ticket = await createUpload(contentType);
   const stat = await fs.stat(filePath);
   const res = await fetch(ticket.upload_url, {
     method: "PUT",
@@ -366,10 +513,24 @@ export interface LongVideoMediaOps {
     concatListPath: string;
     outputPath: string;
   }) => Promise<void>;
+  /** Optional: replaces the stitched video's audio with the source audio. */
+  muxSourceAudio?: (args: {
+    videoPath: string;
+    sourcePath: string;
+    startSec: number;
+    durationSec: number;
+    outputPath: string;
+  }) => Promise<boolean>;
   uploadClipFile: (
     filePath: string,
     createUpload: LongVideoPlatformClient["createUpload"]
   ) => Promise<string>;
+  /** Frame carryover: grabs a piece's last frame and uploads it as a PNG. */
+  carryoverFrame?: (args: {
+    videoUrl: string;
+    workDir: string;
+    createUpload: LongVideoPlatformClient["createUpload"];
+  }) => Promise<string>;
   uploadFinalVideo: (args: {
     filePath: string;
     fileName: string;
@@ -385,8 +546,18 @@ export const defaultLongVideoMediaOps = (
   probeDurationSec: probeVideoDurationSec,
   splitSegment: splitSegmentWithFfmpeg,
   stitchClips: stitchClipsWithFfmpeg,
+  muxSourceAudio: muxSourceAudioWithFfmpeg,
   uploadClipFile: (filePath, createUpload) =>
     uploadClipFileToPlatform(filePath, createUpload),
+  carryoverFrame: async ({ videoUrl, workDir, createUpload }) => {
+    const videoPath = path.join(workDir, "prev-piece.mp4");
+    const framePath = path.join(workDir, "prev-piece-last-frame.png");
+    await downloadMediaToFile(videoUrl, videoPath);
+    await withFfmpegMutex(() =>
+      extractLastFrameWithFfmpeg({ videoPath, outputPath: framePath })
+    );
+    return uploadClipFileToPlatform(framePath, createUpload, "image/png");
+  },
   uploadFinalVideo,
 });
 
@@ -437,7 +608,8 @@ export async function failAndRefundLongVideoJob({
 
 /**
  * Runs inside an async worker pass immediately after creating LongVideoJob:
- * downloads source video, probes duration, sequentially cuts <=30s segments on
+ * downloads source video, probes duration, sequentially cuts segments (<=15s for
+ * Light, <=30s for Pro) on
  * 1 thread, uploads each clip, deletes temp files immediately, and submits
  * bounded Genjutsu batches carrying the exact same prompt & reference anchors.
  */
@@ -472,7 +644,8 @@ export async function processLongVideoJobSplit({
     const effectiveTotal = Math.min(job.totalDurationSec, availableAfterTrim);
     const plannedSegments = computeLongVideoSegments(
       effectiveTotal,
-      job.trimStartSec ?? 0
+      job.trimStartSec ?? 0,
+      maxClipDurationSec(job.variant)
     );
 
     const dbSegments = await entities.LongVideoSegment.findMany({
@@ -481,6 +654,15 @@ export async function processLongVideoJobSplit({
     });
 
     const segmentsToRun = dbSegments.slice(0, plannedSegments.length);
+
+    // If the real source is shorter than the requested span, the extra planned
+    // segments are never rendered. Mark them SKIPPED so the job can still finish.
+    for (const extra of dbSegments.slice(plannedSegments.length)) {
+      await entities.LongVideoSegment.update({
+        where: { id: extra.id },
+        data: { status: "SKIPPED" },
+      });
+    }
     const clipUrls: string[] = [];
 
     // Split + upload sequentially with 1 thread so RAM and /tmp usage remain tiny inside 1 GB.
@@ -506,17 +688,28 @@ export async function processLongVideoJobSplit({
     // Free source file before upstream API queueing.
     await fs.rm(sourcePath, { force: true });
 
-    const modelPath =
-      job.variant === "pro"
-        ? "higgsfield/genjutsu/motion-transfer/v1.0"
-        : "higgsfield/genjutsu-light/motion-transfer/v1.0";
+    const modelPath = genjutsuModelPath(job.variant);
+
+    // Preview-first jobs render only piece 1 now; the rest wait (PENDING, with their
+    // clip URL) for the user's approval. Frame carryover also starts with piece 1 only,
+    // and each later piece starts once the one before it is done (see syncLongVideoJob).
+    const submitNow =
+      (job.previewFirst || job.frameCarryover) && segmentsToRun.length > 1
+        ? segmentsToRun.slice(0, 1)
+        : segmentsToRun;
+    for (let i = submitNow.length; i < segmentsToRun.length; i++) {
+      await entities.LongVideoSegment.update({
+        where: { id: segmentsToRun[i]!.id },
+        data: { clipSourceUrl: clipUrls[i]! },
+      });
+    }
 
     for (
       let offset = 0;
-      offset < segmentsToRun.length;
+      offset < submitNow.length;
       offset += MAX_CONCURRENT_SUBMISSIONS
     ) {
-      const batch = segmentsToRun.slice(offset, offset + MAX_CONCURRENT_SUBMISSIONS);
+      const batch = submitNow.slice(offset, offset + MAX_CONCURRENT_SUBMISSIONS);
       await Promise.all(
         batch.map(async (seg, batchIdx) => {
           const segIdx = offset + batchIdx;
@@ -579,15 +772,49 @@ export async function syncLongVideoJob({
 }: {
   job: any;
   entities: LongVideoEntities;
-  platformClient: Pick<LongVideoPlatformClient, "status" | "cancel">;
+  platformClient: Pick<LongVideoPlatformClient, "status" | "cancel"> &
+    Partial<Pick<LongVideoPlatformClient, "submit" | "createUpload">>;
   mediaOps: LongVideoMediaOps;
 }): Promise<any> {
   if (job.status === "COMPLETED" || job.status === "FAILED") {
     return job;
   }
 
-  const jobAgeMs = Date.now() - new Date(job.createdAt).getTime();
-  if (jobAgeMs > MAX_LONG_JOB_DURATION_MS) {
+  if (job.status === "STITCHING") {
+    const sinceUpdateMs =
+      Date.now() - new Date(job.updatedAt ?? job.createdAt).getTime();
+    if (sinceUpdateMs <= STALE_STITCHING_MS) {
+      return job;
+    }
+    // Stitching was interrupted (e.g. the server restarted mid-concat). Fail it once,
+    // atomically, so a stitch that is still finishing elsewhere keeps its result.
+    const claimed = await entities.LongVideoJob.updateMany({
+      where: { id: job.id, status: "STITCHING" },
+      data: { status: "FAILED", error: "Stitching was interrupted. Credits refunded." },
+    });
+    if (claimed.count > 0) {
+      await failAndRefundLongVideoJob({
+        jobId: job.id,
+        userId: job.userId,
+        creditCost: job.creditCost,
+        errorMessage: "Stitching was interrupted. Credits refunded.",
+        entities,
+      });
+    }
+    return entities.LongVideoJob.findUnique({ where: { id: job.id } });
+  }
+
+  if (job.status === "AWAITING_APPROVAL") {
+    return job;
+  }
+
+  // Preview-first jobs restart the clock when the user approves the rest.
+  const jobAgeMs =
+    Date.now() - new Date(job.approvedAt ?? job.createdAt).getTime();
+  const maxJobMs = job.frameCarryover
+    ? Math.max(MAX_LONG_JOB_DURATION_MS, Number(job.segmentCount || 1) * CARRYOVER_MS_PER_PIECE)
+    : MAX_LONG_JOB_DURATION_MS;
+  if (jobAgeMs > maxJobMs) {
     const segs = await entities.LongVideoSegment.findMany({
       where: { jobId: job.id },
       orderBy: { index: "asc" },
@@ -607,14 +834,16 @@ export async function syncLongVideoJob({
     return entities.LongVideoJob.findUnique({ where: { id: job.id } });
   }
 
-  if (job.status === "SPLITTING" || job.status === "STITCHING") {
+  if (job.status === "SPLITTING") {
     return job;
   }
 
-  const segments = await entities.LongVideoSegment.findMany({
-    where: { jobId: job.id },
-    orderBy: { index: "asc" },
-  });
+  const segments = (
+    await entities.LongVideoSegment.findMany({
+      where: { jobId: job.id },
+      orderBy: { index: "asc" },
+    })
+  ).filter((s) => s.status !== "SKIPPED");
 
   const processingSegments = segments.filter(
     (s) => s.status === "PROCESSING" && s.requestId
@@ -651,6 +880,7 @@ export async function syncLongVideoJob({
                 },
               });
               seg.status = "FAILED";
+              seg.retryable = true;
             }
           } else if (
             remote.status === "failed" ||
@@ -667,12 +897,46 @@ export async function syncLongVideoJob({
             });
             seg.status = "FAILED";
             seg.error = detail;
+            seg.retryable = !NON_RETRYABLE_SEGMENT_STATUSES.has(remote.status);
           }
         } catch {
           // Transient polling errors are retried on the next poll tick.
         }
       })
     );
+  }
+
+  // Re-render failed clips from their already-uploaded source piece while attempts remain.
+  if (platformClient.submit) {
+    for (const seg of segments) {
+      if (seg.status !== "FAILED" || !seg.retryable || !seg.clipSourceUrl) continue;
+      const attempts = Number(seg.attempts ?? 1);
+      if (attempts >= MAX_SEGMENT_ATTEMPTS) continue;
+      try {
+        const queued = await platformClient.submit(genjutsuModelPath(job.variant), {
+          video_url: seg.clipSourceUrl,
+          image_urls: job.referenceImageUrls,
+          resolution: job.resolution,
+          ...(job.prompt ? { prompt: job.prompt } : {}),
+        });
+        await entities.LongVideoSegment.update({
+          where: { id: seg.id },
+          data: {
+            status: "PROCESSING",
+            requestId: queued.requestId,
+            attempts: attempts + 1,
+            outputVideoUrl: null,
+            error: null,
+          },
+        });
+        seg.status = "PROCESSING";
+        seg.requestId = queued.requestId;
+        seg.attempts = attempts + 1;
+        seg.error = null;
+      } catch {
+        // Resubmission failed; the job fails below with the clip's original error.
+      }
+    }
   }
 
   const failedSegment = segments.find((s) => s.status === "FAILED");
@@ -703,6 +967,67 @@ export async function syncLongVideoJob({
       where: { id: job.id },
       data: { completedCount: completedSegments.length },
     });
+  }
+
+  // Preview-first: once piece 1 is ready (and nothing else was started), pause and
+  // let the user decide whether to pay for the rest.
+  if (job.previewFirst && !job.approvedAt && segments.length > 1) {
+    const first = segments[0]!;
+    const restUntouched = segments
+      .slice(1)
+      .every((s) => s.status === "PENDING" && !s.requestId);
+    if (first.status === "COMPLETED" && first.outputVideoUrl && restUntouched) {
+      await entities.LongVideoJob.updateMany({
+        where: { id: job.id, status: "PROCESSING_CLIPS" },
+        data: { status: "AWAITING_APPROVAL", previewVideoUrl: first.outputVideoUrl },
+      });
+      return entities.LongVideoJob.findUnique({ where: { id: job.id } });
+    }
+  }
+
+  // Frame carryover: start the next piece once the one before it is done, passing
+  // the finished piece's last frame as an extra reference so the look carries over.
+  if (job.frameCarryover && platformClient.submit && platformClient.createUpload) {
+    const nextIdx = segments.findIndex((s) => s.status === "PENDING" && !s.requestId);
+    const prev = nextIdx > 0 ? segments[nextIdx - 1] : undefined;
+    if (prev && prev.status === "COMPLETED" && prev.outputVideoUrl) {
+      const next = segments[nextIdx]!;
+      let frameUrl: string | null = null;
+      if (mediaOps.carryoverFrame) {
+        const workDir = await fs.mkdtemp(path.join(os.tmpdir(), `fayaa-carry-${job.id}-`));
+        try {
+          frameUrl = await mediaOps.carryoverFrame({
+            videoUrl: prev.outputVideoUrl,
+            workDir,
+            createUpload: platformClient.createUpload,
+          });
+        } catch (err: unknown) {
+          // Fall back to the user's references alone rather than stalling the job.
+          console.warn(
+            `[longVideo] Frame carryover failed for job ${job.id}, piece ${next.index + 1}:`,
+            err instanceof Error ? err.message : err
+          );
+        } finally {
+          await fs.rm(workDir, { recursive: true, force: true });
+        }
+      }
+      try {
+        const queued = await platformClient.submit(genjutsuModelPath(job.variant), {
+          video_url: next.clipSourceUrl,
+          image_urls: carryoverReferenceImages(job.referenceImageUrls, frameUrl),
+          resolution: job.resolution,
+          ...(job.prompt ? { prompt: job.prompt } : {}),
+        });
+        await entities.LongVideoSegment.update({
+          where: { id: next.id },
+          data: { requestId: queued.requestId, status: "PROCESSING" },
+        });
+        next.status = "PROCESSING";
+        next.requestId = queued.requestId;
+      } catch {
+        // Retried on the next poll tick.
+      }
+    }
   }
 
   if (completedSegments.length < segments.length) {
@@ -744,8 +1069,41 @@ export async function syncLongVideoJob({
       })
     );
 
+    // Keep the original soundtrack. This is best effort: if the source has no audio
+    // or the mux fails, the silent stitched video is still delivered.
+    let finalPath = stitchedPath;
+    if (mediaOps.muxSourceAudio) {
+      const sourcePath = path.join(stitchDir, "source.mp4");
+      const withAudioPath = path.join(stitchDir, `final-${job.id}-audio.mp4`);
+      const startSec = Number(segments[0]?.startSec ?? job.trimStartSec ?? 0);
+      const durationSec = segments.reduce(
+        (sum, s) => sum + Number(s.durationSec || 0),
+        0
+      );
+      try {
+        await mediaOps.downloadToFile(job.sourceVideoUrl, sourcePath);
+        const muxed = await withFfmpegMutex(() =>
+          mediaOps.muxSourceAudio!({
+            videoPath: stitchedPath,
+            sourcePath,
+            startSec,
+            durationSec,
+            outputPath: withAudioPath,
+          })
+        );
+        if (muxed) finalPath = withAudioPath;
+      } catch (err: unknown) {
+        console.warn(
+          `[longVideo] Could not add source audio to job ${job.id}:`,
+          err instanceof Error ? err.message : err
+        );
+      } finally {
+        await fs.rm(sourcePath, { force: true });
+      }
+    }
+
     const uploaded = await mediaOps.uploadFinalVideo({
-      filePath: stitchedPath,
+      filePath: finalPath,
       fileName: `fayaa-genjutsu-${job.id}.mp4`,
       contentType: "video/mp4",
       userId: job.userId,
@@ -774,5 +1132,122 @@ export async function syncLongVideoJob({
     return entities.LongVideoJob.findUnique({ where: { id: job.id } });
   } finally {
     await fs.rm(stitchDir, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Approves a preview-first job: queues every remaining piece (already cut and
+ * uploaded) and moves the job back to PROCESSING_CLIPS. The caller charges the
+ * remaining credits before calling this, and refunds them if it throws.
+ */
+export async function submitRemainingLongVideoSegments({
+  job,
+  entities,
+  platformClient,
+}: {
+  job: any;
+  entities: LongVideoEntities;
+  platformClient: Pick<LongVideoPlatformClient, "submit" | "cancel">;
+}): Promise<void> {
+  const claimed = await entities.LongVideoJob.updateMany({
+    where: { id: job.id, status: "AWAITING_APPROVAL" },
+    data: { status: "PROCESSING_CLIPS", approvedAt: new Date() },
+  });
+  if (claimed.count === 0) {
+    throw new Error("This preview is no longer waiting for approval.");
+  }
+  // Frame carryover renders the rest one piece at a time from syncLongVideoJob.
+  if (job.frameCarryover) return;
+
+  const segments = (
+    await entities.LongVideoSegment.findMany({
+      where: { jobId: job.id },
+      orderBy: { index: "asc" },
+    })
+  ).filter((s) => s.status === "PENDING" && s.clipSourceUrl);
+
+  const submitted: string[] = [];
+  const queuedSegmentIds: string[] = [];
+  try {
+    for (
+      let offset = 0;
+      offset < segments.length;
+      offset += MAX_CONCURRENT_SUBMISSIONS
+    ) {
+      const batch = segments.slice(offset, offset + MAX_CONCURRENT_SUBMISSIONS);
+      await Promise.all(
+        batch.map(async (seg) => {
+          const queued = await platformClient.submit(genjutsuModelPath(job.variant), {
+            video_url: seg.clipSourceUrl,
+            image_urls: job.referenceImageUrls,
+            resolution: job.resolution,
+            ...(job.prompt ? { prompt: job.prompt } : {}),
+          });
+          submitted.push(queued.requestId);
+          queuedSegmentIds.push(seg.id);
+          await entities.LongVideoSegment.update({
+            where: { id: seg.id },
+            data: { requestId: queued.requestId, status: "PROCESSING" },
+          });
+        })
+      );
+    }
+  } catch (err) {
+    // Undo the partial submission so the job can go back to waiting for approval.
+    await Promise.allSettled(submitted.map((rid) => platformClient.cancel(rid)));
+    await Promise.allSettled(
+      queuedSegmentIds.map((id) =>
+        entities.LongVideoSegment.update({
+          where: { id },
+          data: { requestId: null, status: "PENDING" },
+        })
+      )
+    );
+    throw err;
+  }
+}
+
+/**
+ * Declines the rest of a preview-first job: the rendered first piece becomes the
+ * final result, stored like any finished long video. Nothing more is charged.
+ */
+export async function keepLongVideoPreviewOnly({
+  job,
+  entities,
+  mediaOps,
+}: {
+  job: any;
+  entities: LongVideoEntities;
+  mediaOps: Pick<LongVideoMediaOps, "downloadToFile" | "uploadFinalVideo">;
+}): Promise<any> {
+  if (job.status !== "AWAITING_APPROVAL" || !job.previewVideoUrl) {
+    throw new Error("This preview is no longer waiting for approval.");
+  }
+  const workDir = await fs.mkdtemp(path.join(os.tmpdir(), `fayaa-preview-${job.id}-`));
+  try {
+    const localPath = path.join(workDir, "preview.mp4");
+    await mediaOps.downloadToFile(job.previewVideoUrl, localPath);
+    const uploaded = await mediaOps.uploadFinalVideo({
+      filePath: localPath,
+      fileName: `fayaa-genjutsu-${job.id}-preview.mp4`,
+      contentType: "video/mp4",
+      userId: job.userId,
+    });
+    const claimed = await entities.LongVideoJob.updateMany({
+      where: { id: job.id, status: "AWAITING_APPROVAL" },
+      data: {
+        status: "COMPLETED",
+        outputVideoUrl: uploaded.url,
+        outputStorageKey: uploaded.s3Key,
+        completedCount: 1,
+        segmentCount: 1,
+      },
+    });
+    if (claimed.count === 0) {
+      throw new Error("This preview is no longer waiting for approval.");
+    }
+    return entities.LongVideoJob.findUnique({ where: { id: job.id } });
+  } finally {
+    await fs.rm(workDir, { recursive: true, force: true });
   }
 }

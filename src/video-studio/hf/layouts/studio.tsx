@@ -9,7 +9,12 @@ import {
   SubscriptionStatus,
   prettyPaymentPlanName,
 } from "../../../payment/plans"
-import { estimateLongVideoPlan } from "../../longVideoPlanning"
+import { estimateLongVideoPlan, segmentCredits } from "../../longVideoPlanning"
+import {
+  estimateSeedancePlan,
+  normalizeSeedanceAspectRatio,
+  SEEDANCE_MODEL_ID,
+} from "../../seedancePlanning"
 import { creditCostForResolution } from "../../taskSync"
 import { GenjutsuWorkbench } from "../components/studio/genjutsu-workbench"
 import {
@@ -307,11 +312,16 @@ export function StudioTemplate({
     (model.requirePrompt && !prompt.trim())
 
   const requiredCredits =
-    settings.resolution === "1080p"
-      ? 30
-      : settings.resolution === "480p"
-        ? 15
-        : 20
+    model.id === SEEDANCE_MODEL_ID
+      ? estimateSeedancePlan({
+          totalDurationSec: Number(settings.duration ?? 10),
+          resolution: settings.resolution,
+        }).credits
+      : creditCostForResolution(
+          typeof settings.resolution === "string" ? settings.resolution : "480p",
+          settings.variant === "pro" ? "pro" : "light",
+          Number(settings.duration ?? 5)
+        )
 
   const planBadge =
     user?.subscriptionStatus === SubscriptionStatus.Active &&
@@ -330,20 +340,55 @@ export function StudioTemplate({
         setShowGuestSignupGate(true)
         return
       }
+      const projectId = view.kind === "project" ? view.projectId : undefined
+      if (plane.model === SEEDANCE_MODEL_ID) {
+        const seedancePlan = estimateSeedancePlan({
+          totalDurationSec: Number(plane.settings.duration ?? 10),
+          resolution: plane.settings.resolution,
+        })
+        if (user.credits < seedancePlan.credits && !user.isAdmin) {
+          setLocalError(
+            `Insufficient credits (${user.credits} available, ${seedancePlan.credits} needed). Subscribe or top up to continue.`
+          )
+          setView({ kind: "subscription" })
+          return
+        }
+        void runs
+          .submitSeedance(
+            {
+              prompt: plane.prompt.text,
+              totalDurationSec: seedancePlan.totalDurationSec,
+              resolution: seedancePlan.resolution,
+              aspectRatio: normalizeSeedanceAspectRatio(plane.settings.aspect_ratio),
+            },
+            projectId
+          )
+          .then((record) => {
+            if (record && projectId) projectsStore.touch(projectId)
+          })
+        return
+      }
       const res = (plane.settings.resolution === "1080p" || plane.settings.resolution === "720p"
         ? plane.settings.resolution
         : "480p") as "480p" | "720p" | "1080p"
       const variant = plane.settings.variant === "pro" ? "pro" : "light"
       const durationSec = Number(plane.settings.duration ?? 5)
       const trimStartSec = Number(plane.settings.trimStartSec ?? 0)
-      const isLongForm = Boolean(plane.settings.longForm) && durationSec > 30
-      const cost = isLongForm
+      const isLongForm = Boolean(plane.settings.longForm)
+      const previewFirst = isLongForm && Boolean(plane.settings.previewFirst)
+      const longPlan = isLongForm
         ? estimateLongVideoPlan({
             totalDurationSec: durationSec,
             trimStartSec,
             resolution: res,
             variant,
-          }).credits
+          })
+        : null
+      // Preview-first only charges piece 1 up front.
+      const cost = longPlan
+        ? previewFirst && longPlan.segmentCount > 1
+          ? segmentCredits(longPlan.segments[0]!.durationSec, res, variant)
+          : longPlan.credits
         : creditCostForResolution(res, variant, durationSec)
       if (user.credits < cost && !user.isAdmin) {
         setLocalError(
@@ -352,7 +397,6 @@ export function StudioTemplate({
         setView({ kind: "subscription" })
         return
       }
-      const projectId = view.kind === "project" ? view.projectId : undefined
       if (isLongForm) {
         const sourceVideoUrl =
           plane.media.source?.[0]?.url ?? plane.media.video?.[0]?.url ?? ""
@@ -370,6 +414,7 @@ export function StudioTemplate({
               variant,
               trimStartSec,
               totalDurationSec: durationSec,
+              ...(previewFirst ? { previewFirst: true } : {}),
             },
             projectId
           )
@@ -528,6 +573,8 @@ export function StudioTemplate({
               errorMessage={localError ?? runs.error ?? undefined}
               onSubmitPlane={handleSubmitPlane}
               onCancelGenerating={handleCancel}
+              onApprovePreview={(id) => void runs.approvePreview(id)}
+              onKeepPreview={(id) => void runs.keepPreview(id)}
               onOpenSubscriptions={() => setView({ kind: "subscription" })}
               onOpenAllGenerations={() => setView({ kind: "all" })}
             />

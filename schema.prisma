@@ -35,6 +35,31 @@ model User {
   files                     File[]
   videoTasks                VideoTask[]
   longVideoJobs             LongVideoJob[]
+  payments                  Payment[]
+}
+
+// One row per successful charge from the payment processor (currently Stripe
+// invoices). Written by the `invoice.paid` webhook and by the admin
+// "Sync from Stripe" backfill, keyed on the processor's id so both are idempotent.
+model Payment {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  user                      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId                    String?
+
+  provider                  String          @default("stripe")
+  externalId                String          @unique // e.g. Stripe invoice id `in_...`
+  paymentProcessorUserId    String?                 // e.g. Stripe customer id `cus_...`
+  planId                    String?                 // PaymentPlanId, when the price maps to a known plan
+  kind                      String                  // "subscription" | "credits" | "unknown"
+  amountCents               Int                     // amount actually paid, in the currency's minor unit
+  currency                  String                  // lower-case ISO code, e.g. "usd"
+  creditsGranted            Int?
+  paidAt                    DateTime
+
+  @@index([userId])
+  @@index([paidAt])
 }
 
 model ProcessedWebhookEvent {
@@ -127,20 +152,26 @@ model VideoTask {
   publicCategory     String?
   storageKey         String?
   posterUrl          String?
+  // Credit price of the render (provider USD x 30 x 1.5 markup, rounded up) and what was
+  // actually taken from the user's balance (0 for admins). Null on older rows.
+  creditCost         Int?
+  creditsCharged     Int?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
   @@index([userId])
   @@index([status])
   @@index([isPublic, featuredOnHome])
+  @@index([createdAt])
 }
 
 model LongVideoJob {
   id                 String             @id @default(uuid())
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId             String
-  status             String             @default("SPLITTING") // "SPLITTING" | "PROCESSING_CLIPS" | "STITCHING" | "COMPLETED" | "FAILED"
-  variant            String             @default("light")     // "light" | "pro"
+  status             String             @default("SPLITTING") // "SPLITTING" | "PROCESSING_CLIPS" | "AWAITING_APPROVAL" | "STITCHING" | "COMPLETED" | "FAILED"
+  variant            String             @default("light")     // "light" | "pro" | "seedance"
+  aspectRatio        String?                                  // Seedance only, e.g. "16:9"
   resolution         String             @default("480p")      // "480p" | "720p" | "1080p"
   prompt             String?
   sourceVideoUrl     String
@@ -151,6 +182,14 @@ model LongVideoJob {
   completedCount     Int                @default(0)
   creditCost         Int
   creditsRefunded    Boolean            @default(false)
+  // Preview-first: only piece 1 is rendered and charged, then the job waits in
+  // AWAITING_APPROVAL until the user approves (and pays for) the rest.
+  previewFirst       Boolean            @default(false)
+  previewVideoUrl    String?
+  approvedAt         DateTime?
+  // Experimental (LONG_VIDEO_FRAME_CARRYOVER=true): render pieces one after another and
+  // pass each piece's last frame to the next as an extra reference image.
+  frameCarryover     Boolean            @default(false)
   outputVideoUrl     String?
   outputStorageKey   String?
   error              String?
@@ -171,7 +210,8 @@ model LongVideoSegment {
   durationSec    Float
   clipSourceUrl  String?
   requestId      String?      @unique
-  status         String       @default("PENDING") // "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED"
+  attempts       Int          @default(1) // render attempts, incl. automatic retries
+  status         String       @default("PENDING") // "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "SKIPPED"
   outputVideoUrl String?
   error          String?
   createdAt      DateTime     @default(now())

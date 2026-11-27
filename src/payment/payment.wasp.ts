@@ -21,7 +21,7 @@ export const paymentSpec: Spec = [
   query(getCustomerPortalUrl, { entities: ["User"] }),
   action(generateCheckoutSession, { entities: ["User"] }),
   api("POST", "/payments-webhook", paymentsWebhook, {
-    entities: ["User", "ProcessedWebhookEvent"],
+    entities: ["User", "ProcessedWebhookEvent", "Payment"],
     middlewareConfigFn: paymentsMiddlewareConfigFn,
   }),
 ];

@@ -34,6 +34,7 @@ import {
 import { logout } from "wasp/client/auth";
 import { getUserAvatarUrl, DEFAULT_USER_AVATAR } from "./defaultAvatar";
 import { PaymentPlanId, prettyPaymentPlanName } from "../payment/plans";
+import { creditCostForResolution } from "../video-studio/taskSync";
 
 interface AccountPageProps {
   user: User;
@@ -362,7 +363,8 @@ export function AccountPage({ user }: AccountPageProps) {
             </div>
 
             <p className="text-[11px] text-[#71717a] mb-3">
-              Light: 6 credits/sec • Pro: 12 credits/sec
+              5s at 720p: Light {creditCostForResolution("720p", "light", 5)} credits • Pro{" "}
+              {creditCostForResolution("720p", "pro", 5)} credits
             </p>
 
             <div className="space-y-2">
