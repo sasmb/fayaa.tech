@@ -111,8 +111,8 @@ describe("longVideoPlanning segment splitting & dynamic credit estimation", () =
     expect(plan480Light.isLongForm).toBe(true);
     expect(plan480Light.segmentCount).toBe(11);
     expect(plan480Light.billableSeconds).toBe(165);
-    // 11 * ceil(15*0.025*30=11.25 -> 12) = 132
-    expect(plan480Light.credits).toBe(132);
+    // 11 pieces of 15s: $0.38 each (0.375 rounded to cents) x 30 x 1.5 markup = 17.1 -> 18
+    expect(plan480Light.credits).toBe(11 * 18);
 
     const plan720Pro = estimateLongVideoPlan({
       totalDurationSec: 120,

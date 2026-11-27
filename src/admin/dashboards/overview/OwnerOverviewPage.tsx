@@ -242,7 +242,7 @@ function OverviewBody({ data }: { data: AdminOverview }) {
         Revenue is every paid Stripe invoice recorded in the database (use
         "Sync payments from Stripe" to backfill older ones; refunds made in
         Stripe aren't subtracted). Spend is estimated from each render's credit
-        price at 30 credits per $1 of provider cost, counting finished and
+        price (30 credits per $1 of provider cost, times the 1.5x markup), counting finished and
         running renders; failed renders are refunded and assumed free.
       </p>
     </>

@@ -27,6 +27,8 @@ import {
 import { routes } from "wasp/client/router"
 
 import { paymentProcessorClient } from "../../../../payment/paymentProcessorClient"
+import { estimateSeedancePlan } from "../../../seedancePlanning"
+import { creditCostForResolution } from "../../../taskSync"
 import {
   PaymentPlanId,
   SubscriptionStatus,
@@ -176,6 +178,27 @@ const EXTRA_UNLIMITED_MODELS = [
   "FAYAA Genjutsu Pro 1080p Master",
 ]
 
+/** Credits for a 5-second render, from the same pricing the studio charges. */
+function credits5s(resolution: string, variant: "light" | "pro"): number {
+  return creditCostForResolution(resolution, variant, 5)
+}
+
+/** Whole 5-second videos a monthly credit allowance covers. */
+function videosPerMonth(monthlyCredits: number, costPerVideo: number): number {
+  return Math.floor(monthlyCredits / Math.max(1, costPerVideo))
+}
+
+const PLAN_CREDITS = {
+  plus: { monthly: 1470, annual: 1170 },
+  ultra: { monthly: 3900, annual: 3270 },
+}
+
+const LIGHT_720_5S = credits5s("720p", "light")
+const LIGHT_1080_5S = credits5s("1080p", "light")
+const PRO_720_5S = credits5s("720p", "pro")
+const PRO_1080_5S = credits5s("1080p", "pro")
+const SEEDANCE_720_10S = estimateSeedancePlan({ totalDurationSec: 10, resolution: "720p" }).credits
+
 interface FaqItem {
   q: string
   a: string
@@ -184,7 +207,7 @@ interface FaqItem {
 const FAQ_ITEMS: FaqItem[] = [
   {
     q: "How do credits work?",
-    a: "Every generation consumes credits based on duration and model. FAYAA Genjutsu Light costs 6 credits per second (~$0.20/s), and FAYAA Genjutsu Pro costs 12 credits per second (~$0.40/s). 30 credits equal exactly $1.00 USD in compute value. Plan credits refresh every billing cycle, and top-up credits stack permanently on your balance.",
+    a: `Every generation uses credits based on the model, resolution and length, and the exact cost shows before you generate. A 5-second Genjutsu Light video costs ${LIGHT_720_5S} credits at 720p, a 5-second Genjutsu Pro video costs ${PRO_720_5S} credits at 720p, and a 10-second Seedance 2.5 video costs ${SEEDANCE_720_10S} credits at 720p. Failed renders are refunded automatically. Plan credits refresh every billing cycle, and top-up credits stay on your balance.`,
   },
   {
     q: "Is my subscription automatically renewed?",
@@ -192,7 +215,7 @@ const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "How many videos can I generate each month?",
-    a: "On FAYAA Plus (1,470 credits/mo), you can generate up to 245 seconds of Genjutsu Light video or 122 seconds of Genjutsu Pro per month. On FAYAA Ultra (3,900 credits/mo), you can generate up to 650 seconds of Genjutsu Light or 325 seconds of Genjutsu Pro with 8 concurrent GPU slots.",
+    a: `On FAYAA Plus (1,470 credits/mo), that's about ${videosPerMonth(PLAN_CREDITS.plus.monthly, LIGHT_720_5S)} five-second Genjutsu Light videos or ${videosPerMonth(PLAN_CREDITS.plus.monthly, PRO_720_5S)} five-second Genjutsu Pro videos at 720p each month. On FAYAA Ultra (3,900 credits/mo), it's about ${videosPerMonth(PLAN_CREDITS.ultra.monthly, LIGHT_720_5S)} Light or ${videosPerMonth(PLAN_CREDITS.ultra.monthly, PRO_720_5S)} Pro videos, with 8 concurrent GPU slots.`,
   },
   {
     q: "Can I use Claude or an AI Agent with my credits?",
@@ -1472,15 +1495,15 @@ export function StudioSubscriptionPanel({
                       FAYAA Genjutsu Light 720p
                     </span>
                     <span className="mt-0.5 block text-[11px] text-zinc-500">
-                      6 credits/sec (~30 credits / 5s)
+                      {LIGHT_720_5S} credits per 5s video
                     </span>
                   </td>
                   <td className="py-4 text-zinc-500">Trial runs only</td>
                   <td className="py-4 text-zinc-200">
-                    Up to {annualBilling ? "39" : "49"} videos / mo
+                    Up to {videosPerMonth(annualBilling ? PLAN_CREDITS.plus.annual : PLAN_CREDITS.plus.monthly, LIGHT_720_5S)} videos / mo
                   </td>
                   <td className="py-4 font-semibold text-[#D9FF00]">
-                    Up to {annualBilling ? "109" : "130"} videos / mo
+                    Up to {videosPerMonth(annualBilling ? PLAN_CREDITS.ultra.annual : PLAN_CREDITS.ultra.monthly, LIGHT_720_5S)} videos / mo
                   </td>
                 </tr>
 
@@ -1490,15 +1513,15 @@ export function StudioSubscriptionPanel({
                       FAYAA Genjutsu Light 1080p
                     </span>
                     <span className="mt-0.5 block text-[11px] text-zinc-500">
-                      6 credits/sec (~30 credits / 5s)
+                      {LIGHT_1080_5S} credits per 5s video
                     </span>
                   </td>
                   <td className="py-4 text-zinc-500">Trial runs only</td>
                   <td className="py-4 text-zinc-200">
-                    Up to {annualBilling ? "39" : "49"} videos / mo
+                    Up to {videosPerMonth(annualBilling ? PLAN_CREDITS.plus.annual : PLAN_CREDITS.plus.monthly, LIGHT_1080_5S)} videos / mo
                   </td>
                   <td className="py-4 font-semibold text-[#D9FF00]">
-                    Up to {annualBilling ? "109" : "130"} videos / mo
+                    Up to {videosPerMonth(annualBilling ? PLAN_CREDITS.ultra.annual : PLAN_CREDITS.ultra.monthly, LIGHT_1080_5S)} videos / mo
                   </td>
                 </tr>
 
@@ -1508,15 +1531,15 @@ export function StudioSubscriptionPanel({
                       FAYAA Genjutsu Pro 1080p Master
                     </span>
                     <span className="mt-0.5 block text-[11px] text-zinc-500">
-                      12 credits/sec (~60 credits / 5s)
+                      {PRO_1080_5S} credits per 5s video
                     </span>
                   </td>
                   <td className="py-4 text-zinc-500">Trial runs only</td>
                   <td className="py-4 text-zinc-200">
-                    Up to {annualBilling ? "19" : "24"} videos / mo
+                    Up to {videosPerMonth(annualBilling ? PLAN_CREDITS.plus.annual : PLAN_CREDITS.plus.monthly, PRO_1080_5S)} videos / mo
                   </td>
                   <td className="py-4 font-semibold text-[#D9FF00]">
-                    Up to {annualBilling ? "54" : "65"} videos / mo
+                    Up to {videosPerMonth(annualBilling ? PLAN_CREDITS.ultra.annual : PLAN_CREDITS.ultra.monthly, PRO_1080_5S)} videos / mo
                   </td>
                 </tr>
 

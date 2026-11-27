@@ -1,8 +1,15 @@
+import {
+  creditsToProviderCents,
+  usdToCredits,
+} from "../../video-studio/pricing";
+import {
+  estimateSeedancePlan,
+  SEEDANCE_VARIANT,
+} from "../../video-studio/seedancePlanning";
 import { creditCostForResolution } from "../../video-studio/taskSync";
 import { formatMoney } from "./format";
 
-/** FAYAA prices renders at 30 credits per $1 of provider cost. */
-export const CREDITS_PER_USD = 30;
+export { CREDITS_PER_USD, PRICE_MARKUP } from "../../video-studio/pricing";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -140,6 +147,18 @@ export function taskCostCredits(task: OverviewTaskInput): number {
 }
 
 export function longJobCostCredits(job: OverviewLongJobInput): number {
+  if (job.variant === SEEDANCE_VARIANT) {
+    // Seedance pieces are priced as text-to-video first, then extends (see seedancePlanning).
+    const plan = estimateSeedancePlan({
+      totalDurationSec: job.segments.reduce((sum, s) => sum + s.durationSec, 0),
+      resolution: job.resolution,
+    });
+    return job.segments.reduce(
+      (sum, s, i) =>
+        isBillable(s.status) && plan.pieces[i] ? sum + usdToCredits(plan.pieces[i]!.usd) : sum,
+      0,
+    );
+  }
   return job.segments
     .filter((s) => isBillable(s.status))
     .reduce(
@@ -149,8 +168,9 @@ export function longJobCostCredits(job: OverviewLongJobInput): number {
     );
 }
 
+/** Provider cost behind a credit price: credits / (30 per $1 x markup). */
 export function creditsToCents(credits: number): number {
-  return Math.round((credits / CREDITS_PER_USD) * 100);
+  return creditsToProviderCents(credits);
 }
 
 function dayKey(d: Date): string {

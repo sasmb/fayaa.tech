@@ -37,14 +37,14 @@ describe("Seedance planning", () => {
     const single = estimateSeedancePlan({ totalDurationSec: 10, resolution: "720p" });
     expect(single.pieces).toHaveLength(1);
     expect(single.usd).toBeCloseTo(3.4);
-    expect(single.credits).toBe(102);
+    expect(single.credits).toBe(153); // $3.40 x 30 x 1.5
 
     const chain = estimateSeedancePlan({ totalDurationSec: 60, resolution: "720p" });
     expect(chain.pieces.map((p) => p.kind)).toEqual(["text", "extend"]);
     expect(chain.pieces[1]!.contextSec).toBe(5);
     // 30s * 0.34 + 0.65 * 0.34 * (5 + 30)
     expect(chain.usd).toBeCloseTo(10.2 + 7.735);
-    expect(chain.credits).toBe(Math.ceil((10.2 + 7.735) * 30));
+    expect(chain.credits).toBe(Math.ceil((10.2 + 7.735) * 30 * 1.5));
   });
 
   it("defaults unknown resolutions to 720p", () => {

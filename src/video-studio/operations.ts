@@ -390,10 +390,12 @@ export const hfGetGenerationStatuses = async (
                 where: { id: existingTask.userId },
                 data: {
                   credits: {
-                    increment: creditCostForResolution(
-                      existingTask.resolution,
-                      existingTask.model
-                    ),
+                    increment:
+                      existingTask.creditsCharged ??
+                      creditCostForResolution(
+                        existingTask.resolution,
+                        existingTask.model
+                      ),
                   },
                 },
               });
@@ -456,7 +458,9 @@ export const hfCancelGeneration = async (
         where: { id: task.userId },
         data: {
           credits: {
-            increment: creditCostForResolution(task.resolution, task.model),
+            increment:
+              task.creditsCharged ??
+              creditCostForResolution(task.resolution, task.model),
           },
         },
       });

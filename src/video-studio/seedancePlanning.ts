@@ -1,3 +1,5 @@
+import { usdToCredits } from "./pricing";
+
 /**
  * Seedance 2.5 (through MuAPI) planning, shared by the client and the server.
  *
@@ -46,8 +48,6 @@ export const SEEDANCE_USD_PER_SEC: Record<SeedanceResolution, number> = {
 };
 /** MuAPI bills an extend at 65% of the base rate, on input plus new seconds. */
 export const SEEDANCE_EXTEND_RATE_FACTOR = 0.65;
-/** Same rate as the rest of the app: 30 credits = $1. */
-export const CREDITS_PER_USD = 30;
 
 export function normalizeSeedanceResolution(value: unknown): SeedanceResolution {
   return value === "480p" || value === "1080p" ? value : "720p";
@@ -128,6 +128,6 @@ export function estimateSeedancePlan({
     resolution: res,
     pieces,
     usd,
-    credits: Math.max(2, Math.ceil(usd * CREDITS_PER_USD)),
+    credits: usdToCredits(usd),
   };
 }

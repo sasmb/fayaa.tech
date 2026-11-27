@@ -317,11 +317,11 @@ export function StudioTemplate({
           totalDurationSec: Number(settings.duration ?? 10),
           resolution: settings.resolution,
         }).credits
-      : settings.resolution === "1080p"
-      ? 30
-      : settings.resolution === "480p"
-        ? 15
-        : 20
+      : creditCostForResolution(
+          typeof settings.resolution === "string" ? settings.resolution : "480p",
+          settings.variant === "pro" ? "pro" : "light",
+          Number(settings.duration ?? 5)
+        )
 
   const planBadge =
     user?.subscriptionStatus === SubscriptionStatus.Active &&

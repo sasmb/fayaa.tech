@@ -50,7 +50,7 @@ function input(): OverviewInput {
       },
     ],
     tasks: [
-      // 60 credits = $2.00 of provider cost
+      // 60 credits = 60 / (30 x 1.5) = $1.33 of provider cost
       {
         id: "t1",
         userId: "u1",
@@ -86,8 +86,8 @@ describe("buildAdminOverview", () => {
     expect(o.totals.newUsers7d).toBe(1);
     expect(o.totals.revenueCents).toBe(2400);
     expect(o.totals.revenue30dCents).toBe(1500);
-    expect(o.totals.spendCents).toBe(200);
-    expect(o.totals.profitCents).toBe(2200);
+    expect(o.totals.spendCents).toBe(133);
+    expect(o.totals.profitCents).toBe(2267);
     expect(o.totals.payingUsers).toBe(1);
     expect(o.totals.activeUsers7d).toBe(2);
     expect(o.totals.failedGenerations).toBe(1);
@@ -96,8 +96,8 @@ describe("buildAdminOverview", () => {
     const [first, second] = o.users;
     expect(first.id).toBe("u1");
     expect(first.revenueCents).toBe(2400);
-    expect(first.spendCents).toBe(200);
-    expect(first.profitCents).toBe(2200);
+    expect(first.spendCents).toBe(133);
+    expect(first.profitCents).toBe(2267);
     expect(second.spendCents).toBe(0);
     expect(second.failedGenerations).toBe(1);
   });
@@ -131,7 +131,7 @@ describe("buildAdminOverview", () => {
       },
     ];
     const o = buildAdminOverview(base);
-    // light 480p = $0.025/s * 30s = $0.75 -> 23 credits -> $0.77
-    expect(o.totals.spendCents).toBe(200 + 77);
+    // light 480p = $0.025/s * 30s = $0.75 -> 34 credits -> $0.76
+    expect(o.totals.spendCents).toBe(133 + 76);
   });
 });
