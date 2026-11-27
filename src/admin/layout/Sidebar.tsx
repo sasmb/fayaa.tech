@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Calendar,
   ChevronDown,
   ChevronUp,
@@ -120,8 +121,26 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                 }
               >
                 <LayoutDashboard />
-                Dashboard
+                Overview
               </NavLink>
+
+              <li>
+                <NavLink
+                  to={routes.AdminAnalyticsRoute.to}
+                  end
+                  className={({ isActive }) =>
+                    cn(
+                      "text-muted-foreground hover:bg-accent hover:text-accent-foreground group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium duration-300 ease-in-out",
+                      {
+                        "bg-accent text-accent-foreground": isActive,
+                      },
+                    )
+                  }
+                >
+                  <BarChart3 />
+                  Site traffic
+                </NavLink>
+              </li>
 
               {/* <!-- Menu Item Dashboard --> */}
 

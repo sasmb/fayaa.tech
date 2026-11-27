@@ -10,6 +10,10 @@ import { getPaymentPlanIdByPaymentProcessorPlanId } from "../paymentProcessorPla
 import { PaymentPlanId, paymentPlans, SubscriptionStatus } from "../plans";
 import { processWebhookEventOnce } from "../processedWebhookEvent";
 import { updateUserCredits, updateUserSubscription } from "../user";
+import {
+  stripeInvoiceToPaymentRecord,
+  upsertStripePayment,
+} from "./paymentRecord";
 import { stripeApi } from "./stripeApi";
 
 /**
@@ -38,7 +42,12 @@ export const stripeWebhook: PaymentsWebhook = async (
     await processWebhookEventOnce(
       { paymentProcessorEventId: event.id, eventType: event.type },
       context.entities.ProcessedWebhookEvent,
-      () => handleStripeEvent(event, prismaUserDelegate),
+      () =>
+        handleStripeEvent(
+          event,
+          prismaUserDelegate,
+          context.entities.Payment,
+        ),
     );
     return response.status(204).send();
   } catch (error) {
@@ -83,6 +92,7 @@ function constructStripeEvent(request: express.Request): Stripe.Event {
 async function handleStripeEvent(
   event: Stripe.Event,
   prismaUserDelegate: PrismaClient["user"],
+  paymentDelegate: PrismaClient["payment"],
 ): Promise<void> {
   // If you'd like to handle more events, you can add more cases below.
   // When deploying your app, you configure your webhook in the Stripe dashboard
@@ -90,7 +100,7 @@ async function handleStripeEvent(
   // See: https://docs.opensaas.sh/guides/deploying/#setting-up-your-stripe-webhook
   switch (event.type) {
     case "invoice.paid":
-      await handleInvoicePaid(event, prismaUserDelegate);
+      await handleInvoicePaid(event, prismaUserDelegate, paymentDelegate);
       break;
     case "customer.subscription.updated":
       await handleCustomerSubscriptionUpdated(event, prismaUserDelegate);
@@ -106,8 +116,21 @@ async function handleStripeEvent(
 async function handleInvoicePaid(
   event: Stripe.InvoicePaidEvent,
   prismaUserDelegate: PrismaClient["user"],
+  paymentDelegate: PrismaClient["payment"],
 ): Promise<void> {
   const invoice = event.data.object;
+
+  // Record the revenue first. The upsert is idempotent, so if granting credits
+  // below fails and Stripe retries, we don't double count the payment.
+  const paymentRecord = stripeInvoiceToPaymentRecord(invoice);
+  if (paymentRecord) {
+    await upsertStripePayment(
+      paymentRecord,
+      paymentDelegate,
+      prismaUserDelegate,
+    );
+  }
+
   const customerId = getCustomerId(invoice.customer);
   const invoicePaidAtDate = getInvoicePaidAtDate(invoice);
   const paymentPlanId = getPaymentPlanIdByPaymentProcessorPlanId(
