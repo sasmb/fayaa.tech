@@ -11,6 +11,7 @@ import {
   parseFfmpegDurationSec,
   processLongVideoJobSplit,
   syncLongVideoJob,
+  MAX_SEGMENT_ATTEMPTS,
   STALE_STITCHING_MS,
   validateExternalMediaUrl,
   withFfmpegMutex,
@@ -604,5 +605,73 @@ describe("backend split, uniform Genjutsu submission, stitch, and atomic refunds
     const uploadArgs = (mediaOps.uploadFinalVideo as any).mock.calls[0][0];
     expect(uploadArgs.filePath).not.toMatch(/-audio\.mp4$/);
     expect(updated.status).toBe("COMPLETED");
+  });
+
+  function failingClipSetup(remoteStatus: string, attempts = 1) {
+    const state = createMockState({ status: "PROCESSING_CLIPS" });
+    state.segments.forEach((s: any, idx) => {
+      s.status = "PROCESSING";
+      s.requestId = `req-${idx}`;
+      s.clipSourceUrl = `https://upload.hf/clip-${idx}.mp4`;
+      s.attempts = idx === 1 ? attempts : 1;
+    });
+    const platformClient = {
+      status: vi.fn(async (requestId: string) =>
+        requestId === "req-1"
+          ? { status: remoteStatus, requestId, error: "Upstream hiccup" }
+          : { status: "in_progress", requestId }
+      ),
+      cancel: vi.fn(async () => {}),
+      submit: vi.fn(async () => ({
+        status: "queued",
+        requestId: "req-1-retry",
+        statusUrl: "s",
+        cancelUrl: "c",
+      })),
+    };
+    const mediaOps = {} as LongVideoMediaOps;
+    return { ...state, platformClient, mediaOps };
+  }
+
+  it("re-renders a failed clip from its uploaded piece instead of failing the whole job", async () => {
+    const { job, segments, entities, platformClient, mediaOps, userCredits } =
+      failingClipSetup("failed");
+
+    const result = await syncLongVideoJob({ job, entities, platformClient, mediaOps });
+
+    expect(platformClient.submit).toHaveBeenCalledWith(
+      "higgsfield/genjutsu/motion-transfer/v1.0",
+      expect.objectContaining({ video_url: "https://upload.hf/clip-1.mp4" })
+    );
+    expect(segments[1]!.status).toBe("PROCESSING");
+    expect(segments[1]!.requestId).toBe("req-1-retry");
+    expect((segments[1] as any).attempts).toBe(2);
+    expect(result.status).toBe("PROCESSING_CLIPS");
+    expect(platformClient.cancel).not.toHaveBeenCalled();
+    expect(userCredits.count).toBe(20);
+  });
+
+  it("does not retry a clip blocked by the content filter", async () => {
+    const { job, entities, platformClient, mediaOps, userCredits } = failingClipSetup("nsfw");
+
+    const result = await syncLongVideoJob({ job, entities, platformClient, mediaOps });
+
+    expect(platformClient.submit).not.toHaveBeenCalled();
+    expect(result.status).toBe("FAILED");
+    expect(userCredits.count).toBe(200);
+  });
+
+  it("fails and refunds the job once a clip has used all its attempts", async () => {
+    const { job, entities, platformClient, mediaOps, userCredits } = failingClipSetup(
+      "failed",
+      MAX_SEGMENT_ATTEMPTS
+    );
+
+    const result = await syncLongVideoJob({ job, entities, platformClient, mediaOps });
+
+    expect(platformClient.submit).not.toHaveBeenCalled();
+    expect(result.status).toBe("FAILED");
+    expect(result.error).toContain("Upstream hiccup");
+    expect(userCredits.count).toBe(200);
   });
 });

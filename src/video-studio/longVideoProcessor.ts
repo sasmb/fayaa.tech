@@ -27,6 +27,18 @@ const MAX_CONCURRENT_SUBMISSIONS = 4;
 const MAX_LONG_JOB_DURATION_MS = 60 * 60 * 1000; // 60 minutes
 // A stitch (download clips + ffmpeg concat + upload) finishes well within this window.
 // A job still marked STITCHING after it was most likely interrupted by a server restart.
+// A clip that fails upstream is re-rendered automatically before the job is failed,
+// so one flaky clip doesn't throw away (and refund) every other finished clip.
+export const MAX_SEGMENT_ATTEMPTS = 3;
+// Content-filter rejections and user cancels won't change on a retry.
+const NON_RETRYABLE_SEGMENT_STATUSES = new Set(["nsfw", "canceled"]);
+
+export function genjutsuModelPath(variant?: string | null): string {
+  return variant === "pro"
+    ? "higgsfield/genjutsu/motion-transfer/v1.0"
+    : "higgsfield/genjutsu-light/motion-transfer/v1.0";
+}
+
 export const STALE_STITCHING_MS = 20 * 60 * 1000; // 20 minutes
 
 // In-process mutex so heavy FFmpeg split/concat work runs 1 at a time inside 1024 MB RAM.
@@ -605,10 +617,7 @@ export async function processLongVideoJobSplit({
     // Free source file before upstream API queueing.
     await fs.rm(sourcePath, { force: true });
 
-    const modelPath =
-      job.variant === "pro"
-        ? "higgsfield/genjutsu/motion-transfer/v1.0"
-        : "higgsfield/genjutsu-light/motion-transfer/v1.0";
+    const modelPath = genjutsuModelPath(job.variant);
 
     for (
       let offset = 0;
@@ -678,7 +687,8 @@ export async function syncLongVideoJob({
 }: {
   job: any;
   entities: LongVideoEntities;
-  platformClient: Pick<LongVideoPlatformClient, "status" | "cancel">;
+  platformClient: Pick<LongVideoPlatformClient, "status" | "cancel"> &
+    Partial<Pick<LongVideoPlatformClient, "submit">>;
   mediaOps: LongVideoMediaOps;
 }): Promise<any> {
   if (job.status === "COMPLETED" || job.status === "FAILED") {
@@ -776,6 +786,7 @@ export async function syncLongVideoJob({
                 },
               });
               seg.status = "FAILED";
+              seg.retryable = true;
             }
           } else if (
             remote.status === "failed" ||
@@ -792,12 +803,46 @@ export async function syncLongVideoJob({
             });
             seg.status = "FAILED";
             seg.error = detail;
+            seg.retryable = !NON_RETRYABLE_SEGMENT_STATUSES.has(remote.status);
           }
         } catch {
           // Transient polling errors are retried on the next poll tick.
         }
       })
     );
+  }
+
+  // Re-render failed clips from their already-uploaded source piece while attempts remain.
+  if (platformClient.submit) {
+    for (const seg of segments) {
+      if (seg.status !== "FAILED" || !seg.retryable || !seg.clipSourceUrl) continue;
+      const attempts = Number(seg.attempts ?? 1);
+      if (attempts >= MAX_SEGMENT_ATTEMPTS) continue;
+      try {
+        const queued = await platformClient.submit(genjutsuModelPath(job.variant), {
+          video_url: seg.clipSourceUrl,
+          image_urls: job.referenceImageUrls,
+          resolution: job.resolution,
+          ...(job.prompt ? { prompt: job.prompt } : {}),
+        });
+        await entities.LongVideoSegment.update({
+          where: { id: seg.id },
+          data: {
+            status: "PROCESSING",
+            requestId: queued.requestId,
+            attempts: attempts + 1,
+            outputVideoUrl: null,
+            error: null,
+          },
+        });
+        seg.status = "PROCESSING";
+        seg.requestId = queued.requestId;
+        seg.attempts = attempts + 1;
+        seg.error = null;
+      } catch {
+        // Resubmission failed; the job fails below with the clip's original error.
+      }
+    }
   }
 
   const failedSegment = segments.find((s) => s.status === "FAILED");
