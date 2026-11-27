@@ -11,6 +11,9 @@ import {
   submitLongVideoGenjutsu,
 } from "wasp/client/operations"
 
+import type { LongVideoJob } from "wasp/entities"
+
+import type { LongVideoPieceState } from "../../longVideoPlanning"
 import type { GenerationPlane } from "./catalog/types"
 import type { QueuedGeneration, StatusResult } from "./platform"
 
@@ -72,12 +75,16 @@ export async function submitLongVideo(
   }
 }
 
-export async function getLongVideoStatus(jobId: string) {
-  return await getLongVideoJobStatus({ jobId })
+type LongVideoJobWithPieces = LongVideoJob & { pieces?: LongVideoPieceState[] }
+
+export async function getLongVideoStatus(
+  jobId: string
+): Promise<LongVideoJobWithPieces> {
+  return (await getLongVideoJobStatus({ jobId })) as unknown as LongVideoJobWithPieces
 }
 
-export async function listLongVideoJobs() {
-  return await getUserLongVideoJobs()
+export async function listLongVideoJobs(): Promise<LongVideoJobWithPieces[]> {
+  return (await getUserLongVideoJobs()) as unknown as LongVideoJobWithPieces[]
 }
 
 export async function cancelLongVideo(jobId: string) {

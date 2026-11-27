@@ -197,3 +197,49 @@ export function formatLongVideoProgressLabel({
       return "Processing long video…";
   }
 }
+
+export type LongVideoPieceStatus = "pending" | "rendering" | "ready" | "failed";
+
+export interface LongVideoPieceState {
+  index: number;
+  status: LongVideoPieceStatus;
+  startSec: number;
+  durationSec: number;
+  /** Render attempts so far, when the server tracks them (>1 means it was retried). */
+  attempts?: number;
+}
+
+/**
+ * Turns stored LongVideoSegment rows into the ordered per-piece states the studio
+ * shows on a running long-video card. Skipped segments are left out.
+ */
+export function summarizeLongVideoPieces(
+  segments: Array<{
+    index: number;
+    status: string;
+    startSec?: number | null;
+    durationSec?: number | null;
+    attempts?: number | null;
+  }>
+): LongVideoPieceState[] {
+  return segments
+    .filter((s) => s.status !== "SKIPPED")
+    .sort((a, b) => a.index - b.index)
+    .map((s) => {
+      const status: LongVideoPieceStatus =
+        s.status === "COMPLETED"
+          ? "ready"
+          : s.status === "FAILED"
+            ? "failed"
+            : s.status === "PROCESSING"
+              ? "rendering"
+              : "pending";
+      return {
+        index: s.index,
+        status,
+        startSec: Number(s.startSec ?? 0),
+        durationSec: Number(s.durationSec ?? 0),
+        ...(typeof s.attempts === "number" ? { attempts: s.attempts } : {}),
+      };
+    });
+}

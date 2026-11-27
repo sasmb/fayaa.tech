@@ -1,3 +1,4 @@
+import type { LongVideoPieceState } from "../../../longVideoPlanning"
 import type { Surface } from "../../generation/catalog"
 
 import { defaultKv, type Kv } from "./kv"
@@ -26,6 +27,8 @@ export interface RunRecord {
   longVideoProgressLabel?: string
   segmentCount?: number
   completedCount?: number
+  /** Per-piece render progress for a running long-video job. */
+  pieces?: LongVideoPieceState[]
   /** Optional persisted database VideoTask id and public visibility state. */
   taskId?: string
   isPublic?: boolean
