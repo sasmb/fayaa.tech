@@ -9,7 +9,9 @@ import {
   segmentCredits,
 } from "./longVideoPlanning";
 import {
+  carryoverReferenceImages,
   ffmpegListingHasAudio,
+  frameCarryoverEnabled,
   keepLongVideoPreviewOnly,
   parseFfmpegDurationSec,
   submitRemainingLongVideoSegments,
@@ -775,6 +777,20 @@ describe("backend split, uniform Genjutsu submission, stitch, and atomic refunds
       expect(segments.slice(1).every((s) => s.status === "PROCESSING")).toBe(true);
     });
 
+    it("leaves the rest to the one-at-a-time carryover flow when carryover is on", async () => {
+      const { job, segments, entities } = createMockState({ status: "AWAITING_APPROVAL" });
+      job.frameCarryover = true;
+      segments[0]!.status = "COMPLETED";
+      segments.slice(1).forEach((s, i) => (s.clipSourceUrl = `https://upload.hf/clip-${i + 1}.mp4`));
+      const platformClient = queuedClient();
+
+      await submitRemainingLongVideoSegments({ job, entities, platformClient });
+
+      expect(platformClient.submit).not.toHaveBeenCalled();
+      expect(job.status).toBe("PROCESSING_CLIPS");
+      expect(segments.slice(1).every((s) => s.status === "PENDING")).toBe(true);
+    });
+
     it("rolls back a partly submitted approval", async () => {
       const { job, segments, entities } = createMockState({ status: "AWAITING_APPROVAL" });
       segments[0]!.status = "COMPLETED";
@@ -819,6 +835,108 @@ describe("backend split, uniform Genjutsu submission, stitch, and atomic refunds
         0
       );
       expect(sum).toBe(plan.credits);
+    });
+  });
+
+  describe("frame carryover (experimental)", () => {
+    it("is off unless LONG_VIDEO_FRAME_CARRYOVER=true", () => {
+      const prev = process.env.LONG_VIDEO_FRAME_CARRYOVER;
+      delete process.env.LONG_VIDEO_FRAME_CARRYOVER;
+      expect(frameCarryoverEnabled()).toBe(false);
+      process.env.LONG_VIDEO_FRAME_CARRYOVER = "true";
+      expect(frameCarryoverEnabled()).toBe(true);
+      if (prev === undefined) delete process.env.LONG_VIDEO_FRAME_CARRYOVER;
+      else process.env.LONG_VIDEO_FRAME_CARRYOVER = prev;
+    });
+
+    it("keeps the user's references first and only adds the frame if a slot is free", () => {
+      expect(carryoverReferenceImages(["a"], "frame")).toEqual(["a", "frame"]);
+      expect(carryoverReferenceImages(["a", "b", "c", "d"], "frame")).toEqual(["a", "b", "c", "d"]);
+      expect(carryoverReferenceImages(["a"], null)).toEqual(["a"]);
+    });
+
+    it("starts only the first piece at split time", async () => {
+      const { job, segments, entities } = createMockState();
+      job.frameCarryover = true;
+      let seq = 0;
+      const platformClient: LongVideoPlatformClient = {
+        createUpload: vi.fn(),
+        submit: vi.fn(async () => ({ status: "queued", requestId: `req-${++seq}`, statusUrl: "s", cancelUrl: "c" })),
+        status: vi.fn(),
+        cancel: vi.fn(),
+      };
+      const mediaOps: LongVideoMediaOps = {
+        downloadToFile: vi.fn(async () => {}),
+        probeDurationSec: vi.fn(async () => 120),
+        splitSegment: vi.fn(async () => {}),
+        uploadClipFile: vi.fn(async (p) => `https://upload.hf/${p.split("/").pop()}`),
+        stitchClips: vi.fn(),
+        uploadFinalVideo: vi.fn(),
+      };
+
+      await processLongVideoJobSplit({ jobId: job.id, entities, platformClient, mediaOps });
+
+      expect(platformClient.submit).toHaveBeenCalledTimes(1);
+      expect(segments.slice(1).every((s) => s.status === "PENDING" && s.clipSourceUrl)).toBe(true);
+    });
+
+    function carryState() {
+      const state = createMockState({ status: "PROCESSING_CLIPS" });
+      state.job.frameCarryover = true;
+      state.segments.forEach((s, i) => (s.clipSourceUrl = `https://upload.hf/clip-${i}.mp4`));
+      state.segments[0]!.status = "PROCESSING";
+      state.segments[0]!.requestId = "req-0";
+      const platformClient = {
+        status: vi.fn(async (requestId: string) => ({
+          status: "completed",
+          requestId,
+          video: { url: `https://hf.cdn/${requestId}.mp4` },
+        })),
+        cancel: vi.fn(),
+        submit: vi.fn(async () => ({ status: "queued", requestId: "req-1", statusUrl: "s", cancelUrl: "c" })),
+        createUpload: vi.fn(),
+      };
+      return { ...state, platformClient };
+    }
+
+    it("starts the next piece with the previous piece's last frame as an extra reference", async () => {
+      const { job, segments, entities, platformClient } = carryState();
+      const mediaOps = {
+        carryoverFrame: vi.fn(async () => "https://upload.hf/last-frame.png"),
+      } as unknown as LongVideoMediaOps;
+
+      const result = await syncLongVideoJob({ job, entities, platformClient, mediaOps });
+
+      expect(mediaOps.carryoverFrame).toHaveBeenCalledWith(
+        expect.objectContaining({ videoUrl: "https://hf.cdn/req-0.mp4" })
+      );
+      expect(platformClient.submit).toHaveBeenCalledWith(
+        "higgsfield/genjutsu/motion-transfer/v1.0",
+        expect.objectContaining({
+          video_url: "https://upload.hf/clip-1.mp4",
+          image_urls: ["https://cdn.example.com/ref1.png", "https://upload.hf/last-frame.png"],
+        })
+      );
+      expect(segments[1]!.status).toBe("PROCESSING");
+      expect(segments[2]!.status).toBe("PENDING");
+      expect(result.status).toBe("PROCESSING_CLIPS");
+    });
+
+    it("still starts the next piece if grabbing the frame fails", async () => {
+      const { job, segments, entities, platformClient } = carryState();
+      const mediaOps = {
+        carryoverFrame: vi.fn(async () => {
+          throw new Error("ffmpeg failed");
+        }),
+      } as unknown as LongVideoMediaOps;
+
+      await syncLongVideoJob({ job, entities, platformClient, mediaOps });
+
+      expect(platformClient.submit).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ image_urls: ["https://cdn.example.com/ref1.png"] })
+      );
+      expect(segments[1]!.status).toBe("PROCESSING");
     });
   });
 });

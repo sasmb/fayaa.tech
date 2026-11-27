@@ -156,6 +156,9 @@ model LongVideoJob {
   previewFirst       Boolean            @default(false)
   previewVideoUrl    String?
   approvedAt         DateTime?
+  // Experimental (LONG_VIDEO_FRAME_CARRYOVER=true): render pieces one after another and
+  // pass each piece's last frame to the next as an extra reference image.
+  frameCarryover     Boolean            @default(false)
   outputVideoUrl     String?
   outputStorageKey   String?
   error              String?

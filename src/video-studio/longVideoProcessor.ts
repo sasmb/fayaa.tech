@@ -37,6 +37,31 @@ export function genjutsuModelPath(variant?: string | null): string {
     : "higgsfield/genjutsu-light/motion-transfer/v1.0";
 }
 
+/** Genjutsu accepts up to 4 reference images per request. */
+export const MAX_GENJUTSU_REFERENCES = 4;
+// Carryover renders pieces one after another, so allow more time per piece.
+const CARRYOVER_MS_PER_PIECE = 15 * 60 * 1000;
+
+/** Whether new long-video jobs should use experimental frame carryover. */
+export function frameCarryoverEnabled(): boolean {
+  return process.env.LONG_VIDEO_FRAME_CARRYOVER?.trim().toLowerCase() === "true";
+}
+
+/**
+ * Reference images for piece N under frame carryover: the user's references stay
+ * first (prompts point at @Image1), then the previous piece's last frame if a slot
+ * is free.
+ */
+export function carryoverReferenceImages(
+  references: string[],
+  previousFrameUrl: string | null | undefined
+): string[] {
+  if (!previousFrameUrl || references.length >= MAX_GENJUTSU_REFERENCES) {
+    return references;
+  }
+  return [...references, previousFrameUrl];
+}
+
 // A stitch (download clips + ffmpeg concat + upload) finishes well within this window.
 // A job still marked STITCHING after it was most likely interrupted by a server restart.
 export const STALE_STITCHING_MS = 20 * 60 * 1000; // 20 minutes
@@ -315,6 +340,36 @@ export async function muxSourceAudioWithFfmpeg({
   return true;
 }
 
+/** Saves the final frame of a video as a PNG (used for frame carryover between pieces). */
+export async function extractLastFrameWithFfmpeg({
+  videoPath,
+  outputPath,
+}: {
+  videoPath: string;
+  outputPath: string;
+}): Promise<void> {
+  const ffmpeg = resolveFfmpegBinary();
+  await execFileAsync(
+    ffmpeg,
+    [
+      "-y",
+      "-sseof",
+      "-0.5",
+      "-i",
+      videoPath,
+      "-threads",
+      "1",
+      "-update",
+      "1",
+      "-frames:v",
+      "1",
+      outputPath,
+    ],
+    { timeout: 60_000 }
+  );
+  await fs.access(outputPath);
+}
+
 export async function stitchClipsWithFfmpeg({
   clipPaths,
   concatListPath,
@@ -394,9 +449,10 @@ export async function uploadClipFileToPlatform(
     upload_url: string;
     public_url: string;
     upload_headers: Record<string, string>;
-  }>
+  }>,
+  contentType = "video/mp4"
 ): Promise<string> {
-  const ticket = await createUpload("video/mp4");
+  const ticket = await createUpload(contentType);
   const stat = await fs.stat(filePath);
   const res = await fetch(ticket.upload_url, {
     method: "PUT",
@@ -469,6 +525,12 @@ export interface LongVideoMediaOps {
     filePath: string,
     createUpload: LongVideoPlatformClient["createUpload"]
   ) => Promise<string>;
+  /** Frame carryover: grabs a piece's last frame and uploads it as a PNG. */
+  carryoverFrame?: (args: {
+    videoUrl: string;
+    workDir: string;
+    createUpload: LongVideoPlatformClient["createUpload"];
+  }) => Promise<string>;
   uploadFinalVideo: (args: {
     filePath: string;
     fileName: string;
@@ -487,6 +549,15 @@ export const defaultLongVideoMediaOps = (
   muxSourceAudio: muxSourceAudioWithFfmpeg,
   uploadClipFile: (filePath, createUpload) =>
     uploadClipFileToPlatform(filePath, createUpload),
+  carryoverFrame: async ({ videoUrl, workDir, createUpload }) => {
+    const videoPath = path.join(workDir, "prev-piece.mp4");
+    const framePath = path.join(workDir, "prev-piece-last-frame.png");
+    await downloadMediaToFile(videoUrl, videoPath);
+    await withFfmpegMutex(() =>
+      extractLastFrameWithFfmpeg({ videoPath, outputPath: framePath })
+    );
+    return uploadClipFileToPlatform(framePath, createUpload, "image/png");
+  },
   uploadFinalVideo,
 });
 
@@ -619,10 +690,11 @@ export async function processLongVideoJobSplit({
 
     const modelPath = genjutsuModelPath(job.variant);
 
-    // Preview-first jobs render only piece 1 now. The other pieces are already cut
-    // and uploaded, and wait (PENDING, with their clip URL) for the user's approval.
+    // Preview-first jobs render only piece 1 now; the rest wait (PENDING, with their
+    // clip URL) for the user's approval. Frame carryover also starts with piece 1 only,
+    // and each later piece starts once the one before it is done (see syncLongVideoJob).
     const submitNow =
-      job.previewFirst && segmentsToRun.length > 1
+      (job.previewFirst || job.frameCarryover) && segmentsToRun.length > 1
         ? segmentsToRun.slice(0, 1)
         : segmentsToRun;
     for (let i = submitNow.length; i < segmentsToRun.length; i++) {
@@ -701,7 +773,7 @@ export async function syncLongVideoJob({
   job: any;
   entities: LongVideoEntities;
   platformClient: Pick<LongVideoPlatformClient, "status" | "cancel"> &
-    Partial<Pick<LongVideoPlatformClient, "submit">>;
+    Partial<Pick<LongVideoPlatformClient, "submit" | "createUpload">>;
   mediaOps: LongVideoMediaOps;
 }): Promise<any> {
   if (job.status === "COMPLETED" || job.status === "FAILED") {
@@ -739,7 +811,10 @@ export async function syncLongVideoJob({
   // Preview-first jobs restart the clock when the user approves the rest.
   const jobAgeMs =
     Date.now() - new Date(job.approvedAt ?? job.createdAt).getTime();
-  if (jobAgeMs > MAX_LONG_JOB_DURATION_MS) {
+  const maxJobMs = job.frameCarryover
+    ? Math.max(MAX_LONG_JOB_DURATION_MS, Number(job.segmentCount || 1) * CARRYOVER_MS_PER_PIECE)
+    : MAX_LONG_JOB_DURATION_MS;
+  if (jobAgeMs > maxJobMs) {
     const segs = await entities.LongVideoSegment.findMany({
       where: { jobId: job.id },
       orderBy: { index: "asc" },
@@ -910,6 +985,51 @@ export async function syncLongVideoJob({
     }
   }
 
+  // Frame carryover: start the next piece once the one before it is done, passing
+  // the finished piece's last frame as an extra reference so the look carries over.
+  if (job.frameCarryover && platformClient.submit && platformClient.createUpload) {
+    const nextIdx = segments.findIndex((s) => s.status === "PENDING" && !s.requestId);
+    const prev = nextIdx > 0 ? segments[nextIdx - 1] : undefined;
+    if (prev && prev.status === "COMPLETED" && prev.outputVideoUrl) {
+      const next = segments[nextIdx]!;
+      let frameUrl: string | null = null;
+      if (mediaOps.carryoverFrame) {
+        const workDir = await fs.mkdtemp(path.join(os.tmpdir(), `fayaa-carry-${job.id}-`));
+        try {
+          frameUrl = await mediaOps.carryoverFrame({
+            videoUrl: prev.outputVideoUrl,
+            workDir,
+            createUpload: platformClient.createUpload,
+          });
+        } catch (err: unknown) {
+          // Fall back to the user's references alone rather than stalling the job.
+          console.warn(
+            `[longVideo] Frame carryover failed for job ${job.id}, piece ${next.index + 1}:`,
+            err instanceof Error ? err.message : err
+          );
+        } finally {
+          await fs.rm(workDir, { recursive: true, force: true });
+        }
+      }
+      try {
+        const queued = await platformClient.submit(genjutsuModelPath(job.variant), {
+          video_url: next.clipSourceUrl,
+          image_urls: carryoverReferenceImages(job.referenceImageUrls, frameUrl),
+          resolution: job.resolution,
+          ...(job.prompt ? { prompt: job.prompt } : {}),
+        });
+        await entities.LongVideoSegment.update({
+          where: { id: next.id },
+          data: { requestId: queued.requestId, status: "PROCESSING" },
+        });
+        next.status = "PROCESSING";
+        next.requestId = queued.requestId;
+      } catch {
+        // Retried on the next poll tick.
+      }
+    }
+  }
+
   if (completedSegments.length < segments.length) {
     return entities.LongVideoJob.findUnique({ where: { id: job.id } });
   }
@@ -1036,6 +1156,8 @@ export async function submitRemainingLongVideoSegments({
   if (claimed.count === 0) {
     throw new Error("This preview is no longer waiting for approval.");
   }
+  // Frame carryover renders the rest one piece at a time from syncLongVideoJob.
+  if (job.frameCarryover) return;
 
   const segments = (
     await entities.LongVideoSegment.findMany({

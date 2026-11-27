@@ -16,6 +16,7 @@ import {
   defaultLongVideoMediaOps,
   failAndRefundLongVideoJob,
   keepLongVideoPreviewOnly,
+  frameCarryoverEnabled,
   processLongVideoJobSplit,
   submitRemainingLongVideoSegments,
   syncLongVideoJob,
@@ -720,6 +721,7 @@ export const submitLongVideoGenjutsu = async (
         completedCount: 0,
         creditCost: chargedCredits,
         previewFirst,
+        frameCarryover: frameCarryoverEnabled() && plan.segmentCount > 1,
         segments: {
           create: plan.segments.map((seg) => ({
             index: seg.index,
