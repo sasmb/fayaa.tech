@@ -9,6 +9,7 @@ import { estimateLongVideoPlan, MIN_CLIP_DURATION_SEC } from "./longVideoPlannin
 import {
   defaultLongVideoMediaOps,
   failAndRefundLongVideoJob,
+  frameCarryoverEnabled,
   processLongVideoJobSplit,
   syncLongVideoJob,
   validateExternalMediaUrl,
@@ -682,6 +683,7 @@ export const submitLongVideoGenjutsu = async (
         segmentCount: plan.segmentCount,
         completedCount: 0,
         creditCost: chargedCredits,
+        frameCarryover: frameCarryoverEnabled() && plan.segmentCount > 1,
         segments: {
           create: plan.segments.map((seg) => ({
             index: seg.index,
