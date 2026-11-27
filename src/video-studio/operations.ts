@@ -309,6 +309,8 @@ export const hfSubmitGeneration = async (
         referenceImageUrls,
         resolution,
         status: "PROCESSING",
+        creditCost: requiredCredits,
+        creditsCharged: reserved > 0 ? requiredCredits : 0,
       },
     });
   }
@@ -521,6 +523,8 @@ export const createGenjutsuTask = async (
     model: "higgsfield/genjutsu/motion-transfer/v1.0",
     requestId: queued.requestId,
     prompt: prompt ?? null,
+    creditCost: null,
+    creditsCharged: null,
     sourceVideoUrl,
     referenceImageUrls,
     outputVideoUrl: null,

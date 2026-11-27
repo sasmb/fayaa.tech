@@ -1,6 +1,11 @@
-import { page, route, type Spec } from "@wasp.sh/spec";
+import { action, page, query, route, type Spec } from "@wasp.sh/spec";
 
 import { AnalyticsDashboardPage } from "./dashboards/analytics/AnalyticsDashboardPage" with { type: "ref" };
+import { OwnerOverviewPage } from "./dashboards/overview/OwnerOverviewPage" with { type: "ref" };
+import {
+  getAdminOverview,
+  syncStripePayments,
+} from "./overview/operations" with { type: "ref" };
 import { MessagesPage } from "./dashboards/messages/MessagesPage" with { type: "ref" };
 import { UsersDashboardPage } from "./dashboards/users/UsersDashboardPage" with { type: "ref" };
 import { CalendarPage } from "./elements/calendar/CalendarPage" with { type: "ref" };
@@ -11,8 +16,17 @@ export const adminSpec: Spec = [
   route(
     "AdminRoute",
     "/admin",
+    page(OwnerOverviewPage, { authRequired: true }),
+  ),
+  route(
+    "AdminAnalyticsRoute",
+    "/admin/analytics",
     page(AnalyticsDashboardPage, { authRequired: true }),
   ),
+  query(getAdminOverview, {
+    entities: ["User", "Payment", "VideoTask", "LongVideoJob"],
+  }),
+  action(syncStripePayments, { entities: ["User", "Payment"] }),
   route(
     "AdminUsersRoute",
     "/admin/users",

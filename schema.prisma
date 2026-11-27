@@ -35,6 +35,31 @@ model User {
   files                     File[]
   videoTasks                VideoTask[]
   longVideoJobs             LongVideoJob[]
+  payments                  Payment[]
+}
+
+// One row per successful charge from the payment processor (currently Stripe
+// invoices). Written by the `invoice.paid` webhook and by the admin
+// "Sync from Stripe" backfill, keyed on the processor's id so both are idempotent.
+model Payment {
+  id                        String          @id @default(uuid())
+  createdAt                 DateTime        @default(now())
+
+  user                      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId                    String?
+
+  provider                  String          @default("stripe")
+  externalId                String          @unique // e.g. Stripe invoice id `in_...`
+  paymentProcessorUserId    String?                 // e.g. Stripe customer id `cus_...`
+  planId                    String?                 // PaymentPlanId, when the price maps to a known plan
+  kind                      String                  // "subscription" | "credits" | "unknown"
+  amountCents               Int                     // amount actually paid, in the currency's minor unit
+  currency                  String                  // lower-case ISO code, e.g. "usd"
+  creditsGranted            Int?
+  paidAt                    DateTime
+
+  @@index([userId])
+  @@index([paidAt])
 }
 
 model ProcessedWebhookEvent {
@@ -127,12 +152,17 @@ model VideoTask {
   publicCategory     String?
   storageKey         String?
   posterUrl          String?
+  // Credit price of the render (provider USD x 30, rounded up) and what was
+  // actually taken from the user's balance (0 for admins). Null on older rows.
+  creditCost         Int?
+  creditsCharged     Int?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
   @@index([userId])
   @@index([status])
   @@index([isPublic, featuredOnHome])
+  @@index([createdAt])
 }
 
 model LongVideoJob {
