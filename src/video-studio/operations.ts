@@ -22,6 +22,21 @@ import {
   syncLongVideoJob,
   validateExternalMediaUrl,
 } from "./longVideoProcessor";
+import {
+  createMuapiClient,
+  readMuapiApiKey,
+  warnOnLowMuapiBalance,
+} from "./muapi";
+import {
+  clampSeedanceDuration,
+  estimateSeedancePlan,
+  normalizeSeedanceAspectRatio,
+  SEEDANCE_MAX_TOTAL_SEC,
+  SEEDANCE_MIN_DURATION_SEC,
+  SEEDANCE_MODEL_ID,
+  SEEDANCE_VARIANT,
+} from "./seedancePlanning";
+import { startSeedanceJob, syncSeedanceJob } from "./seedanceProcessor";
 import { getModel, parseSettings } from "./hf/generation/catalog";
 import type { GenerationPlane } from "./hf/generation/catalog/types";
 import { urls } from "./hf/generation/catalog/mappers";
@@ -190,6 +205,9 @@ export const hfSubmitGeneration = async (
   let path: string;
   let body: Record<string, unknown>;
   try {
+    if (plane.model === SEEDANCE_MODEL_ID) {
+      throw new Error("Seedance videos are made with submitSeedanceVideo.");
+    }
     const model = getModel(plane.model);
     parsed = {
       ...plane,
@@ -766,6 +784,138 @@ export const submitLongVideoGenjutsu = async (
   return createdJob;
 };
 
+export interface SubmitSeedanceVideoInput {
+  prompt: string;
+  totalDurationSec: number;
+  resolution?: "480p" | "720p" | "1080p";
+  aspectRatio?: string;
+}
+
+/**
+ * Seedance 2.5 through MuAPI, paid from the server's MUAPI_API_KEY. One piece for up
+ * to 30 seconds; longer videos chain extends and are joined into one file.
+ */
+export const submitSeedanceVideo = async (
+  args: SubmitSeedanceVideoInput,
+  context: any
+): Promise<LongVideoJobSummary> => {
+  const activeUserId = context.user?.id;
+  if (!activeUserId) {
+    throw new HttpError(401, "Please sign in or create an account to generate videos.");
+  }
+
+  const prompt = String(args.prompt ?? "").trim();
+  if (!prompt) {
+    throw new HttpError(400, "Describe the video you want Seedance to make.");
+  }
+  const requested = Number(args.totalDurationSec);
+  if (
+    !Number.isFinite(requested) ||
+    requested < SEEDANCE_MIN_DURATION_SEC ||
+    requested > SEEDANCE_MAX_TOTAL_SEC
+  ) {
+    throw new HttpError(
+      400,
+      `Seedance videos can be ${SEEDANCE_MIN_DURATION_SEC} to ${SEEDANCE_MAX_TOTAL_SEC} seconds long.`
+    );
+  }
+
+  let muapi;
+  try {
+    muapi = createMuapiClient(readMuapiApiKey(), fetch, warnOnLowMuapiBalance);
+  } catch (err: unknown) {
+    throw new HttpError(503, err instanceof Error ? err.message : "Seedance is not set up.");
+  }
+
+  const plan = estimateSeedancePlan({
+    totalDurationSec: clampSeedanceDuration(requested),
+    resolution: args.resolution,
+  });
+  const aspectRatio = normalizeSeedanceAspectRatio(args.aspectRatio);
+
+  // Guard the owner's MuAPI balance: refuse a job MuAPI could not pay for.
+  const balance = await muapi.balanceUsd();
+  if (balance !== null && balance < plan.usd) {
+    console.warn(
+      `[seedance] Refused a $${plan.usd.toFixed(2)} job: MuAPI balance is $${balance.toFixed(2)}.`
+    );
+    throw new HttpError(503, "Seedance is temporarily unavailable. Please try again later.");
+  }
+
+  const dbUser = await context.entities.User.findUnique({
+    where: { id: activeUserId },
+    select: { id: true, isAdmin: true, credits: true },
+  });
+  const isAdmin = Boolean(dbUser?.isAdmin);
+  const { count: reserved } = await context.entities.User.updateMany({
+    where: { id: activeUserId, credits: { gte: plan.credits } },
+    data: { credits: { decrement: plan.credits } },
+  });
+  if (reserved === 0 && !isAdmin) {
+    throw new HttpError(
+      402,
+      `Insufficient credits (${dbUser?.credits ?? 0} available, ${plan.credits} needed). Please upgrade or buy credits.`
+    );
+  }
+  const chargedCredits = reserved > 0 ? plan.credits : 0;
+
+  let createdJob: LongVideoJob;
+  try {
+    createdJob = await context.entities.LongVideoJob.create({
+      data: {
+        userId: activeUserId,
+        status: "PROCESSING_CLIPS",
+        variant: SEEDANCE_VARIANT,
+        resolution: plan.resolution,
+        aspectRatio,
+        prompt,
+        sourceVideoUrl: "",
+        referenceImageUrls: [],
+        trimStartSec: 0,
+        totalDurationSec: plan.totalDurationSec,
+        segmentCount: plan.pieces.length,
+        completedCount: 0,
+        creditCost: chargedCredits,
+        segments: {
+          create: plan.pieces.map((piece) => ({
+            index: piece.index,
+            startSec: piece.startSec,
+            durationSec: piece.durationSec,
+            status: "PENDING",
+          })),
+        },
+      },
+    });
+  } catch (err: unknown) {
+    if (chargedCredits > 0) {
+      await context.entities.User.update({
+        where: { id: activeUserId },
+        data: { credits: { increment: chargedCredits } },
+      });
+    }
+    throw new HttpError(
+      500,
+      err instanceof Error ? err.message : "Failed to start the Seedance video."
+    );
+  }
+
+  try {
+    await startSeedanceJob({ job: createdJob, entities: context.entities, muapi });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Seedance did not accept the request.";
+    await failAndRefundLongVideoJob({
+      jobId: createdJob.id,
+      userId: activeUserId,
+      creditCost: chargedCredits,
+      errorMessage: message,
+      entities: context.entities,
+    });
+    throw new HttpError(502, message);
+  }
+
+  return createdJob;
+};
+
 export const getLongVideoJobStatus = async (
   { jobId }: { jobId: string },
   context: any
@@ -793,6 +943,20 @@ export const getLongVideoJobStatus = async (
   const timeSinceUpdateMs = Date.now() - new Date(job.updatedAt).getTime();
   if (timeSinceUpdateMs < 5000) {
     return withPieces(job, context.entities);
+  }
+
+  if (job.variant === SEEDANCE_VARIANT) {
+    try {
+      const updated = await syncSeedanceJob({
+        job,
+        entities: context.entities,
+        muapi: createMuapiClient(readMuapiApiKey(), fetch, warnOnLowMuapiBalance),
+        mediaOps: defaultLongVideoMediaOps(uploadLocalFileToS3),
+      });
+      return withPieces(await resolveFreshJobUrl(updated || job), context.entities);
+    } catch {
+      return withPieces(job, context.entities);
+    }
   }
 
   try {
@@ -866,11 +1030,14 @@ export const cancelLongVideoJob = async (
     .filter((s: any) => s.status === "PROCESSING" && s.requestId)
     .map((s: any) => s.requestId);
 
+  // MuAPI has no cancel endpoint we rely on; a canceled Seedance piece just finishes unused.
   let platformClient;
-  try {
-    platformClient = createPlatformClient(readServerCredentials(context.user.id));
-  } catch {
-    platformClient = undefined;
+  if (job.variant !== SEEDANCE_VARIANT) {
+    try {
+      platformClient = createPlatformClient(readServerCredentials(context.user.id));
+    } catch {
+      platformClient = undefined;
+    }
   }
 
   await failAndRefundLongVideoJob({

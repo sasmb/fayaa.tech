@@ -9,4 +9,5 @@ export const videoStudioEnvSchema = z.object({
     .string()
     .min(1, "MUAPI_API_KEY is required for video studio")
     .optional(),
+  MUAPI_LOW_BALANCE_USD: z.string().optional(),
 });

@@ -14,7 +14,9 @@ import {
   listLongVideoJobs,
   submitGeneration,
   submitLongVideo,
+  submitSeedance,
   type SubmitLongVideoRequest,
+  type SubmitSeedanceRequest,
 } from "../../generation/actions"
 import { getModel } from "../../generation/catalog"
 import type { GenerationPlane } from "../../generation/catalog"
@@ -38,6 +40,7 @@ function remainingCreditsFor(job: LongVideoJob): number {
   }).credits
   return Math.max(0, full - job.creditCost)
 }
+import { SEEDANCE_VARIANT } from "../../../seedancePlanning"
 
 import {
   aspectFromSettings,
@@ -90,6 +93,7 @@ export function useRuns(userId?: string | null) {
               status: job.status,
               segmentCount: job.segmentCount,
               completedCount: job.completedCount,
+              variant: job.variant,
             })
             if (job.status === "COMPLETED" && job.outputVideoUrl) {
               update(recordId, {
@@ -184,7 +188,9 @@ export function useRuns(userId?: string | null) {
           status: job.status,
           segmentCount: job.segmentCount,
           completedCount: job.completedCount,
+          variant: job.variant,
         })
+        const isSeedance = job.variant === SEEDANCE_VARIANT
         byRequestId.set(key, {
           id: key,
           requestId: key,
@@ -194,15 +200,18 @@ export function useRuns(userId?: string | null) {
           completedCount: job.completedCount,
           ...(job.pieces ? { pieces: job.pieces } : {}),
           surface: "video",
-          modelId: "genjutsu",
-          modelLabel: "Higgsfield Genjutsu",
+          modelId: isSeedance ? "seedance" : "genjutsu",
+          modelLabel: isSeedance ? "Seedance 2.5" : "Higgsfield Genjutsu",
           prompt: job.prompt ?? "",
           settings: {
             resolution: job.resolution,
             variant: job.variant,
             duration: job.totalDurationSec,
+            ...(job.aspectRatio ? { aspect_ratio: job.aspectRatio } : {}),
           },
-          aspect: 16 / 9,
+          aspect: job.aspectRatio
+            ? aspectFromSettings({ aspect_ratio: job.aspectRatio })
+            : 16 / 9,
           status: mappedStatus,
           urls: awaiting
             ? [job.previewVideoUrl!]
@@ -403,6 +412,54 @@ export function useRuns(userId?: string | null) {
     [watchLongJob]
   )
 
+  const submitSeedanceRun = useCallback(
+    async (
+      input: SubmitSeedanceRequest,
+      projectId?: string
+    ): Promise<RunRecord | null> => {
+      setError(null)
+      try {
+        const queued = await submitSeedance(input)
+        const key = `long-${queued.id}`
+        const record: RunRecord = {
+          id: key,
+          requestId: key,
+          longVideoJobId: queued.id,
+          longVideoProgressLabel: formatLongVideoProgressLabel({
+            status: queued.status,
+            segmentCount: queued.segmentCount,
+            completedCount: 0,
+            variant: SEEDANCE_VARIANT,
+          }),
+          segmentCount: queued.segmentCount,
+          completedCount: 0,
+          surface: "video",
+          modelId: "seedance",
+          modelLabel: "Seedance 2.5",
+          prompt: input.prompt,
+          settings: {
+            resolution: input.resolution ?? "720p",
+            variant: SEEDANCE_VARIANT,
+            duration: input.totalDurationSec,
+            aspect_ratio: input.aspectRatio ?? "16:9",
+          },
+          ...(projectId ? { projectId } : {}),
+          aspect: aspectFromSettings({ aspect_ratio: input.aspectRatio ?? "16:9" }),
+          status: "running",
+          urls: [],
+          createdAt: Date.now(),
+        }
+        setRecords((current) => [record, ...current])
+        watchLongJob(record.id, queued.id)
+        return record
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : String(caught))
+        return null
+      }
+    },
+    [watchLongJob]
+  )
+
   const cancel = useCallback(
     async (id: string) => {
       const record = records.find((r) => r.id === id)
@@ -478,6 +535,7 @@ export function useRuns(userId?: string | null) {
     error,
     submit,
     submitLong,
+    submitSeedance: submitSeedanceRun,
     cancel,
     approvePreview,
     keepPreview,

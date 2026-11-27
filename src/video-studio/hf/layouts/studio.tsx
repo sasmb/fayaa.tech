@@ -10,6 +10,11 @@ import {
   prettyPaymentPlanName,
 } from "../../../payment/plans"
 import { estimateLongVideoPlan, segmentCredits } from "../../longVideoPlanning"
+import {
+  estimateSeedancePlan,
+  normalizeSeedanceAspectRatio,
+  SEEDANCE_MODEL_ID,
+} from "../../seedancePlanning"
 import { creditCostForResolution } from "../../taskSync"
 import { GenjutsuWorkbench } from "../components/studio/genjutsu-workbench"
 import {
@@ -307,7 +312,12 @@ export function StudioTemplate({
     (model.requirePrompt && !prompt.trim())
 
   const requiredCredits =
-    settings.resolution === "1080p"
+    model.id === SEEDANCE_MODEL_ID
+      ? estimateSeedancePlan({
+          totalDurationSec: Number(settings.duration ?? 10),
+          resolution: settings.resolution,
+        }).credits
+      : settings.resolution === "1080p"
       ? 30
       : settings.resolution === "480p"
         ? 15
@@ -328,6 +338,34 @@ export function StudioTemplate({
       setLocalError(null)
       if (!user) {
         setShowGuestSignupGate(true)
+        return
+      }
+      const projectId = view.kind === "project" ? view.projectId : undefined
+      if (plane.model === SEEDANCE_MODEL_ID) {
+        const seedancePlan = estimateSeedancePlan({
+          totalDurationSec: Number(plane.settings.duration ?? 10),
+          resolution: plane.settings.resolution,
+        })
+        if (user.credits < seedancePlan.credits && !user.isAdmin) {
+          setLocalError(
+            `Insufficient credits (${user.credits} available, ${seedancePlan.credits} needed). Subscribe or top up to continue.`
+          )
+          setView({ kind: "subscription" })
+          return
+        }
+        void runs
+          .submitSeedance(
+            {
+              prompt: plane.prompt.text,
+              totalDurationSec: seedancePlan.totalDurationSec,
+              resolution: seedancePlan.resolution,
+              aspectRatio: normalizeSeedanceAspectRatio(plane.settings.aspect_ratio),
+            },
+            projectId
+          )
+          .then((record) => {
+            if (record && projectId) projectsStore.touch(projectId)
+          })
         return
       }
       const res = (plane.settings.resolution === "1080p" || plane.settings.resolution === "720p"
@@ -359,7 +397,6 @@ export function StudioTemplate({
         setView({ kind: "subscription" })
         return
       }
-      const projectId = view.kind === "project" ? view.projectId : undefined
       if (isLongForm) {
         const sourceVideoUrl =
           plane.media.source?.[0]?.url ?? plane.media.video?.[0]?.url ?? ""

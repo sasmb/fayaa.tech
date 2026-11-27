@@ -2,6 +2,9 @@ import type { CheckVideoTasksJob } from "wasp/server/jobs";
 import { uploadLocalFileToS3 } from "../file-upload/s3Utils";
 import { createPlatformClient } from "./hf/generation/platform";
 import { defaultLongVideoMediaOps, syncLongVideoJob } from "./longVideoProcessor";
+import { createMuapiClient, warnOnLowMuapiBalance } from "./muapi";
+import { SEEDANCE_VARIANT } from "./seedancePlanning";
+import { syncSeedanceJob } from "./seedanceProcessor";
 import { syncVideoTaskStatus } from "./taskSync";
 
 /**
@@ -66,22 +69,35 @@ export const checkVideoTasksJob: CheckVideoTasksJob<never, void> = async (
       take: 10,
     });
 
+    const seedanceJobs = activeLongJobs.filter((job) => job.variant === SEEDANCE_VARIANT);
+    const genjutsuJobs = activeLongJobs.filter((job) => job.variant !== SEEDANCE_VARIANT);
+    const mediaOps = defaultLongVideoMediaOps(uploadLocalFileToS3);
+
     const apiKey = process.env.HF_CREDENTIALS?.trim();
-    if (activeLongJobs.length > 0 && apiKey) {
+    if (genjutsuJobs.length > 0 && apiKey) {
       const baseUrl = (
         process.env.HF_API_BASE_URL || "https://api.higgsfield.ai"
       ).replace(/\/+$/, "");
       const platformClient = createPlatformClient({ apiKey, baseUrl });
-      const mediaOps = defaultLongVideoMediaOps(uploadLocalFileToS3);
 
       await Promise.allSettled(
-        activeLongJobs.map((job) =>
+        genjutsuJobs.map((job) =>
           syncLongVideoJob({
             job,
             entities: context.entities,
             platformClient,
             mediaOps,
           })
+        )
+      );
+    }
+
+    const muapiKey = process.env.MUAPI_API_KEY?.trim();
+    if (seedanceJobs.length > 0 && muapiKey) {
+      const muapi = createMuapiClient(muapiKey, fetch, warnOnLowMuapiBalance);
+      await Promise.allSettled(
+        seedanceJobs.map((job) =>
+          syncSeedanceJob({ job, entities: context.entities, muapi, mediaOps })
         )
       );
     }

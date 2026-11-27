@@ -187,11 +187,29 @@ export function formatLongVideoProgressLabel({
   status,
   segmentCount,
   completedCount,
+  variant,
 }: {
   status: string;
   segmentCount: number;
   completedCount: number;
+  variant?: string | null;
 }): string {
+  if (variant === "seedance") {
+    switch (status) {
+      case "PROCESSING_CLIPS":
+        return segmentCount > 1
+          ? `Generating (${completedCount}/${segmentCount} pieces ready)`
+          : "Generating…";
+      case "STITCHING":
+        return segmentCount > 1 ? `Joining ${segmentCount} pieces…` : "Saving video…";
+      case "COMPLETED":
+        return "Final video ready";
+      case "FAILED":
+        return "Seedance video failed";
+      default:
+        return "Generating…";
+    }
+  }
   switch (status) {
     case "SPLITTING":
       return `Preparing ${segmentCount} clips…`;
@@ -241,7 +259,7 @@ export function summarizeLongVideoPieces(
           ? "ready"
           : s.status === "FAILED"
             ? "failed"
-            : s.status === "PROCESSING"
+            : s.status === "PROCESSING" || s.status === "SUBMITTING"
               ? "rendering"
               : "pending";
       return {
