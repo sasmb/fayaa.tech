@@ -27,7 +27,8 @@ jobs:
           cache: "npm"
 
       - name: Install Wasp & Cloudflare CLIs
-        run: npm install -g @wasp.sh/wasp-cli@0.26.0 cf
+        # cf is pre-release and changes its Build Output format between releases, so pin it.
+        run: npm install -g @wasp.sh/wasp-cli@0.26.0 cf@1.0.0-rc.6
 
       # Wasp generates .wasp/spec and .wasp/out, which package.json depends on
       # ("@wasp.sh/spec": "file:.wasp/spec" and the .wasp/out/* workspaces).
