@@ -171,6 +171,7 @@ model LongVideoSegment {
   durationSec    Float
   clipSourceUrl  String?
   requestId      String?      @unique
+  attempts       Int          @default(1) // render attempts, incl. automatic retries
   status         String       @default("PENDING") // "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "SKIPPED"
   outputVideoUrl String?
   error          String?
