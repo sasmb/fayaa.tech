@@ -26,10 +26,16 @@ jobs:
           node-version: "24"
           cache: "npm"
 
-      - name: Install Dependencies & CLIs
-        run: |
-          npm ci || npm install --legacy-peer-deps
-          npm install -g @wasp.sh/wasp-cli@0.26.0 cf
+      - name: Install Wasp & Cloudflare CLIs
+        # cf is pre-release and changes its Build Output format between releases, so pin it.
+        run: npm install -g @wasp.sh/wasp-cli@0.26.0 cf@1.0.0-rc.6
+
+      # Wasp generates .wasp/spec and .wasp/out, which package.json depends on
+      # ("@wasp.sh/spec": "file:.wasp/spec" and the .wasp/out/* workspaces).
+      # A plain `npm ci` runs before those exist, so `wasp compile` then fails with
+      # "Missing or stale dependencies". `wasp install` generates them and installs.
+      - name: Install Project Dependencies
+        run: wasp install
 
       - name: Compile Wasp Project
         run: wasp compile
