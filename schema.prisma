@@ -152,7 +152,7 @@ model VideoTask {
   publicCategory     String?
   storageKey         String?
   posterUrl          String?
-  // Credit price of the render (provider USD x 30, rounded up) and what was
+  // Credit price of the render (provider USD x 30 x 1.5 markup, rounded up) and what was
   // actually taken from the user's balance (0 for admins). Null on older rows.
   creditCost         Int?
   creditsCharged     Int?
