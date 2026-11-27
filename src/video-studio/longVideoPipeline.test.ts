@@ -7,6 +7,7 @@ import {
   maxClipDurationSec,
 } from "./longVideoPlanning";
 import {
+  ffmpegListingHasAudio,
   parseFfmpegDurationSec,
   processLongVideoJobSplit,
   syncLongVideoJob,
@@ -139,6 +140,15 @@ describe("FFmpeg duration parser, SSRF guard, and low-RAM mutex", () => {
       "  Duration: 00:02:45.32, start: 0.000000, bitrate: 2450 kb/s";
     expect(parseFfmpegDurationSec(sample)).toBeCloseTo(165.32, 2);
     expect(parseFfmpegDurationSec("Duration: N/A")).toBeNull();
+  });
+
+  it("detects whether a source has an audio stream", () => {
+    expect(
+      ffmpegListingHasAudio(
+        "  Stream #0:0[0x1](und): Video: h264\n  Stream #0:1[0x2](und): Audio: aac (LC), 44100 Hz"
+      )
+    ).toBe(true);
+    expect(ffmpegListingHasAudio("  Stream #0:0[0x1](und): Video: h264")).toBe(false);
   });
 
   it("rejects non-HTTPS and local/private IP media URLs", async () => {
@@ -522,5 +532,77 @@ describe("backend split, uniform Genjutsu submission, stitch, and atomic refunds
 
     expect(result.status).toBe("STITCHING");
     expect(userCredits.count).toBe(20);
+  });
+  it("lays the source audio from the trimmed range over the stitched video", async () => {
+    const { job, segments, entities } = createMockState({ status: "PROCESSING_CLIPS" });
+    job.trimStartSec = 10;
+    segments.forEach((s, idx) => {
+      s.status = "PROCESSING";
+      s.requestId = `req-${idx}`;
+      s.startSec = 10 + idx * 30;
+    });
+    const platformClient = {
+      status: vi.fn(async (requestId: string) => ({
+        status: "completed",
+        requestId,
+        video: { url: `https://hf.cdn/${requestId}.mp4` },
+      })),
+      cancel: vi.fn(),
+    };
+    const downloaded: string[] = [];
+    const mediaOps: LongVideoMediaOps = {
+      downloadToFile: vi.fn(async (url) => {
+        downloaded.push(url);
+      }),
+      probeDurationSec: vi.fn(),
+      splitSegment: vi.fn(),
+      uploadClipFile: vi.fn(),
+      stitchClips: vi.fn(async () => {}),
+      muxSourceAudio: vi.fn(async () => true),
+      uploadFinalVideo: vi.fn(async () => ({ s3Key: "k", url: "https://r2/k" })),
+    };
+
+    const updated = await syncLongVideoJob({ job, entities, platformClient, mediaOps });
+
+    expect(downloaded).toContain("https://cdn.example.com/2min.mp4");
+    expect(mediaOps.muxSourceAudio).toHaveBeenCalledWith(
+      expect.objectContaining({ startSec: 10, durationSec: 120 })
+    );
+    const uploadArgs = (mediaOps.uploadFinalVideo as any).mock.calls[0][0];
+    expect(uploadArgs.filePath).toMatch(/-audio\.mp4$/);
+    expect(updated.status).toBe("COMPLETED");
+  });
+
+  it("still delivers the stitched video if adding source audio fails", async () => {
+    const { job, segments, entities } = createMockState({ status: "PROCESSING_CLIPS" });
+    segments.forEach((s, idx) => {
+      s.status = "PROCESSING";
+      s.requestId = `req-${idx}`;
+    });
+    const platformClient = {
+      status: vi.fn(async (requestId: string) => ({
+        status: "completed",
+        requestId,
+        video: { url: `https://hf.cdn/${requestId}.mp4` },
+      })),
+      cancel: vi.fn(),
+    };
+    const mediaOps: LongVideoMediaOps = {
+      downloadToFile: vi.fn(async () => {}),
+      probeDurationSec: vi.fn(),
+      splitSegment: vi.fn(),
+      uploadClipFile: vi.fn(),
+      stitchClips: vi.fn(async () => {}),
+      muxSourceAudio: vi.fn(async () => {
+        throw new Error("ffmpeg exploded");
+      }),
+      uploadFinalVideo: vi.fn(async () => ({ s3Key: "k", url: "https://r2/k" })),
+    };
+
+    const updated = await syncLongVideoJob({ job, entities, platformClient, mediaOps });
+
+    const uploadArgs = (mediaOps.uploadFinalVideo as any).mock.calls[0][0];
+    expect(uploadArgs.filePath).not.toMatch(/-audio\.mp4$/);
+    expect(updated.status).toBe("COMPLETED");
   });
 });

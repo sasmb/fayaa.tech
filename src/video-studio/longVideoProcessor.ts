@@ -228,6 +228,81 @@ export async function splitSegmentWithFfmpeg({
   );
 }
 
+/** True when ffmpeg's stream listing (stderr of `ffmpeg -i`) contains an audio stream. */
+export function ffmpegListingHasAudio(stderr: string): boolean {
+  return /Stream #\d+:\d+[^\n]*: Audio:/.test(stderr);
+}
+
+async function fileHasAudioStream(filePath: string): Promise<boolean> {
+  const ffmpeg = resolveFfmpegBinary();
+  try {
+    const { stderr } = await execFileAsync(ffmpeg, ["-i", filePath], {
+      timeout: 30_000,
+    });
+    return ffmpegListingHasAudio(stderr || "");
+  } catch (err: any) {
+    // ffmpeg exits non-zero when -i has no output target; stderr still lists streams.
+    return ffmpegListingHasAudio(String(err?.stderr ?? ""));
+  }
+}
+
+/**
+ * Lays the original source audio (from the same trimmed range the clips were cut
+ * from) over the stitched video. Genjutsu re-renders the picture, so without this
+ * the final long video loses the music or voice of the upload.
+ * Returns false and leaves `outputPath` unwritten when the source has no audio.
+ */
+export async function muxSourceAudioWithFfmpeg({
+  videoPath,
+  sourcePath,
+  startSec,
+  durationSec,
+  outputPath,
+}: {
+  videoPath: string;
+  sourcePath: string;
+  startSec: number;
+  durationSec: number;
+  outputPath: string;
+}): Promise<boolean> {
+  if (!(await fileHasAudioStream(sourcePath))) return false;
+  const ffmpeg = resolveFfmpegBinary();
+  await execFileAsync(
+    ffmpeg,
+    [
+      "-y",
+      "-i",
+      videoPath,
+      "-ss",
+      Math.max(0, startSec).toFixed(2),
+      "-t",
+      durationSec.toFixed(2),
+      "-i",
+      sourcePath,
+      "-threads",
+      "1",
+      "-map",
+      "0:v:0",
+      "-map",
+      "1:a:0",
+      "-c:v",
+      "copy",
+      "-c:a",
+      "aac",
+      "-ar",
+      "44100",
+      "-ac",
+      "2",
+      "-shortest",
+      "-movflags",
+      "+faststart",
+      outputPath,
+    ],
+    { timeout: FFMPEG_TIMEOUT_MS }
+  );
+  return true;
+}
+
 export async function stitchClipsWithFfmpeg({
   clipPaths,
   concatListPath,
@@ -370,6 +445,14 @@ export interface LongVideoMediaOps {
     concatListPath: string;
     outputPath: string;
   }) => Promise<void>;
+  /** Optional: replaces the stitched video's audio with the source audio. */
+  muxSourceAudio?: (args: {
+    videoPath: string;
+    sourcePath: string;
+    startSec: number;
+    durationSec: number;
+    outputPath: string;
+  }) => Promise<boolean>;
   uploadClipFile: (
     filePath: string,
     createUpload: LongVideoPlatformClient["createUpload"]
@@ -389,6 +472,7 @@ export const defaultLongVideoMediaOps = (
   probeDurationSec: probeVideoDurationSec,
   splitSegment: splitSegmentWithFfmpeg,
   stitchClips: stitchClipsWithFfmpeg,
+  muxSourceAudio: muxSourceAudioWithFfmpeg,
   uploadClipFile: (filePath, createUpload) =>
     uploadClipFileToPlatform(filePath, createUpload),
   uploadFinalVideo,
@@ -785,8 +869,41 @@ export async function syncLongVideoJob({
       })
     );
 
+    // Keep the original soundtrack. This is best effort: if the source has no audio
+    // or the mux fails, the silent stitched video is still delivered.
+    let finalPath = stitchedPath;
+    if (mediaOps.muxSourceAudio) {
+      const sourcePath = path.join(stitchDir, "source.mp4");
+      const withAudioPath = path.join(stitchDir, `final-${job.id}-audio.mp4`);
+      const startSec = Number(segments[0]?.startSec ?? job.trimStartSec ?? 0);
+      const durationSec = segments.reduce(
+        (sum, s) => sum + Number(s.durationSec || 0),
+        0
+      );
+      try {
+        await mediaOps.downloadToFile(job.sourceVideoUrl, sourcePath);
+        const muxed = await withFfmpegMutex(() =>
+          mediaOps.muxSourceAudio!({
+            videoPath: stitchedPath,
+            sourcePath,
+            startSec,
+            durationSec,
+            outputPath: withAudioPath,
+          })
+        );
+        if (muxed) finalPath = withAudioPath;
+      } catch (err: unknown) {
+        console.warn(
+          `[longVideo] Could not add source audio to job ${job.id}:`,
+          err instanceof Error ? err.message : err
+        );
+      } finally {
+        await fs.rm(sourcePath, { force: true });
+      }
+    }
+
     const uploaded = await mediaOps.uploadFinalVideo({
-      filePath: stitchedPath,
+      filePath: finalPath,
       fileName: `fayaa-genjutsu-${job.id}.mp4`,
       contentType: "video/mp4",
       userId: job.userId,
