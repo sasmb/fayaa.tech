@@ -5,6 +5,7 @@ import {
   estimateLongVideoPlan,
   formatLongVideoProgressLabel,
   maxClipDurationSec,
+  summarizeLongVideoPieces,
 } from "./longVideoPlanning";
 import {
   ffmpegListingHasAudio,
@@ -115,6 +116,22 @@ describe("longVideoPlanning segment splitting & dynamic credit estimation", () =
     });
     expect(plan720Pro.segmentCount).toBe(4);
     expect(plan720Pro.credits).toBeGreaterThan(plan480Light.credits);
+  });
+
+  it("summarizes stored segments into ordered per-piece progress, hiding skipped ones", () => {
+    const pieces = summarizeLongVideoPieces([
+      { index: 2, status: "PENDING", startSec: 30, durationSec: 15 },
+      { index: 0, status: "COMPLETED", startSec: 0, durationSec: 15 },
+      { index: 1, status: "PROCESSING", startSec: 15, durationSec: 15, attempts: 2 },
+      { index: 3, status: "FAILED", startSec: 45, durationSec: 10 },
+      { index: 4, status: "SKIPPED", startSec: 55, durationSec: 4 },
+    ]);
+    expect(pieces).toEqual([
+      { index: 0, status: "ready", startSec: 0, durationSec: 15 },
+      { index: 1, status: "rendering", startSec: 15, durationSec: 15, attempts: 2 },
+      { index: 2, status: "pending", startSec: 30, durationSec: 15 },
+      { index: 3, status: "failed", startSec: 45, durationSec: 10 },
+    ]);
   });
 
   it("formats user-facing progress labels without exposing intermediate segment chaos", () => {

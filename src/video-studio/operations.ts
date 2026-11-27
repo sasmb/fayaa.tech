@@ -5,7 +5,12 @@ import {
   uploadLocalFileToS3,
 } from "../file-upload/s3Utils";
 import { getCuratedHomepageStorageKeys } from "../landing-page/homepageConfig";
-import { estimateLongVideoPlan, MIN_CLIP_DURATION_SEC } from "./longVideoPlanning";
+import {
+  estimateLongVideoPlan,
+  MIN_CLIP_DURATION_SEC,
+  summarizeLongVideoPieces,
+  type LongVideoPieceState,
+} from "./longVideoPlanning";
 import {
   defaultLongVideoMediaOps,
   failAndRefundLongVideoJob,
@@ -573,6 +578,26 @@ export interface LongVideoJobSummary {
   updatedAt: Date;
 }
 
+export type LongVideoJobWithPieces = LongVideoJob & {
+  pieces?: LongVideoPieceState[];
+};
+
+/** Adds the ordered per-piece progress the studio shows on running long-video cards. */
+async function withPieces(
+  job: LongVideoJob,
+  entities: { LongVideoSegment: { findMany: (args: any) => Promise<any[]> } }
+): Promise<LongVideoJobWithPieces> {
+  try {
+    const segments = await entities.LongVideoSegment.findMany({
+      where: { jobId: job.id },
+      orderBy: { index: "asc" },
+    });
+    return { ...job, pieces: summarizeLongVideoPieces(segments) };
+  } catch {
+    return job;
+  }
+}
+
 async function resolveFreshJobUrl(job: LongVideoJob): Promise<LongVideoJob> {
   if (job.status === "COMPLETED" && job.outputStorageKey) {
     try {
@@ -729,7 +754,7 @@ export const submitLongVideoGenjutsu = async (
 export const getLongVideoJobStatus = async (
   { jobId }: { jobId: string },
   context: any
-): Promise<LongVideoJob> => {
+): Promise<LongVideoJobWithPieces> => {
   if (!context.user?.id) {
     throw new HttpError(401, "Authentication required");
   }
@@ -744,15 +769,15 @@ export const getLongVideoJobStatus = async (
   }
 
   if (job.status === "COMPLETED") {
-    return resolveFreshJobUrl(job);
+    return withPieces(await resolveFreshJobUrl(job), context.entities);
   }
   if (job.status === "FAILED" || job.status === "SPLITTING" || job.status === "STITCHING") {
-    return job;
+    return withPieces(job, context.entities);
   }
 
   const timeSinceUpdateMs = Date.now() - new Date(job.updatedAt).getTime();
   if (timeSinceUpdateMs < 5000) {
-    return job;
+    return withPieces(job, context.entities);
   }
 
   try {
@@ -763,23 +788,31 @@ export const getLongVideoJobStatus = async (
       platformClient: createPlatformClient(credentials),
       mediaOps: defaultLongVideoMediaOps(uploadLocalFileToS3),
     });
-    return resolveFreshJobUrl(updated || job);
+    return withPieces(await resolveFreshJobUrl(updated || job), context.entities);
   } catch {
-    return job;
+    return withPieces(job, context.entities);
   }
 };
 
 export const getUserLongVideoJobs = async (
   _args: void,
   context: any
-): Promise<LongVideoJob[]> => {
+): Promise<LongVideoJobWithPieces[]> => {
   if (!context.user?.id) return [];
   const jobs = await context.entities.LongVideoJob.findMany({
     where: { userId: context.user.id },
     orderBy: { createdAt: "desc" },
     take: 30,
   });
-  return Promise.all(jobs.map((job: LongVideoJob) => resolveFreshJobUrl(job)));
+  return Promise.all(
+    jobs.map(async (job: LongVideoJob) => {
+      const fresh = await resolveFreshJobUrl(job);
+      // Only running jobs need per-piece progress on their cards.
+      return job.status === "COMPLETED" || job.status === "FAILED"
+        ? fresh
+        : withPieces(fresh, context.entities);
+    })
+  );
 };
 
 export const cancelLongVideoJob = async (

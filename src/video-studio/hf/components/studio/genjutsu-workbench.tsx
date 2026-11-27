@@ -75,6 +75,7 @@ import {
   estimateLongVideoPlan,
   maxClipDurationSec,
 } from "../../../longVideoPlanning"
+import { LongVideoPieces } from "./long-video-pieces"
 import type { MotionModel, VideoQuality } from "../../../types"
 
 import { AssetLibraryModal } from "./asset-library"
@@ -2968,6 +2969,11 @@ export function GenjutsuWorkbench({
                             generatingLabel={
                               run.longVideoProgressLabel ??
                               `Processing Genjutsu (${String(Math.floor(elapsedSec / 60)).padStart(2, "0")}:${String(elapsedSec % 60).padStart(2, "0")})`
+                            }
+                            generatingDetail={
+                              run.pieces && run.pieces.length > 1 ? (
+                                <LongVideoPieces pieces={run.pieces} />
+                              ) : undefined
                             }
                             failureLabel={
                               run.error ??

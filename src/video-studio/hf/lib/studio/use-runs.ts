@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { getUserVideoTasks } from "wasp/client/operations"
-import type { LongVideoJob, VideoTask } from "wasp/entities"
+import type { LongVideoJob as LongVideoJobEntity, VideoTask } from "wasp/entities"
 
 import {
   cancelGeneration,
@@ -18,7 +18,12 @@ import { getModel } from "../../generation/catalog"
 import type { GenerationPlane } from "../../generation/catalog"
 import type { GenerationStatus } from "../../generation/platform"
 import { stopWatching, watchRequest } from "../../generation/poll"
-import { formatLongVideoProgressLabel } from "../../../longVideoPlanning"
+import {
+  formatLongVideoProgressLabel,
+  type LongVideoPieceState,
+} from "../../../longVideoPlanning"
+
+type LongVideoJob = LongVideoJobEntity & { pieces?: LongVideoPieceState[] }
 
 import {
   aspectFromSettings,
@@ -94,6 +99,7 @@ export function useRuns(userId?: string | null) {
               completedCount: job.completedCount,
               segmentCount: job.segmentCount,
               longVideoProgressLabel: progressLabel,
+              ...(job.pieces ? { pieces: job.pieces } : {}),
             })
             scheduleNext(5000)
           } catch {
@@ -160,6 +166,7 @@ export function useRuns(userId?: string | null) {
           longVideoProgressLabel: progressLabel,
           segmentCount: job.segmentCount,
           completedCount: job.completedCount,
+          ...(job.pieces ? { pieces: job.pieces } : {}),
           surface: "video",
           modelId: "genjutsu",
           modelLabel: "Higgsfield Genjutsu",
