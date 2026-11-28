@@ -263,3 +263,11 @@
 .fy-admin body {
   background: var(--color-fy-ink);
 }
+
+/* Dark canvas from the first paint, so loading screens never flash white. */
+html {
+  background-color: var(--color-fy-ink);
+}
+html.dark {
+  color-scheme: dark;
+}

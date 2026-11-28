@@ -14,7 +14,7 @@ export function PrivacyPage() {
       activePath="/privacy"
     >
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           1. Introduction
         </h2>
         <p>
@@ -26,10 +26,10 @@ export function PrivacyPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           2. Information We Collect
         </h2>
-        <ul className="list-disc pl-5 space-y-2 text-[#a1a1aa]">
+        <ul className="list-disc pl-5 space-y-2 text-fy-muted">
           <li>
             <strong>Account Data:</strong> When you register an account, we collect your email address, username, display name, profile avatar, and authentication identifiers.
           </li>
@@ -46,11 +46,11 @@ export function PrivacyPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           3. How We Use Your Information
         </h2>
         <p>We use the collected information for the following purposes:</p>
-        <ul className="list-disc pl-5 space-y-2 text-[#a1a1aa]">
+        <ul className="list-disc pl-5 space-y-2 text-fy-muted">
           <li>To render and generate synthesized motion-transfer videos requested through the Studio or Claude MCP server.</li>
           <li>To manage user accounts, authenticate sessions, and track credit balances.</li>
           <li>To prevent fraudulent activity, security abuses, and non-consensual deepfake generation.</li>
@@ -59,11 +59,11 @@ export function PrivacyPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           4. Third-Party Service Providers
         </h2>
         <p>We work with trusted third-party service providers who process data strictly under our direction:</p>
-        <ul className="list-disc pl-5 space-y-2 text-[#a1a1aa]">
+        <ul className="list-disc pl-5 space-y-2 text-fy-muted">
           <li>
             <strong>Paddle.com:</strong> Payment processing, fraud detection, VAT collection, and subscription invoicing as Merchant of Record.
           </li>
@@ -77,7 +77,7 @@ export function PrivacyPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           5. Data Retention & Deletion
         </h2>
         <p>
@@ -86,7 +86,7 @@ export function PrivacyPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           6. Your Privacy Rights (GDPR & CCPA)
         </h2>
         <p>
@@ -95,7 +95,7 @@ export function PrivacyPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           7. Security
         </h2>
         <p>
@@ -104,10 +104,10 @@ export function PrivacyPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           8. Contact Information
         </h2>
-        <div className="p-4 rounded-xl bg-[#131317] border border-[#22222b] space-y-1 text-xs">
+        <div className="p-4 rounded-xl bg-fy-surface-1 border border-fy-surface-3 space-y-1 text-xs">
           <p className="font-semibold text-white">Data Protection Officer / nexusbizz</p>
           <p>Email: <a href="mailto:sam@nepocommerce.com" className="text-fy-accent hover:underline">sam@nepocommerce.com</a></p>
           <p>Website: <a href="https://fayaa-studio-client.fly.dev" className="text-fy-accent hover:underline">https://fayaa-studio-client.fly.dev</a></p>
