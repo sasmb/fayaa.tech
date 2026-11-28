@@ -9,7 +9,7 @@ import type {
 import * as z from "zod";
 
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
-import { siteMediaInputSchema, type SiteMediaItem } from "./siteMedia";
+import { siteMediaInputSchema, type SiteMediaInput, type SiteMediaItem } from "./siteMedia";
 
 const SELECT = {
   id: true,
@@ -49,7 +49,7 @@ export const getAllSiteMedia: GetAllSiteMedia<void, SiteMediaItem[]> = async (_a
   });
 };
 
-export const upsertSiteMedia: UpsertSiteMedia<unknown, SiteMediaItem> = async (rawArgs, context) => {
+export const upsertSiteMedia: UpsertSiteMedia<SiteMediaInput, SiteMediaItem> = async (rawArgs, context) => {
   assertAdmin(context.user);
   const { id, sortOrder, ...data } = ensureArgsSchemaOrThrowHttpError(siteMediaInputSchema, rawArgs);
 
@@ -72,7 +72,7 @@ export const upsertSiteMedia: UpsertSiteMedia<unknown, SiteMediaItem> = async (r
   });
 };
 
-export const deleteSiteMedia: DeleteSiteMedia<unknown, { id: string }> = async (rawArgs, context) => {
+export const deleteSiteMedia: DeleteSiteMedia<{ id: string }, { id: string }> = async (rawArgs, context) => {
   assertAdmin(context.user);
   const { id } = ensureArgsSchemaOrThrowHttpError(z.object({ id: z.string().uuid() }), rawArgs);
   await context.entities.SiteMedia.delete({ where: { id } });
@@ -80,7 +80,7 @@ export const deleteSiteMedia: DeleteSiteMedia<unknown, { id: string }> = async (
 };
 
 /** Swaps a row with its neighbour in the same slot. */
-export const moveSiteMedia: MoveSiteMedia<unknown, SiteMediaItem[]> = async (rawArgs, context) => {
+export const moveSiteMedia: MoveSiteMedia<{ id: string; direction: "up" | "down" }, SiteMediaItem[]> = async (rawArgs, context) => {
   assertAdmin(context.user);
   const { id, direction } = ensureArgsSchemaOrThrowHttpError(
     z.object({ id: z.string().uuid(), direction: z.enum(["up", "down"]) }),

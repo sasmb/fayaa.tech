@@ -21,7 +21,7 @@ export const SITE_MEDIA_SLOTS = [
 export type SiteMediaSlot = (typeof SITE_MEDIA_SLOTS)[number]["id"];
 export const SITE_MEDIA_SLOT_IDS = SITE_MEDIA_SLOTS.map((s) => s.id) as [SiteMediaSlot, ...SiteMediaSlot[]];
 
-export interface SiteMediaItem {
+export type SiteMediaItem = {
   id: string;
   slot: string;
   title: string;
@@ -34,7 +34,7 @@ export interface SiteMediaItem {
   creditName: string | null;
   sourceUrl: string | null;
   platform: string | null;
-}
+};
 
 const httpsUrl = z
   .string()
