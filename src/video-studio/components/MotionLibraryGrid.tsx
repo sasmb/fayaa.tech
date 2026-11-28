@@ -146,7 +146,7 @@ export function MotionLibraryGrid({
       {/* Add Custom Template Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-[#121217] border border-white/15 rounded-2xl p-5 space-y-4 shadow-2xl">
+          <div className="w-full max-w-sm bg-fy-surface-1 border border-white/15 rounded-2xl p-5 space-y-4 shadow-2xl">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-fy-accent-400" />
               <span>Add Higgsfield Motion Template</span>

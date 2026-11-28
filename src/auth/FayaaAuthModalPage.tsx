@@ -240,7 +240,7 @@ export function FayaaAuthModalPage({
         {/* Responsive Modal Card:
             - Below lg (<1024px): Single-column centered modal (Screenshot 1)
             - lg and up (>=1024px): Split 2-column modal with Left Showcase Story & Right Auth Pane (Screenshots 2 & 3) */}
-        <div className="relative z-50 my-auto flex w-full max-w-[500px] overflow-hidden rounded-[28px] border border-white/10 bg-[#121215] p-3 shadow-[0_32px_120px_rgba(0,0,0,0.92)] lg:max-w-[980px] lg:grid lg:grid-cols-[430px_1fr] lg:gap-3">
+        <div className="relative z-50 my-auto flex w-full max-w-[500px] overflow-hidden rounded-[28px] border border-white/10 bg-fy-surface-1 p-3 shadow-[0_32px_120px_rgba(0,0,0,0.92)] lg:max-w-[980px] lg:grid lg:grid-cols-[430px_1fr] lg:gap-3">
           {/* ════════════════════════════════════════════════════════════════
               LEFT SHOWCASE STORY PANEL (Visible on lg+ screens — Screenshots 2 & 3)
              ════════════════════════════════════════════════════════════════ */}
@@ -378,7 +378,7 @@ export function FayaaAuthModalPage({
                   <div className="mt-6 flex w-full flex-col gap-2.5">
                     <a
                       href={googleSignInUrl}
-                      className="flex h-12 w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-white/12 bg-[#17171A] px-4 text-xs font-semibold text-white transition-colors hover:border-white/25 hover:bg-white/[0.06] sm:text-sm no-underline"
+                      className="flex h-12 w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-white/12 bg-fy-surface-2 px-4 text-xs font-semibold text-white transition-colors hover:border-white/25 hover:bg-white/[0.06] sm:text-sm no-underline"
                     >
                       <GoogleIcon />
                       <span>Continue with Google</span>
@@ -415,7 +415,7 @@ export function FayaaAuthModalPage({
                           setErrorMessage(null);
                         }}
                         placeholder="you@example.com"
-                        className="h-12 w-full rounded-xl border border-white/12 bg-[#17171A] px-4 text-sm text-white placeholder:text-zinc-500 focus:border-fy-accent/60 focus:outline-none"
+                        className="h-12 w-full rounded-xl border border-white/12 bg-fy-surface-2 px-4 text-sm text-white placeholder:text-zinc-500 focus:border-fy-accent/60 focus:outline-none"
                       />
                     </div>
 
@@ -454,7 +454,7 @@ export function FayaaAuthModalPage({
                             setErrorMessage(null);
                           }}
                           placeholder="Enter password (min. 8 characters)"
-                          className="h-12 w-full rounded-xl border border-white/12 bg-[#17171A] px-4 text-sm text-white placeholder:text-zinc-500 focus:border-fy-accent/60 focus:outline-none"
+                          className="h-12 w-full rounded-xl border border-white/12 bg-fy-surface-2 px-4 text-sm text-white placeholder:text-zinc-500 focus:border-fy-accent/60 focus:outline-none"
                         />
                       </div>
                     ) : null}
@@ -499,7 +499,7 @@ export function FayaaAuthModalPage({
                         type="checkbox"
                         checked={agreedToTerms}
                         onChange={(e) => setAgreedToTerms(e.target.checked)}
-                        className="mt-0.5 size-4 shrink-0 cursor-pointer rounded border-white/20 bg-[#17171A] accent-fy-accent"
+                        className="mt-0.5 size-4 shrink-0 cursor-pointer rounded border-white/20 bg-fy-surface-2 accent-fy-accent"
                       />
                       <span>
                         I agree to the{" "}
