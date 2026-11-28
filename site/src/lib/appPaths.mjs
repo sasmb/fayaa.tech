@@ -1,8 +1,8 @@
 /**
  * Paths that belong to the app and now live on app.fayaa.tech. Old links,
  * bookmarks, emails and search results for fayaa.tech/<path> are redirected
- * there with the query string kept. vercel.json and public/_redirects
- * (Cloudflare Pages) must list the same paths; tests/redirects.check.mjs checks.
+ * there with the query string kept. nginx.conf must list the same paths;
+ * tests/redirects.check.mjs checks.
  */
 export const APP_PATHS = [
   "/studio",

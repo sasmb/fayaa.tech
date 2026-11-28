@@ -60,8 +60,9 @@ interface UltraTierConfig {
 const ULTRA_TIERS: Record<UltraTierKey, UltraTierConfig> = {
   "3k": {
     key: "3k",
-    label: "3K",
-    credits: 3000,
+    // Matches what billing grants for Ultra (src/payment/plans.ts): 3,900/mo.
+    label: "3.9K",
+    credits: 3900,
     imagesApprox: 600,
     videosApprox: 60,
     yearlyMonthlyPrice: 109,
@@ -211,7 +212,7 @@ const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Is my subscription automatically renewed?",
-    a: "Yes. Monthly and Annual plans renew automatically at the end of each billing cycle so your generation pipeline is never interrupted. You can cancel or switch tiers anytime through your Paddle Customer Portal with one click.",
+    a: "Yes. Monthly and Annual plans renew automatically at the end of each billing cycle so your generation pipeline is never interrupted. You can cancel or switch tiers anytime from your account's billing portal with one click.",
   },
   {
     q: "How many videos can I generate each month?",
@@ -223,7 +224,7 @@ const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "How can I purchase extra credits?",
-    a: "Select any instant credit pack under 'Credit top-ups' ($12 for 360 credits, $39 for 1,170 credits, or $89 for 2,670 credits). Credits are instantly credited to your account via Paddle checkout and never expire.",
+    a: "Select any instant credit pack under 'Credit top-ups' ($12 for 360 credits, $39 for 1,170 credits, or $89 for 2,670 credits). Credits are instantly credited to your account at checkout and never expire.",
   },
   {
     q: "What motion transfer models does FAYAA provide?",
@@ -1064,7 +1065,7 @@ export function StudioSubscriptionPanel({
           {/* Fine Print below Plan Cards */}
           <div className="mx-auto flex max-w-[760px] flex-col items-center gap-3 pt-1 text-center text-[11px] leading-relaxed text-zinc-500">
             <p>
-              FAYAA credits are valid across the Genjutsu Web Studio and Agent CLI workflows (hosted Claude MCP server coming soon). Prices exclude VAT and local taxes, calculated at Paddle checkout.{" "}
+              FAYAA credits are valid across the Genjutsu Web Studio and Agent CLI workflows (hosted Claude MCP server coming soon). Prices exclude VAT and local taxes, calculated at checkout.{" "}
               <a
                 href="#faq-section"
                 className="underline transition-colors hover:text-zinc-300"

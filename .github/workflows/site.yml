@@ -1,9 +1,17 @@
 name: Marketing site
 
-# Builds and checks the static marketing site (site/) on every PR that
-# touches it, and asks the host to rebuild once a day so dated campaigns in
-# src/marketing/landingContent.ts switch on and off without a code change.
+# Checks the marketing site (site/) on PRs, and deploys it to Fly
+# (app "fayaa-marketing") on every push to main and once a night. The nightly
+# deploy picks up new /admin/site-media clips and switches dated campaigns
+# in src/marketing/landingContent.ts on and off.
 on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "src/marketing/**"
+      - "src/landing-page/homepageConfig.ts"
+      - "src/client/design/tokens.css"
   pull_request:
     paths:
       - "site/**"
@@ -20,7 +28,7 @@ permissions:
 
 jobs:
   check:
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -36,13 +44,16 @@ jobs:
       - run: npx astro check
       - run: npm test
 
-  nightly-rebuild:
-    if: github.event_name == 'schedule'
+  deploy:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    concurrency: fly-marketing-deploy
     steps:
-      - name: Trigger marketing deploy hook
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy to Fly
         env:
-          HOOK: ${{ secrets.MARKETING_DEPLOY_HOOK_URL }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
-          if [ -z "$HOOK" ]; then echo "MARKETING_DEPLOY_HOOK_URL not set; skipping."; exit 0; fi
-          curl -fsS -X POST "$HOOK" > /dev/null && echo "Rebuild requested."
+          if [ -z "$FLY_API_TOKEN" ]; then echo "FLY_API_TOKEN not set; skipping deploy."; exit 0; fi
+          flyctl deploy --config site/fly.toml --remote-only
