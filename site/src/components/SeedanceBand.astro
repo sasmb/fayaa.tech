@@ -1,0 +1,131 @@
+---
+/**
+ * Seedance Week launch band. Rendered at build time, then a small script keeps
+ * the phase, countdown and CTAs right in the visitor's browser and hides the
+ * band once the week is over. Dates and copy: src/marketing/seedanceLaunch.ts.
+ */
+import Button from "./Button.astro";
+import Clip from "./Clip.astro";
+import { app, APP_URL } from "../config";
+import type { MediaClip } from "../lib/content";
+import { SEEDANCE_LAUNCH, SEEDANCE_LAUNCH_COPY, seedanceLaunchPhase } from "../../../src/marketing/seedanceLaunch";
+
+interface Props {
+  clip?: MediaClip;
+  heading?: "h1" | "h2";
+  showPageLink?: boolean;
+}
+const { clip, heading = "h2", showPageLink = true } = Astro.props;
+const phase = seedanceLaunchPhase();
+const show = phase === "upcoming" || phase === "live";
+const live = phase === "live";
+const Heading = heading;
+const studio = (prompt?: string) =>
+  `${APP_URL}/studio?${new URLSearchParams({ model: "seedance", ...(prompt ? { prompt } : {}) }).toString()}`;
+---
+
+{show && (
+  <section
+    id="seedance-launch"
+    class="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6"
+    aria-label="Seedance 2.5 launch"
+    data-seedance-band
+    data-start={SEEDANCE_LAUNCH.startsAt}
+    data-end={SEEDANCE_LAUNCH.endsAt}
+  >
+    <div class="fy-grain relative overflow-hidden rounded-3xl ring-1 ring-fy-accent/30">
+      <div class="absolute inset-0 opacity-60">
+        <Clip clip={clip} class="!absolute inset-0 !aspect-auto size-full !rounded-none" />
+      </div>
+      <div class="absolute inset-0 bg-gradient-to-r from-fy-ink via-fy-ink/85 to-fy-ink/30"></div>
+      <div class="relative grid gap-10 px-6 py-14 sm:px-12 lg:grid-cols-[1.3fr_1fr] lg:items-end">
+        <div class="flex flex-col gap-5">
+          <div class="flex flex-wrap gap-2">
+            <span data-sd-badge class="fy-heat-bg w-fit rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-[0.14em] text-fy-on-accent uppercase">
+              {live ? SEEDANCE_LAUNCH_COPY.badge.live : SEEDANCE_LAUNCH_COPY.badge.upcoming}
+            </span>
+            <span class="w-fit rounded-full border border-fy-line-strong bg-black/60 px-2.5 py-0.5 text-[10px] font-bold tracking-[0.14em] uppercase">{SEEDANCE_LAUNCH.name}</span>
+          </div>
+          <Heading class="fy-display text-[clamp(2.75rem,7vw,5.5rem)]">
+            <span class="block">{SEEDANCE_LAUNCH_COPY.headline[0]}</span>
+            <span class="fy-text-heat block" data-sd-headline data-live={SEEDANCE_LAUNCH_COPY.headline[1]} data-upcoming="is coming.">
+              {live ? SEEDANCE_LAUNCH_COPY.headline[1] : "is coming."}
+            </span>
+          </Heading>
+          <p class="max-w-xl text-lg text-white/80">{SEEDANCE_LAUNCH_COPY.tagline}</p>
+          <p class="max-w-xl text-sm text-fy-muted">{SEEDANCE_LAUNCH_COPY.description}</p>
+          <p class="fy-glass w-fit rounded-xl px-4 py-3 text-sm">✦ {SEEDANCE_LAUNCH_COPY.deal}</p>
+          <div class="flex flex-wrap gap-3">
+            <span data-sd-live-only hidden={!live}><Button href={studio()} size="lg" event="Seedance Try Click">Try Seedance now →</Button></span>
+            <span data-sd-upcoming-only hidden={live}><Button href={app.pricing} size="lg" event="Seedance Teaser Click">Stock up on credits →</Button></span>
+            {showPageLink
+              ? <Button href={SEEDANCE_LAUNCH.path} size="lg" variant="ghost" event="Seedance Page Click">See what it can do</Button>
+              : <Button href={app.pricing} size="lg" variant="ghost" event="Seedance Deal Click">See plans</Button>}
+          </div>
+        </div>
+        <div class="flex flex-col gap-5">
+          <div>
+            <p class="fy-eyebrow text-fy-subtle" data-sd-count-label>{live ? "Deal ends in" : "Launches in"}</p>
+            <div class="mt-2 grid grid-cols-4 gap-2" role="timer">
+              {["days", "hrs", "min", "sec"].map((unit) => (
+                <div class="fy-glass rounded-xl px-2 py-3 text-center">
+                  <div class="fy-display text-3xl tabular-nums sm:text-4xl" data-sd-unit={unit}>--</div>
+                  <div class="mt-1 text-[10px] font-semibold tracking-[0.14em] text-fy-subtle uppercase">{unit}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div class="flex flex-col gap-2">
+            <p class="fy-eyebrow text-fy-subtle">Prompts to try</p>
+            {SEEDANCE_LAUNCH_COPY.prompts.slice(0, 3).map((prompt) => (
+              <a href={studio(prompt)} data-event="Seedance Prompt Click" class="fy-glass flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm text-fy-muted hover:text-fy-text">
+                <span>{prompt}</span><span aria-hidden="true">→</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
+<script>
+  for (const band of document.querySelectorAll<HTMLElement>("[data-seedance-band]")) {
+    const start = Date.parse(band.dataset.start ?? "");
+    const end = Date.parse(band.dataset.end ?? "");
+    const $ = <T extends HTMLElement>(sel: string) => band.querySelector<T>(sel);
+    const tick = () => {
+      const now = Date.now();
+      if (now >= end) {
+        band.hidden = true;
+        return false;
+      }
+      const live = now >= start;
+      const headline = $("[data-sd-headline]");
+      if (headline) headline.textContent = (live ? headline.dataset.live : headline.dataset.upcoming) ?? "";
+      const badge = $("[data-sd-badge]");
+      if (badge) badge.textContent = live ? "Live now" : "Coming Dec 1";
+      const label = $("[data-sd-count-label]");
+      if (label) label.textContent = live ? "Deal ends in" : "Launches in";
+      band.querySelectorAll<HTMLElement>("[data-sd-live-only]").forEach((el) => (el.hidden = !live));
+      band.querySelectorAll<HTMLElement>("[data-sd-upcoming-only]").forEach((el) => (el.hidden = live));
+      const left = Math.max(0, Math.floor(((live ? end : start) - now) / 1000));
+      const parts: Record<string, number> = {
+        days: Math.floor(left / 86400),
+        hrs: Math.floor((left % 86400) / 3600),
+        min: Math.floor((left % 3600) / 60),
+        sec: left % 60,
+      };
+      for (const [unit, value] of Object.entries(parts)) {
+        const el = $(`[data-sd-unit="${unit}"]`);
+        if (el) el.textContent = String(value).padStart(2, "0");
+      }
+      return true;
+    };
+    if (tick()) {
+      const id = window.setInterval(() => {
+        if (!tick()) window.clearInterval(id);
+      }, 1000);
+    }
+  }
+</script>

@@ -37,7 +37,7 @@ export const app = {
  */
 export function resolveHref(href: string): string {
   if (/^(https?:|mailto:|#)/.test(href)) return href;
-  const marketingPaths = ["/", "/pricing", "/blog"];
+  const marketingPaths = ["/", "/pricing", "/blog", "/seedance"];
   if (marketingPaths.includes(href) || href.startsWith("/blog/")) return href;
   return `${APP_URL}${href}`;
 }

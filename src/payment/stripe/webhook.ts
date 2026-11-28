@@ -5,6 +5,7 @@ import { env, type MiddlewareConfigFn } from "wasp/server";
 import { type PaymentsWebhook } from "wasp/server/api";
 import { emailSender } from "wasp/server/email";
 import { assertUnreachable } from "../../shared/utils";
+import { seedanceLaunchBonusCredits } from "../../marketing/seedanceLaunch";
 import { UnhandledWebhookEventError } from "../errors";
 import { getPaymentPlanIdByPaymentProcessorPlanId } from "../paymentProcessorPlans";
 import { PaymentPlanId, paymentPlans, SubscriptionStatus } from "../plans";
@@ -146,7 +147,10 @@ async function handleInvoicePaid(
         {
           paymentProcessorUserId: customerId,
           datePaid: invoicePaidAtDate,
-          numOfCreditsPurchased: paymentPlans[paymentPlanId].effect.amount,
+          numOfCreditsPurchased: withLaunchBonus(
+            paymentPlans[paymentPlanId].effect.amount,
+            invoicePaidAtDate,
+          ),
         },
         prismaUserDelegate,
       );
@@ -166,10 +170,29 @@ async function handleInvoicePaid(
         },
         prismaUserDelegate,
       );
+      // Seedance Week: a new subscription's first payment gets bonus credits.
+      if (invoice.billing_reason === "subscription_create") {
+        const plan = paymentPlans[paymentPlanId];
+        const bonus = seedanceLaunchBonusCredits(
+          "monthlyCredits" in plan ? plan.monthlyCredits : 0,
+          invoicePaidAtDate,
+        );
+        if (bonus > 0) {
+          await prismaUserDelegate.update({
+            where: { paymentProcessorUserId: customerId },
+            data: { credits: { increment: bonus } },
+          });
+        }
+      }
       break;
     default:
       assertUnreachable(paymentPlanId);
   }
+}
+
+/** Credit pack amount plus the Seedance Week bonus when paid during the launch. */
+function withLaunchBonus(baseCredits: number, paidAt: Date): number {
+  return baseCredits + seedanceLaunchBonusCredits(baseCredits, paidAt);
 }
 
 function getInvoicePriceId(invoice: Stripe.Invoice): Stripe.Price["id"] {

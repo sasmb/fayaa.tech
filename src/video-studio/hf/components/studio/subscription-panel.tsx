@@ -29,6 +29,7 @@ import { routes } from "wasp/client/router"
 
 import { paymentProcessorClient } from "../../../../payment/paymentProcessorClient"
 import { estimateSeedancePlan } from "../../../seedancePlanning"
+import { SeedanceLaunchBanner } from "../../../../marketing/SeedanceLaunchBanner"
 import { creditCostForResolution } from "../../../taskSync"
 import {
   PaymentPlanId,
@@ -625,6 +626,9 @@ export function StudioSubscriptionPanel({
             </div>
           )}
         </section>
+
+        {/* Seedance Week bonus (hidden outside the launch). */}
+        <SeedanceLaunchBanner />
 
         {/* ════════════════════════════════════════════════════════════════════
             2. "All plans" HEADER + INDIVIDUAL/BUSINESS + ANNUAL SWITCH

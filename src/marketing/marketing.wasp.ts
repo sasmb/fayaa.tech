@@ -1,4 +1,4 @@
-import { action, api, query, type Spec } from "@wasp.sh/spec";
+import { action, api, page, query, route, type Spec } from "@wasp.sh/spec";
 
 import {
   deleteSiteMedia,
@@ -8,8 +8,11 @@ import {
   upsertSiteMedia,
 } from "./operations" with { type: "ref" };
 import { getPublicSiteMediaApi } from "./publicApi" with { type: "ref" };
+import { SeedanceLaunchPage } from "./SeedanceLaunchPage" with { type: "ref" };
 
 export const marketingSpec: Spec = [
+  // Seedance Week launch page. Not prerendered: it shows a live countdown.
+  route("SeedanceLaunchRoute", "/seedance", page(SeedanceLaunchPage)),
   query(getPublicSiteMedia, { entities: ["SiteMedia"], auth: false }),
   // Read at build time by the static marketing site in site/.
   api("GET", "/api/public/site-media", getPublicSiteMediaApi, { entities: ["SiteMedia"], auth: false }),

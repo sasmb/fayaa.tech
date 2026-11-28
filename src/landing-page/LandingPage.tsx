@@ -20,6 +20,7 @@ import { HeroSection } from "./components/marketing/HeroSection";
 import { MarketingFooter } from "./components/marketing/MarketingFooter";
 import { MarketingHeader } from "./components/marketing/MarketingHeader";
 import { ReelMarqueeSection } from "./components/marketing/ReelMarqueeSection";
+import { SeedanceLaunchSection } from "./components/marketing/SeedanceLaunchSection";
 import { ToolsBentoSection } from "./components/marketing/ToolsBentoSection";
 import { WorkflowTemplatesSection } from "./components/marketing/WorkflowTemplatesSection";
 import {
@@ -190,7 +191,13 @@ export function LandingPage() {
       <MarketingHeader />
       <main className="flex flex-col">
         {ordered.map((section) => (
-          <div key={section.id}>{sections[section.id](section.ariaLabel)}</div>
+          <div key={section.id}>
+            {sections[section.id](section.ariaLabel)}
+            {/* Seedance Week sits right under the hero; it hides itself after the launch. */}
+            {section.id === "hero-showcase" ? (
+              <SeedanceLaunchSection clip={clipsById[content.festival.clipId] ?? heroBackground} />
+            ) : null}
+          </div>
         ))}
       </main>
       <MarketingFooter />

@@ -22,12 +22,14 @@ function usePromptFromUrl() {
   const [params, setParams] = useSearchParams();
   const hydrateFromRemix = useGenjutsuWorkspace((s) => s.hydrateFromRemix);
   const prompt = params.get("prompt");
+  // ?model=seedance&prompt=... is handled by the studio layout, which opens Seedance.
+  const forSeedance = params.get("model") === "seedance";
 
   useEffect(() => {
-    if (!prompt) return;
+    if (!prompt || forSeedance) return;
     hydrateFromRemix({ prompt: prompt.slice(0, 2000), resolution: "720p" });
     const next = new URLSearchParams(params);
     next.delete("prompt");
     setParams(next, { replace: true });
-  }, [prompt, params, setParams, hydrateFromRemix]);
+  }, [prompt, forSeedance, params, setParams, hydrateFromRemix]);
 }
