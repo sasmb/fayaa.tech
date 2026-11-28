@@ -7,7 +7,7 @@ export const MOTION_MODELS: MotionModel[] = [
     name: "FAYAA Genjutsu Light",
     provider: "HIGGSFIELD",
     badge: "LIGHT",
-    badgeColor: "bg-[#D9FF00] text-black",
+    badgeColor: "bg-fy-accent text-black",
     resolution: "1080p",
     durationRange: "4s-15s",
     category: "featured",

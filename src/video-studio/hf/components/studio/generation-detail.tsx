@@ -139,7 +139,7 @@ export function GenerationDetailModal({
                   className={cn(
                     "flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-semibold transition-colors",
                     watermarkEnabled
-                      ? "border-[#D9FF00]/40 bg-[#D9FF00]/10 text-white"
+                      ? "border-fy-accent/40 bg-fy-accent/10 text-white"
                       : "border-white/10 bg-white/5 text-muted-foreground hover:text-white"
                   )}
                 >
@@ -147,7 +147,7 @@ export function GenerationDetailModal({
                     className={cn(
                       "size-1.5 rounded-full",
                       watermarkEnabled
-                        ? "bg-[#D9FF00] shadow-[0_0_6px_#D9FF00]"
+                        ? "bg-fy-accent shadow-[0_0_6px_#ff5b1f]"
                         : "bg-zinc-600"
                     )}
                   />

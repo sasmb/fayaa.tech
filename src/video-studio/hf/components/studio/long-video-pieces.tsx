@@ -3,8 +3,8 @@ import { cn } from "../../lib/utils"
 
 const PIECE_STYLES: Record<LongVideoPieceState["status"], string> = {
   pending: "bg-white/15",
-  rendering: "bg-[#D9FF00]/60 animate-pulse",
-  ready: "bg-[#D9FF00]",
+  rendering: "bg-fy-accent/60 animate-pulse",
+  ready: "bg-fy-accent",
   failed: "bg-red-500",
 }
 

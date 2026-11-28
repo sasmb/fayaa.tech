@@ -41,7 +41,7 @@ export function GuestJourneyInviteDialog({
     >
       <DialogContent
         size="sm"
-        className="w-full max-w-[440px] overflow-hidden rounded-[28px] border border-fy-accent/30 bg-[#111114] p-0 text-white shadow-[0_32px_100px_rgba(0,0,0,0.92)]"
+        className="w-full max-w-[440px] overflow-hidden rounded-[28px] border border-fy-accent/30 bg-fy-surface-1 p-0 text-white shadow-[0_32px_100px_rgba(0,0,0,0.92)]"
       >
         <DialogTitle className="sr-only">
           Come on a journey to when you are logged in
@@ -74,7 +74,7 @@ export function GuestJourneyInviteDialog({
             className="pointer-events-none absolute inset-y-0 left-[45%] w-1 -skew-x-12 bg-fy-accent shadow-[0_0_20px_rgba(255,91,31,0.95)]"
           />
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#111114] via-[#111114]/70 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-fy-surface-1 via-fy-surface-1/70 to-transparent" />
 
           {/* Floating 8-Hour Pass Badge */}
           <div className="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 rounded-full border border-fy-accent/40 bg-black/75 px-3 py-1 text-[11px] font-extrabold tracking-wider text-fy-accent uppercase backdrop-blur-md">
@@ -194,14 +194,14 @@ export function GuestSignupGateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         size="sm"
-        className="w-full max-w-[420px] overflow-hidden rounded-[26px] border border-[#D9FF00]/35 bg-[#121215] p-6 text-white shadow-[0_28px_90px_rgba(0,0,0,0.9)]"
+        className="w-full max-w-[420px] overflow-hidden rounded-[26px] border border-fy-accent/35 bg-fy-surface-1 p-6 text-white shadow-[0_28px_90px_rgba(0,0,0,0.9)]"
       >
         <div className="flex flex-col items-center text-center">
-          <div className="flex size-12 items-center justify-center rounded-2xl border border-[#D9FF00]/35 bg-[#D9FF00]/15 text-[#D9FF00]">
+          <div className="flex size-12 items-center justify-center rounded-2xl border border-fy-accent/35 bg-fy-accent/15 text-fy-accent">
             <WandSparkles className="size-6" />
           </div>
 
-          <span className="mt-3 rounded-full border border-[#D9FF00]/30 bg-[#D9FF00]/10 px-3 py-0.5 text-[10px] font-bold tracking-wider text-[#D9FF00] uppercase">
+          <span className="mt-3 rounded-full border border-fy-accent/30 bg-fy-accent/10 px-3 py-0.5 text-[10px] font-bold tracking-wider text-fy-accent uppercase">
             {formattedRemaining} left in preview
           </span>
 
@@ -218,7 +218,7 @@ export function GuestSignupGateDialog({
             <Button
               size="lg"
               onClick={() => void navigate("/signup")}
-              className="h-11 w-full cursor-pointer rounded-xl bg-[#D9FF00] text-sm font-extrabold text-black shadow-[0_8px_24px_rgba(217,255,0,0.28)] hover:bg-[#e3ff38]"
+              className="h-11 w-full cursor-pointer rounded-xl bg-fy-accent text-sm font-extrabold text-black shadow-[0_8px_24px_rgba(255,91,31,0.28)] hover:bg-fy-accent-hover"
             >
               Sign up free &amp; start generating
             </Button>
@@ -273,9 +273,9 @@ export function GuestJourneyExpiredDialog({
     >
       <DialogContent
         size="sm"
-        className="w-full max-w-[430px] overflow-hidden rounded-[28px] border border-amber-400/35 bg-[#121110] p-0 text-white shadow-[0_32px_100px_rgba(0,0,0,0.95)]"
+        className="w-full max-w-[430px] overflow-hidden rounded-[28px] border border-amber-400/35 bg-fy-surface-1 p-0 text-white shadow-[0_32px_100px_rgba(0,0,0,0.95)]"
       >
-        <div className="relative flex flex-col items-center overflow-hidden bg-gradient-to-b from-amber-500/20 via-[#181510] to-[#121110] px-6 pt-7 pb-6 text-center">
+        <div className="relative flex flex-col items-center overflow-hidden bg-gradient-to-b from-amber-500/20 via-[#181510] to-fy-surface-1 px-6 pt-7 pb-6 text-center">
           {!lockStudio && onDismissOnLanding ? (
             <DialogClose
               onClick={onDismissOnLanding}

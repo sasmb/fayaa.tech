@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { routes } from "wasp/client/router";
 import { Zap } from "lucide-react";
 import { UserDropdown } from "../../user/UserDropdown";
+import { FayaaLogo } from "../../client/design";
 
 interface StudioHeaderProps {
   user: any;
@@ -10,15 +11,10 @@ interface StudioHeaderProps {
 
 export function StudioHeader({ user }: StudioHeaderProps) {
   return (
-    <header className="h-14 border-b border-white/10 bg-[#0d0d11]/90 backdrop-blur-md px-4 flex items-center justify-between sticky top-0 z-40">
+    <header className="h-14 border-b border-white/10 bg-fy-surface-1/90 backdrop-blur-md px-4 flex items-center justify-between sticky top-0 z-40">
       {/* Left: Brand + Navigation Items */}
       <div className="flex items-center gap-6">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-fy-accent-400 to-emerald-500 flex items-center justify-center font-bold text-black text-lg shadow-lg shadow-fy-accent-500/20">
-            ⚡
-          </div>
-          <span className="font-bold tracking-tight text-base text-white">FAYAA</span>
-        </Link>
+        <FayaaLogo to="/" />
 
         <nav className="hidden sm:flex items-center gap-4 text-sm text-neutral-400">
           <Link to="/" className="hover:text-white transition-colors cursor-pointer">Explore</Link>
@@ -43,7 +39,7 @@ export function StudioHeader({ user }: StudioHeaderProps) {
 
         <Link
           to={routes.PricingPageRoute.to}
-          className="hidden md:flex items-center gap-1.5 bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-500 hover:to-rose-400 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md transition-all"
+          className="hidden md:flex items-center gap-1.5 fy-heat-bg hover:brightness-110 text-fy-on-accent text-xs font-bold px-3 py-1.5 rounded-full shadow-md transition-all"
         >
           <span>🚀 Upgrade</span>
           <span className="bg-white/20 text-[10px] px-1 rounded">30% OFF</span>

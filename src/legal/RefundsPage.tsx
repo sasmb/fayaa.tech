@@ -14,7 +14,7 @@ export function RefundsPage() {
       activePath="/refunds"
     >
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           1. Overview
         </h2>
         <p>
@@ -26,7 +26,7 @@ export function RefundsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           2. Automatic System Failure Credit Protection
         </h2>
         <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[#d4d4d8] space-y-2">
@@ -40,10 +40,10 @@ export function RefundsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           3. Subscriptions (FAYAA Plus & FAYAA Ultra)
         </h2>
-        <ul className="list-disc pl-5 space-y-2 text-[#a1a1aa]">
+        <ul className="list-disc pl-5 space-y-2 text-fy-muted">
           <li>
             <strong>14-Day Initial Cooling-Off Period:</strong> If you purchased a recurring subscription and have not utilized any of the plan’s compute credits to generate videos, you are eligible for a full refund within 14 days of your initial purchase date.
           </li>
@@ -57,7 +57,7 @@ export function RefundsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           4. One-Time Credit Top-Up Packs
         </h2>
         <p>
@@ -66,16 +66,16 @@ export function RefundsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           5. How to Request a Refund
         </h2>
         <p>
           To request a refund, please follow either of these methods:
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-2">
-          <div className="p-4 rounded-xl bg-[#141419] border border-[#23232f] space-y-2">
+          <div className="p-4 rounded-xl bg-fy-surface-1 border border-fy-surface-3 space-y-2">
             <h4 className="font-semibold text-white text-xs">Method 1: Contact FAYAA Support</h4>
-            <p className="text-xs text-[#8e8e96]">
+            <p className="text-xs text-fy-muted">
               Email our support team with your registered email and Paddle transaction ID:
             </p>
             <a
@@ -86,9 +86,9 @@ export function RefundsPage() {
             </a>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#141419] border border-[#23232f] space-y-2">
+          <div className="p-4 rounded-xl bg-fy-surface-1 border border-fy-surface-3 space-y-2">
             <h4 className="font-semibold text-white text-xs">Method 2: Paddle Buyer Portal</h4>
-            <p className="text-xs text-[#8e8e96]">
+            <p className="text-xs text-fy-muted">
               Lookup your order directly on Paddle's consumer support platform:
             </p>
             <a
@@ -101,16 +101,16 @@ export function RefundsPage() {
             </a>
           </div>
         </div>
-        <p className="text-xs text-[#71717a]">
+        <p className="text-xs text-fy-subtle">
           Once approved, refunds are credited back to your original payment method (Credit Card, PayPal, Apple Pay, Google Pay) by Paddle within 5 to 10 business days depending on your financial institution.
         </p>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           6. Contact Us
         </h2>
-        <div className="p-4 rounded-xl bg-[#131317] border border-[#22222b] space-y-1 text-xs">
+        <div className="p-4 rounded-xl bg-fy-surface-1 border border-fy-surface-3 space-y-1 text-xs">
           <p className="font-semibold text-white">nexusbizz (FAYAA)</p>
           <p>Email: <a href="mailto:sam@nepocommerce.com" className="text-fy-accent hover:underline">sam@nepocommerce.com</a></p>
           <p>Website: <a href="https://fayaa-studio-client.fly.dev" className="text-fy-accent hover:underline">https://fayaa-studio-client.fly.dev</a></p>
