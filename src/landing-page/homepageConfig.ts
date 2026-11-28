@@ -55,86 +55,33 @@ export interface MediaClip {
   prompt?: string;
 }
 
-const GENJUTSU_DEMO_VIDEO =
-  "https://d3u0tzju9qaucj.cloudfront.net/4f337d0a-8b91-49a0-a8a1-b1231e0187fe/01a193ff-30aa-7895-a568-97ee1d417087/1a93cb6a-1214-48db-b8ec-e903f2efccc3.mp4";
-
-const unsplash = (id: string, w = 900) =>
-  `https://images.unsplash.com/${id}?w=${w}&q=80&auto=format&fit=crop`;
+/** FAYAA's own renders. Swap or add clips here, or without code at /admin/site-media. */
+const CLIP_CDN = "https://d8j0ntlcm91z4.cloudfront.net/user_3DNQ4ZWloyKLj4vd7CJjEXvpMje/";
+const clip = (file: string) => `${CLIP_CDN}${file}`;
 
 export const MEDIA_CLIPS: MediaClip[] = [
-  {
-    id: "hero-genjutsu",
-    title: "Genjutsu motion transfer",
-    tag: "Motion transfer",
-    aspect: "landscape",
-    poster: unsplash("photo-1534528741775-53994a69daeb", 1600),
-    videoUrl: GENJUTSU_DEMO_VIDEO,
-  },
-  {
-    id: "locker-swap",
-    title: "Tactical locker room swap",
-    tag: "Recast",
-    aspect: "portrait",
-    poster: unsplash("photo-1507003211169-0a1dd7228f2d", 700),
-    videoUrl: GENJUTSU_DEMO_VIDEO,
-  },
-  {
-    id: "cash-flex",
-    title: "Penthouse flex reel",
-    tag: "UGC",
-    aspect: "portrait",
-    poster: unsplash("photo-1534528741775-53994a69daeb", 700),
-  },
-  {
-    id: "stadium-sprint",
-    title: "Sideline sprint",
-    tag: "Sports",
-    aspect: "portrait",
-    poster: unsplash("photo-1500648767791-00dcc994a43e", 700),
-  },
-  {
-    id: "studio-dance",
-    title: "Contemporary studio dance",
-    tag: "Choreography",
-    aspect: "landscape",
-    poster: unsplash("photo-1517841905240-472988babdf9", 900),
-    videoUrl: GENJUTSU_DEMO_VIDEO,
-  },
-  {
-    id: "midnight-portrait",
-    title: "Midnight portrait",
-    tag: "Restyle",
-    aspect: "portrait",
-    poster: unsplash("photo-1494790108377-be9c29b29330", 700),
-  },
-  {
-    id: "freestyle",
-    title: "Freestyle groove",
-    tag: "Choreography",
-    aspect: "portrait",
-    poster: unsplash("photo-1539571696357-5a69c17a67c6", 700),
-  },
-  {
-    id: "object-swap",
-    title: "Scale model swap",
-    tag: "Object swap",
-    aspect: "landscape",
-    poster: unsplash("photo-1518709268805-4e9042af9f23", 900),
-  },
-  {
-    id: "crowd",
-    title: "Championship night",
-    tag: "Cinematic",
-    aspect: "landscape",
-    poster: unsplash("photo-1542751371-adc38448a05e", 900),
-  },
-  {
-    id: "streetwear",
-    title: "Streetwear ensemble",
-    tag: "Fashion",
-    aspect: "portrait",
-    poster: unsplash("photo-1578632767115-351597cf2477", 700),
-  },
+  { id: "ember-hero", title: "Ember rises", tag: "FAYAA", aspect: "landscape", poster: "", videoUrl: clip("hf_20261128_025758_459b7849-323f-4918-a21b-e6ea5272239b.mp4"), prompt: "Cinematic reveal of my product rising out of sparks and smoke" },
+  { id: "trend-dance", title: "Bedroom dance trend", tag: "Trend", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_030134_96c1f000-6b96-4b2e-8fd5-3d1865b11988.mp4"), prompt: "Put me in this trending dance, same moves, LED bedroom" },
+  { id: "snap-transition", title: "Snap outfit transition", tag: "Transition", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_030134_102b7d11-1578-4dec-b182-f87c6f0b1e18.mp4"), prompt: "Snap transition from hoodie to an evening look on a neon street" },
+  { id: "sneaker-hook", title: "Sneaker slam hook", tag: "Product hook", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_030257_7ab6f6bc-4585-4337-8563-6cc435565ff7.mp4"), prompt: "Turn my sneaker into a 3-second hook that stops the scroll" },
+  { id: "street-interview", title: "Street interview twist", tag: "Format", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_030257_9a8bb967-602a-48d4-abd6-a68c38b64456.mp4"), prompt: "Street interview that turns into a movie trailer halfway" },
+  { id: "grwm-anime", title: "GRWM anime switch", tag: "Restyle", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_030533_c8b52ae6-88d4-45aa-9296-0e3a0b1a8e01.mp4"), prompt: "Get ready with me, then the room turns into a 90s anime opening" },
+  { id: "gym-spin", title: "Box jump 360", tag: "Sports", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_030533_17ba10ab-4d33-4545-837f-f9cfa03b8949.mp4"), prompt: "Slow-motion box jump with a 360 spin into a rainy rooftop" },
+  { id: "burger-drop", title: "Burger drop", tag: "Food", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_030533_2fa9d1e7-c1a7-4c0b-a5fb-0c011a5cd71e.mp4"), prompt: "Slow-motion food drop hook with a chef reveal" },
+  { id: "night-market-pov", title: "Night market POV", tag: "POV", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_030711_4312d99d-4f8e-4f75-b011-e532274daf2b.mp4"), prompt: "POV run through a night market ending on fireworks" },
+  { id: "skate-dog", title: "Skater dog", tag: "Pets", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_030810_998545c4-5d5f-4c77-a3f0-1d0e246e6215.mp4"), prompt: "My dog in sunglasses skateboarding down the boardwalk" },
+  { id: "perfume-spin", title: "Perfume spin ad", tag: "Product ad", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_031406_89742dfc-08de-497d-b443-12e70ae75574.mp4"), prompt: "Glossy perfume ad with light ribbons and a hand catch" },
+  { id: "cliff-freeze", title: "Cliff jump freeze", tag: "Travel", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_031406_2b0b45d1-ba4b-4f7a-9c51-1e93b1662590.mp4"), prompt: "Cliff jump with a mid-air freeze and spin" },
+  { id: "sneaker-unbox", title: "Glow unboxing", tag: "Unboxing", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_031406_c23df597-c0f5-4cc7-9121-f9b40e261cd3.mp4"), prompt: "Unboxing with light spilling out and a floating spin" },
+  { id: "ember-dance", title: "Ember dance break", tag: "FAYAA", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_025758_b31435b9-e3f7-4cfd-8d0b-6e600766693d.mp4"), prompt: "Dance trend with flame trails on every move" },
+  { id: "ember-rooftop", title: "Ember on the rooftop", tag: "FAYAA", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_025758_fdbc10c9-ffcd-4405-aaf5-b9430ae39110.mp4"), prompt: "Neon rooftop in the rain, slow orbit" },
+  { id: "ember-director", title: "Ember calls action", tag: "FAYAA", aspect: "landscape", poster: "", videoUrl: clip("hf_20261128_025758_f8124270-1ece-4843-b92b-f8b73ebf0afd.mp4"), prompt: "Director's chair, clapperboard snaps with sparks" },
+  { id: "ember-sprint", title: "Ember stadium sprint", tag: "FAYAA", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_025758_3c570d6f-bbb5-4155-8c40-15c99f3cf8bb.mp4"), prompt: "Stadium tunnel sprint into floodlights" },
+  { id: "ember-sneakers", title: "Ember sneaker swap", tag: "FAYAA", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_025758_fb252d4d-23d4-4699-89e4-7c70863fc7a4.mp4"), prompt: "Swap these sneakers for @Image1 in a swirl of fire" },
+  { id: "ember-portrait", title: "Ember at midnight", tag: "FAYAA", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_025758_338bb356-4c20-44c0-8c64-9ed33e86a310.mp4"), prompt: "Moody midnight portrait, flame-lit" },
+  { id: "ember-crowd", title: "Ember live", tag: "FAYAA", aspect: "landscape", poster: "", videoUrl: clip("hf_20261128_025758_bd1e96b5-025d-4726-8ba2-f7e9669be6f0.mp4"), prompt: "On stage in front of a huge crowd" },
+  { id: "ember-skate", title: "Ember skate line", tag: "FAYAA", aspect: "portrait", poster: "", videoUrl: clip("hf_20261128_025758_b5b4034d-1193-4fd5-8589-0979130f0b16.mp4"), prompt: "Skatepark line with flames on every trick" },
+  { id: "ember-premiere", title: "Ember premiere night", tag: "FAYAA", aspect: "landscape", poster: "", videoUrl: clip("hf_20261128_025758_e04dc971-e81d-4122-87fb-a18ccc012d65.mp4"), prompt: "Festival premiere in a dark cinema" },
 ];
 
 export function getMediaClip(id: string): MediaClip | undefined {

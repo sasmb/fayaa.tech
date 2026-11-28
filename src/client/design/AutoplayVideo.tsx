@@ -138,6 +138,21 @@ export function AutoplayVideo({
       ) : null}
       {!poster && !ready ? <div aria-hidden="true" className="fy-skeleton absolute inset-0" /> : null}
 
+      {/* No poster and no playback (reduced motion, data saver): show the first frame as a still. */}
+      {!poster && src && !failed && !canPlay ? (
+        <video
+          src={`${src}#t=0.1`}
+          muted
+          playsInline
+          preload="metadata"
+          aria-label={alt || undefined}
+          aria-hidden={alt ? undefined : true}
+          onLoadedData={() => setReady(true)}
+          onError={() => setFailed(true)}
+          className={cn("absolute inset-0 size-full object-cover", videoClassName)}
+        />
+      ) : null}
+
       {canPlay && near ? (
         <video
           ref={videoRef}

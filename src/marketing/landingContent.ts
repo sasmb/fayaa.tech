@@ -131,8 +131,8 @@ export const BASE_CONTENT: LandingContent = {
       "Turn my product into a 3-second hook that stops the scroll",
       "Make this street clip look like a movie trailer",
     ],
-    backgroundClipId: "hero-genjutsu",
-    floatingClipIds: ["locker-swap", "midnight-portrait", "studio-dance"],
+    backgroundClipId: "ember-hero",
+    floatingClipIds: ["trend-dance", "sneaker-hook", "snap-transition"],
     stats: [
       { value: "Seconds", label: "from idea to post" },
       { value: "9:16", label: "built for short-form" },
@@ -143,8 +143,8 @@ export const BASE_CONTENT: LandingContent = {
     eyebrow: "Made with FAYAA",
     title: "Made to be shared.",
     rows: [
-      ["locker-swap", "studio-dance", "cash-flex", "object-swap", "midnight-portrait", "crowd"],
-      ["streetwear", "stadium-sprint", "hero-genjutsu", "freestyle", "locker-swap", "studio-dance"],
+      ["trend-dance", "snap-transition", "sneaker-hook", "street-interview", "grwm-anime", "gym-spin", "burger-drop", "ember-sneakers"],
+      ["night-market-pov", "skate-dog", "ember-rooftop", "perfume-spin", "cliff-freeze", "sneaker-unbox", "ember-dance", "ember-skate"],
     ],
   },
   capabilities: {
@@ -158,28 +158,28 @@ export const BASE_CONTENT: LandingContent = {
         tag: "01 · Join the trend",
         title: "Hop on any trend in one tap.",
         body: "Pick a trending dance or format, add one photo, and you are the star. Every step and beat lands on cue.",
-        clipId: "studio-dance",
+        clipId: "trend-dance",
       },
       {
         id: "swap",
         tag: "02 · Product swap",
         title: "Your product in the viral shot.",
         body: "Drop your product, outfit or logo into a clip that already works. Hands, lighting and background stay exactly as shot.",
-        clipId: "object-swap",
+        clipId: "sneaker-hook",
       },
       {
         id: "restyle",
         tag: "03 · Restyle",
         title: "Same clip, new hook.",
         body: "Turn a plain clip into a movie trailer, an anime opening or a night-city edit, and keep the rhythm that made it work.",
-        clipId: "midnight-portrait",
+        clipId: "grwm-anime",
       },
       {
         id: "long",
         tag: "04 · Ship it",
         title: "Post-ready in seconds.",
         body: "Vertical, 1080p and ready for TikTok, Reels and Shorts. Need longer? Edits run past two minutes in one MP4.",
-        clipId: "hero-genjutsu",
+        clipId: "street-interview",
       },
     ],
     cta: { label: "Try it in the studio", href: "/studio", event: "Studio Open" },
@@ -209,7 +209,7 @@ export const BASE_CONTENT: LandingContent = {
     description:
       "Make your best viral short with FAYAA and enter our first community festival.",
     cta: { label: "Explore community work", href: "#community-showcase", event: "Festival Click" },
-    clipId: "crowd",
+    clipId: "ember-premiere",
   },
   aroundTheWeb: {
     eyebrow: "Around the web",
@@ -224,7 +224,7 @@ export const BASE_CONTENT: LandingContent = {
     subhead: "Free to start. No editing skills needed. Make your first one in seconds.",
     primaryCta: { label: "Start creating free", href: "/signup", event: "Signup CTA Click" },
     secondaryCta: { label: "See pricing", href: "/pricing", event: "Pricing Click" },
-    clipId: "hero-genjutsu",
+    clipId: "ember-crowd",
   },
   layout: HOMEPAGE_LAYOUT.map((section) => section.id),
 };

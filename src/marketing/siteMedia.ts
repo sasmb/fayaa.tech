@@ -197,7 +197,7 @@ export function applySiteMedia(
   return {
     content: next,
     clipsById: clips,
-    toolsClipId: tools[0] ?? "studio-dance",
+    toolsClipId: tools[0] ?? "ember-director",
     web: bySlot(items, "web"),
   };
 }
