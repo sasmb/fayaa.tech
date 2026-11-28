@@ -19,6 +19,8 @@ import {
   DialogDescription,
   DialogTitle,
 } from "../ui/dialog"
+import { MediaThumb } from "./media-thumb"
+import { studioClip } from "../../../studioClips"
 
 /* ══════════════════════════════════════════════════════════════════════════
    1. INVITE MODAL: "Come on a journey to when you are logged in"
@@ -53,26 +55,11 @@ export function GuestJourneyInviteDialog({
 
         {/* Top Visual Preview Banner */}
         <div className="relative h-[200px] w-full overflow-hidden bg-zinc-900">
-          <img
-            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=900&q=80"
-            alt="FAYAA Studio preview"
-            className="size-full object-cover opacity-80"
-          />
-          <div
-            className="absolute inset-0 overflow-hidden"
-            style={{ clipPath: "polygon(0 0, 52% 0, 38% 100%, 0% 100%)" }}
-          >
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80"
-              alt="Motion source input"
-              className="size-full object-cover"
-            />
+          <div className="absolute inset-0 grid grid-cols-3 gap-1 opacity-90">
+            <MediaThumb src={studioClip("trend-dance")} alt="" mode="always" />
+            <MediaThumb src={studioClip("grwm-anime")} alt="" mode="always" />
+            <MediaThumb src={studioClip("sneaker-hook")} alt="" mode="always" />
           </div>
-
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-[45%] w-1 -skew-x-12 bg-fy-accent shadow-[0_0_20px_rgba(255,91,31,0.95)]"
-          />
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-fy-surface-1 via-fy-surface-1/70 to-transparent" />
 

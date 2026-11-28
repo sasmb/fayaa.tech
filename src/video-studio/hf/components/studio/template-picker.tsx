@@ -12,6 +12,8 @@ import {
 import { Button } from "../ui/button"
 import type { MediaItem } from "../../generation/catalog"
 import { cn } from "../../lib/utils"
+import { studioClip } from "../../../studioClips"
+import { MediaThumb } from "./media-thumb"
 
 /**
  * Templates — the "what you can make" examples. A `TemplateItem` seeds the
@@ -40,142 +42,87 @@ export interface TemplateItem {
 export const TEMPLATES: TemplateItem[] = [
   {
     id: "genjutsu-dance",
-    title: "Viral Choreography Transfer",
-    subtitle: "Full-body dance sync with locked character identity",
+    title: "Viral dance transfer",
+    subtitle: "Same moves, your character, identity locked",
     category: "dance",
     kind: "video",
-    images: [
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&q=80",
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&q=80",
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
-    ],
+    images: [studioClip("trend-dance"), studioClip("ember-dance"), studioClip("gym-spin")],
     icon: WandSparkles,
     modelId: "genjutsu",
     settings: { resolution: "720p" },
     media: [
       {
-        id: "sample-motion-dance",
-        url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+        id: "sample-motion-genjutsu-dance",
+        url: studioClip("trend-dance"),
         role: "source",
         kind: "video",
-        name: "Dance_Choreography_Reference.mp4",
-      },
-      {
-        id: "sample-ref-1",
-        url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80",
-        role: "reference",
-        kind: "image",
-        name: "Hero_Performer.jpg",
-      },
-      {
-        id: "sample-ref-2",
-        url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80",
-        role: "reference",
-        kind: "image",
-        name: "Neon_Stage_Scene.jpg",
+        name: "Viral_dance_transfer.mp4",
       },
     ],
-    prompt:
-      "Recast the performer into @Image1 executing the exact choreography inside the neon stage atmosphere of @Image2, crisp limb articulation, studio rim lighting.",
+    prompt: "Recast the dancer into @Image1 with the exact same choreography, crisp limbs and the same camera move.",
   },
   {
-    id: "genjutsu-runway",
-    title: "Editorial Runway Walk",
-    subtitle: "Catwalk stride with natural fabric dynamics",
-    category: "fashion",
+    id: "genjutsu-product",
+    title: "Product swap hook",
+    subtitle: "Drop your product into a scroll-stopping shot",
+    category: "product",
     kind: "video",
-    images: [
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&q=80",
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&q=80",
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&q=80",
-    ],
+    images: [studioClip("sneaker-hook"), studioClip("perfume-spin"), studioClip("sneaker-unbox")],
     icon: Calendar,
     modelId: "genjutsu",
     settings: { resolution: "1080p" },
     media: [
       {
-        id: "sample-motion-runway",
-        url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+        id: "sample-motion-genjutsu-product",
+        url: studioClip("sneaker-hook"),
         role: "source",
         kind: "video",
-        name: "Runway_Walk_Motion.mp4",
-      },
-      {
-        id: "sample-ref-runway-1",
-        url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80",
-        role: "reference",
-        kind: "image",
-        name: "Runway_Model.jpg",
+        name: "Product_swap_hook.mp4",
       },
     ],
-    prompt:
-      "Transform the subject into @Image1 with high-fashion editorial styling, natural fabric motion, sharp silhouette.",
+    prompt: "Swap the product for @Image1, keeping the slam, the bounce and the lighting.",
   },
   {
-    id: "genjutsu-creator",
-    title: "Creator Hook Gestures",
-    subtitle: "Expressive talking-head motion for viral reels",
-    category: "ugc",
+    id: "genjutsu-transition",
+    title: "Snap outfit transition",
+    subtitle: "Hoodie to evening look on the beat",
+    category: "fashion",
     kind: "video",
-    images: [
-      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&q=80",
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80",
-    ],
+    images: [studioClip("snap-transition"), studioClip("grwm-anime"), studioClip("street-interview")],
     icon: House,
     modelId: "genjutsu",
     settings: { resolution: "720p" },
     media: [
       {
-        id: "sample-motion-creator",
-        url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+        id: "sample-motion-genjutsu-transition",
+        url: studioClip("snap-transition"),
         role: "source",
         kind: "video",
-        name: "Creator_Hook_Motion.mp4",
-      },
-      {
-        id: "sample-ref-creator-1",
-        url: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&q=80",
-        role: "reference",
-        kind: "image",
-        name: "Creator_Subject.jpg",
+        name: "Snap_outfit_transition.mp4",
       },
     ],
-    prompt:
-      "Recast the speaker into @Image1 with expressive creator hand gestures and natural head movement, warm key light, shallow depth of field.",
+    prompt: "Recast the person into @Image1 and keep the snap transition into the evening look.",
   },
   {
     id: "genjutsu-action",
-    title: "Dynamic Action Sequence",
-    subtitle: "High-velocity martial arts & athletic motion",
+    title: "Action moment",
+    subtitle: "Jumps, spins and freezes with real weight",
     category: "action",
     kind: "video",
-    images: [
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80",
-      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&q=80",
-    ],
+    images: [studioClip("gym-spin"), studioClip("cliff-freeze"), studioClip("ember-sprint")],
     icon: BatteryFull,
     modelId: "genjutsu",
     settings: { resolution: "1080p" },
     media: [
       {
-        id: "sample-motion-action",
-        url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+        id: "sample-motion-genjutsu-action",
+        url: studioClip("gym-spin"),
         role: "source",
         kind: "video",
-        name: "Action_Combo_Motion.mp4",
-      },
-      {
-        id: "sample-ref-action-1",
-        url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
-        role: "reference",
-        kind: "image",
-        name: "Action_Hero.jpg",
+        name: "Action_moment.mp4",
       },
     ],
-    prompt:
-      "Recast the fighter into @Image1 executing a crisp martial arts combo with grounded footwork, cinematic camera follow, dramatic contrast.",
+    prompt: "Recast the athlete into @Image1 with the same jump, spin and slow-motion landing.",
   },
 ]
 
@@ -249,20 +196,12 @@ export function TemplateCard({
                 TRIPTYCH[i]
               )}
             >
-              <img
-                src={src}
-                alt={`${template.title} — shot ${i + 1}`}
-                className="size-full object-cover"
-              />
+              <MediaThumb src={src} alt={`${template.title}, shot ${i + 1}`} mode="hover" />
             </div>
           ))
         ) : (
           <div className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-white/10">
-            <img
-              src={template.images[0]}
-              alt={template.title}
-              className="size-full object-cover"
-            />
+            <MediaThumb src={template.images[0]} alt={template.title} />
           </div>
         )}
       </div>
