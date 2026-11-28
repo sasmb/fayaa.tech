@@ -134,14 +134,10 @@ export const HERO_SHOWCASE_CARDS: HeroShowcaseCardConfig[] = [
     comingSoon: false,
     videoUrl:
       "https://d3u0tzju9qaucj.cloudfront.net/4f337d0a-8b91-49a0-a8a1-b1231e0187fe/01a193ff-30aa-7895-a568-97ee1d417087/1a93cb6a-1214-48db-b8ec-e903f2efccc3.mp4",
-    inputImage:
-      "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&q=80",
-    outputImage:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80",
-    loggedInInputImage:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
-    loggedInOutputImage:
-      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&q=80",
+    inputImage: "",
+    outputImage: "",
+    loggedInInputImage: "",
+    loggedInOutputImage: "",
   },
   {
     id: "fayaa-playable",
@@ -151,15 +147,11 @@ export const HERO_SHOWCASE_CARDS: HeroShowcaseCardConfig[] = [
     badgeText: "COMING SOON",
     comingSoon: true,
     videoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    inputImage:
-      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=900&q=80",
-    outputImage:
-      "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=900&q=80",
-    loggedInInputImage:
-      "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=900&q=80",
-    loggedInOutputImage:
-      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=900&q=80",
+      clip("hf_20261128_025758_459b7849-323f-4918-a21b-e6ea5272239b.mp4"),
+    inputImage: "",
+    outputImage: "",
+    loggedInInputImage: "",
+    loggedInOutputImage: "",
   },
   {
     id: "content-factory",
@@ -170,14 +162,10 @@ export const HERO_SHOWCASE_CARDS: HeroShowcaseCardConfig[] = [
     comingSoon: true,
     videoUrl:
       "https://d3u0tzju9qaucj.cloudfront.net/4f337d0a-8b91-49a0-a8a1-b1231e0187fe/01a193ff-30aa-7895-a568-97ee1d417087/1a93cb6a-1214-48db-b8ec-e903f2efccc3.mp4",
-    inputImage:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80",
-    outputImage:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80",
-    loggedInInputImage:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80",
-    loggedInOutputImage:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80",
+    inputImage: "",
+    outputImage: "",
+    loggedInInputImage: "",
+    loggedInOutputImage: "",
   },
 ];
 
@@ -197,140 +185,43 @@ export interface CommunityShotConfig {
   isFromStorage?: boolean;
 }
 
-export const COMMUNITY_GENJUTSU_SHOTS: CommunityShotConfig[] = [
-  {
-    id: "comm-1",
-    title: "Tactical Locker Room Swap",
-    creator: "@kuro_vfx",
-    aspect: "landscape",
-    src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=80",
-    videoUrl:
-      "https://d3u0tzju9qaucj.cloudfront.net/4f337d0a-8b91-49a0-a8a1-b1231e0187fe/01a193ff-30aa-7895-a568-97ee1d417087/1a93cb6a-1214-48db-b8ec-e903f2efccc3.mp4",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    referenceImageUrl:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
-    prompt:
-      "Recast the subject into @Image1 inside a cinematic locker room with crisp prop tracking and dramatic rim light.",
-    category: "action",
-  },
-  {
-    id: "comm-2",
-    title: "Viral Cash Flex Reel",
-    creator: "@neoviral.ai",
-    aspect: "portrait",
-    src: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=700&q=80",
-    videoUrl:
-      "https://d3u0tzju9qaucj.cloudfront.net/4f337d0a-8b91-49a0-a8a1-b1231e0187fe/01a193ff-30aa-7895-a568-97ee1d417087/1a93cb6a-1214-48db-b8ec-e903f2efccc3.mp4",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    referenceImageUrl:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80",
-    prompt:
-      "Transform the performer into @Image1 with locked facial identity, luxury penthouse lighting, ultra-sharp hand motion.",
-    category: "ugc",
-  },
-  {
-    id: "comm-3",
-    title: "Stadium Pitch Sideline Sprint",
-    creator: "@stadium_gen",
-    aspect: "portrait",
-    src: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=700&q=80",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    referenceImageUrl:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=80",
-    prompt:
-      "Recast the athlete on the pitch into @Image1 preserving full-body stride physics and crowd stadium atmosphere.",
-    category: "action",
-  },
-  {
-    id: "comm-4",
-    title: "Contemporary Studio Dance",
-    creator: "@mira.motion",
-    aspect: "landscape",
-    src: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=700&q=80",
-    videoUrl:
-      "https://d3u0tzju9qaucj.cloudfront.net/4f337d0a-8b91-49a0-a8a1-b1231e0187fe/01a193ff-30aa-7895-a568-97ee1d417087/1a93cb6a-1214-48db-b8ec-e903f2efccc3.mp4",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    referenceImageUrl:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80",
-    prompt:
-      "Recast the dancer into @Image1 executing fluid contemporary choreography against emerald studio backdrop.",
-    category: "dance",
-  },
-  {
-    id: "comm-5",
-    title: "Midnight Portrait Motion Transfer",
-    creator: "@aria.synth",
-    aspect: "portrait",
-    src: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=700&q=80",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    referenceImageUrl:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80",
-    prompt:
-      "Recast speaker into @Image1 with expressive hand wave, natural eye contact, and soft studio key light.",
-    category: "fashion",
-  },
-  {
-    id: "comm-6",
-    title: "Freestyle Groove Transfer",
-    creator: "@dex.frames",
-    aspect: "landscape",
-    src: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=700&q=80",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    referenceImageUrl:
-      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&q=80",
-    prompt:
-      "Recast dancer into @Image1 with sharp shoulder isolation and natural fabric physics.",
-    category: "dance",
-  },
-  {
-    id: "comm-7",
-    title: "Scale Model Object Swap",
-    creator: "@prop_alchemist",
-    aspect: "landscape",
-    src: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=700&q=80",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    referenceImageUrl:
-      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80",
-    prompt:
-      "Swap the handheld object with @Image1 while keeping hand articulation and window daylight untouched.",
-    category: "ugc",
-  },
-  {
-    id: "comm-8",
-    title: "Championship Crowd Celebration",
-    creator: "@cinema.pulse",
-    aspect: "landscape",
-    src: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=700&q=80",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    referenceImageUrl:
-      "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80",
-    prompt:
-      "Recast the central figure into @Image1 celebrating in front of a roaring stadium crowd, anamorphic lens flare.",
-    category: "action",
-  },
-  {
-    id: "comm-9",
-    title: "Streetwear Ensemble Musical",
-    creator: "@tokyo.recast",
-    aspect: "landscape",
-    src: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=700&q=80",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    referenceImageUrl:
-      "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&q=80",
-    prompt:
-      "Recast lead performer into @Image1 leading a synchronized street-dance formation, vibrant daylight grading.",
-    category: "fashion",
-  },
+/**
+ * Curated community fallback, built only from FAYAA's own clips (no stock
+ * photos, no invented creator handles). Real community posts from storage are
+ * merged in front of these at runtime.
+ */
+const COMMUNITY_FALLBACK_CLIPS: Array<{ clipId: string; category: ShowcaseCategory }> = [
+  { clipId: "ember-sprint", category: "action" },
+  { clipId: "trend-dance", category: "dance" },
+  { clipId: "snap-transition", category: "fashion" },
+  { clipId: "ember-crowd", category: "action" },
+  { clipId: "grwm-anime", category: "fashion" },
+  { clipId: "ember-dance", category: "dance" },
+  { clipId: "sneaker-unbox", category: "ugc" },
+  { clipId: "gym-spin", category: "action" },
+  { clipId: "perfume-spin", category: "ugc" },
 ];
+
+export const COMMUNITY_GENJUTSU_SHOTS: CommunityShotConfig[] = COMMUNITY_FALLBACK_CLIPS.flatMap(
+  ({ clipId, category }, index) => {
+    const media = MEDIA_CLIPS.find((c) => c.id === clipId);
+    if (!media) return [];
+    return [
+      {
+        id: `comm-${index + 1}`,
+        title: media.title,
+        creator: "Made with FAYAA",
+        aspect: media.aspect === "landscape" ? "landscape" : "portrait",
+        src: media.poster,
+        videoUrl: media.videoUrl,
+        sourceVideoUrl: media.videoUrl ?? "",
+        referenceImageUrl: "",
+        prompt: media.prompt ?? "",
+        category,
+      },
+    ];
+  }
+);
 
 export type BentoToolIconKey =
   | "wand-sparkles"

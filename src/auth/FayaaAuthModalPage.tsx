@@ -13,6 +13,8 @@ import {
 
 import { LandingPage } from "../landing-page/LandingPage";
 import { useRedirectIfLoggedIn } from "./hooks/useRedirectIfLoggedIn";
+import { MediaThumb } from "../video-studio/hf/components/studio/media-thumb";
+import { studioClip } from "../video-studio/studioClips";
 
 interface ShowcaseSlide {
   id: string;
@@ -30,8 +32,7 @@ const AUTH_SHOWCASE_SLIDES: ShowcaseSlide[] = [
     title: "GENJUTSU PRO 1080P",
     subtitle:
       "Studio-grade master motion recast with fine garment dynamics and camera tracking",
-    image:
-      "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1000&q=85",
+    image: studioClip("ember-sprint"),
     badges: [
       { icon: "gem", label: "1080p HD" },
       { icon: "wand", label: "Live in Studio" },
@@ -43,8 +44,7 @@ const AUTH_SHOWCASE_SLIDES: ShowcaseSlide[] = [
     title: "GENJUTSU LIGHT",
     subtitle:
       "Ultra-fast motion transfer with temporal stability and multi-image identity lock",
-    image:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=1000&q=85",
+    image: studioClip("trend-dance"),
     badges: [
       { icon: "gem", label: "4s–15s Clips" },
       { icon: "wand", label: "Live in Studio" },
@@ -56,8 +56,7 @@ const AUTH_SHOWCASE_SLIDES: ShowcaseSlide[] = [
     title: "RESTYLE & SWAP",
     subtitle:
       "Redraw videos in Anime, Claymation, or 3D styles, or swap subjects with @Image1",
-    image:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1000&q=85",
+    image: studioClip("grwm-anime"),
     badges: [
       { icon: "gem", label: "Style Presets" },
       { icon: "wand", label: "Object Swap" },
@@ -69,8 +68,7 @@ const AUTH_SHOWCASE_SLIDES: ShowcaseSlide[] = [
     title: "CINEMA & SEEDANCE",
     subtitle:
       "Next-generation text-to-video, AI Influencer & Cinema Studio 4.0 workflows",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1000&q=85",
+    image: studioClip("ember-hero"),
     badges: [
       { icon: "check", label: "Coming Soon" },
       { icon: "check", label: "FAYAA Roadmap" },
@@ -245,12 +243,9 @@ export function FayaaAuthModalPage({
               LEFT SHOWCASE STORY PANEL (Visible on lg+ screens — Screenshots 2 & 3)
              ════════════════════════════════════════════════════════════════ */}
           <div className="relative hidden min-h-[620px] w-full flex-col justify-end overflow-hidden rounded-[20px] bg-zinc-900 lg:flex">
-            <img
-              key={currentSlide.id}
-              src={currentSlide.image}
-              alt={currentSlide.title}
-              className="absolute inset-0 size-full object-cover transition-opacity duration-500"
-            />
+            <div key={currentSlide.id} className="absolute inset-0 animate-in fade-in duration-500">
+              <MediaThumb src={currentSlide.image} alt={currentSlide.title} mode="always" />
+            </div>
 
             {/* Multi-stop cinematic dark bottom vignette */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-transparent" />

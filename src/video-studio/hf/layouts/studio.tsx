@@ -58,12 +58,13 @@ import {
   useUploads,
   type AssetSelection,
 } from "../lib/studio/uploads"
+import { studioClip } from "../../studioClips"
 import { useRuns } from "../lib/studio/use-runs"
 
 const HERO_FALLBACKS = [
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&q=80",
-  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&q=80",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
+  studioClip("trend-dance"),
+  studioClip("grwm-anime"),
+  studioClip("sneaker-hook"),
 ] as const
 
 type DockProps = Omit<

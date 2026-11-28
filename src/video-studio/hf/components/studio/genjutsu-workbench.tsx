@@ -10,7 +10,6 @@ import {
   Box,
   Check,
   ChevronRight,
-  Clock,
   Coins,
   Crown,
   Download,
@@ -29,7 +28,6 @@ import {
   Search,
   Sparkles,
   Trash2,
-  TrendingUp,
   User,
   Video as VideoIcon,
   Wand2,
@@ -85,6 +83,8 @@ import { GenerationTile } from "./generation-card"
 import { HeroComposition } from "./hero-composition"
 import { IconTile } from "./icon-tile"
 import { ScreenEmptyState } from "./screen-empty-state"
+import { MediaThumb } from "./media-thumb"
+import { studioClip } from "../../../studioClips"
 import { ExamplePresets, TEMPLATES, type TemplateItem } from "./template-picker"
 
 /* ── Types & Presets ──────────────────────────────────────────────────────── */
@@ -92,7 +92,7 @@ import { ExamplePresets, TEMPLATES, type TemplateItem } from "./template-picker"
 type TopSidebarTab = "create-video" | "edit-video" | "motion-control"
 type GenjutsuMode = "motion-transfer" | "object-swap" | "restyle" | "lite"
 type StageTab = "history" | "motion-library" | "styles" | "how-it-works"
-type FeedFilter = "fayaa" | "trending" | "new"
+type FeedFilter = "all" | "trends" | "products" | "restyle"
 
 interface StylePreset {
   id: string
@@ -112,10 +112,8 @@ const STYLE_PRESETS: StylePreset[] = [
     tagline: "Keep realistic textures while transferring motion & identity",
     category: "Photoreal",
     promptSuffix: "",
-    thumb:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
-    beforeThumb:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
+    thumb: studioClip("trend-dance"),
+    beforeThumb: studioClip("trend-dance"),
   },
   {
     id: "anime-cel",
@@ -124,10 +122,8 @@ const STYLE_PRESETS: StylePreset[] = [
     category: "Illustration",
     promptSuffix:
       "Style: cel-shaded 2D anime aesthetic, crisp ink linework, vibrant Studio Trigger palette, expressive cel lighting.",
-    thumb:
-      "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400&q=80",
-    beforeThumb:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
+    thumb: studioClip("grwm-anime"),
+    beforeThumb: studioClip("trend-dance"),
     badge: "Popular",
   },
   {
@@ -137,10 +133,8 @@ const STYLE_PRESETS: StylePreset[] = [
     category: "3D & Tactile",
     promptSuffix:
       "Style: handcrafted stop-motion claymation, visible thumbprint plasticine textures, miniature stage lighting, shallow tilt-shift depth of field.",
-    thumb:
-      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&q=80",
-    beforeThumb:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80",
+    thumb: studioClip("skate-dog"),
+    beforeThumb: studioClip("snap-transition"),
     badge: "New",
   },
   {
@@ -150,10 +144,8 @@ const STYLE_PRESETS: StylePreset[] = [
     category: "3D & Tactile",
     promptSuffix:
       "Style: macro knitted wool and crocheted yarn world, fuzzy tactile fibers, stitched felt details, warm softbox studio illumination.",
-    thumb:
-      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80",
-    beforeThumb:
-      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&q=80",
+    thumb: studioClip("sneaker-unbox"),
+    beforeThumb: studioClip("street-interview"),
     badge: "New",
   },
   {
@@ -163,10 +155,8 @@ const STYLE_PRESETS: StylePreset[] = [
     category: "3D & Tactile",
     promptSuffix:
       "Style: stylized feature-film 3D animation, soft subsurface scattering, expressive stylized proportions, rich volumetric rim lighting.",
-    thumb:
-      "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=400&q=80",
-    beforeThumb:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
+    thumb: studioClip("ember-dance"),
+    beforeThumb: studioClip("gym-spin"),
   },
   {
     id: "hollywood-action",
@@ -175,249 +165,200 @@ const STYLE_PRESETS: StylePreset[] = [
     category: "Cinematic",
     promptSuffix:
       "Style: Hollywood 35mm anamorphic action cinema, subtle horizontal lens flares, teal and amber color grade, organic 35mm Kodak film grain.",
-    thumb:
-      "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&q=80",
-    beforeThumb:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
+    thumb: studioClip("cliff-freeze"),
+    beforeThumb: studioClip("night-market-pov"),
   },
 ]
 
 interface CommunityExample {
   id: string
   title: string
-  author: string
-  category: "fayaa" | "trending" | "new"
-  aspect: "square" | "landscape" | "portrait"
+  category: Exclude<FeedFilter, "all">
   videoUrl: string
+  /** The clip loaded as the motion source when the example is remixed. */
   sourceVideoUrl: string
-  posterUrl: string
-  sourcePosterUrl: string
   referenceImages: { url: string; name: string }[]
   prompt: string
   mode: GenjutsuMode
   styleId: string
-  views: string
 }
 
+/** Motion library: FAYAA's own renders, each one remixable into the sidebar. */
 const COMMUNITY_MASONRY: CommunityExample[] = [
   {
-    id: "cuff-lens-pov",
-    title: "Handcuff Lens Transition POV",
-    author: "@fayaa_official",
-    category: "trending",
-    aspect: "landscape",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-man-dancing-under-changing-lights-1240-large.mp4",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    posterUrl:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
-    sourcePosterUrl:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80",
-    referenceImages: [
-      {
-        url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
-        name: "Locker_Room_Actor.jpg",
-      },
-    ],
-    prompt:
-      "Recast the subject into @Image1 framed through the metallic ring foreground in a blue locker room.",
+    id: "trend-dance",
+    title: "Bedroom dance trend",
+    category: "trends",
+    videoUrl: studioClip("trend-dance"),
+    sourceVideoUrl: studioClip("trend-dance"),
+    referenceImages: [],
+    prompt: "Recast the dancer into @Image1 with the same moves in the same LED-lit bedroom.",
     mode: "motion-transfer",
     styleId: "none",
-    views: "1.4M",
   },
   {
-    id: "aerial-drop-pov",
-    title: "Top-Down Skyfall Reaction",
-    author: "@kora.motion",
-    category: "trending",
-    aspect: "landscape",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-dancing-40033-large.mp4",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    posterUrl:
-      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&q=80",
-    sourcePosterUrl:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
-    referenceImages: [
-      {
-        url: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&q=80",
-        name: "Creator_TopDown.jpg",
-      },
-    ],
-    prompt:
-      "Transform the performer into @Image1 with wide-angle overhead camera perspective over turf grass.",
-    mode: "motion-transfer",
-    styleId: "none",
-    views: "890K",
-  },
-  {
-    id: "cash-fan-flex",
-    title: "Money Fan Slow-Mo Flex",
-    author: "@lux_reels",
-    category: "trending",
-    aspect: "portrait",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-woman-modeling-in-a-studio-with-colored-lights-42407-large.mp4",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    posterUrl:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80",
-    sourcePosterUrl:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&q=80",
-    referenceImages: [
-      {
-        url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80",
-        name: "Protagonist_Portrait.jpg",
-      },
-    ],
-    prompt:
-      "Recast the character into @Image1 holding the fanned prop with exact finger and wrist choreography.",
-    mode: "motion-transfer",
-    styleId: "none",
-    views: "2.7M",
-  },
-  {
-    id: "night-street-shades",
-    title: "Night Street Puffer Freestyle",
-    author: "@fayaa_official",
-    category: "fayaa",
-    aspect: "landscape",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-fashion-model-posing-in-neon-light-39879-large.mp4",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    posterUrl:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80",
-    sourcePosterUrl:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&q=80",
-    referenceImages: [
-      {
-        url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80",
-        name: "Streetwear_Stylist.jpg",
-      },
-    ],
-    prompt:
-      "Recast the performer into @Image1 wearing glossy sunglasses and white puffer jacket on a city street at night.",
-    mode: "motion-transfer",
-    styleId: "hollywood-action",
-    views: "640K",
-  },
-  {
-    id: "stadium-sideline-sprint",
-    title: "Champions Touchline Celebration",
-    author: "@pitch_vfx",
-    category: "trending",
-    aspect: "square",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-man-dancing-under-changing-lights-1240-large.mp4",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    posterUrl:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=80",
-    sourcePosterUrl:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
-    referenceImages: [
-      {
-        url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=80",
-        name: "Coach_Character.jpg",
-      },
-    ],
-    prompt:
-      "Swap the sideline coach into @Image1 sprinting down the stadium touchline in front of the cheering crowd.",
+    id: "sneaker-hook",
+    title: "Sneaker slam hook",
+    category: "products",
+    videoUrl: studioClip("sneaker-hook"),
+    sourceVideoUrl: studioClip("sneaker-hook"),
+    referenceImages: [],
+    prompt: "Swap the sneaker for @Image1, keeping the slam, the bounce and the camera move.",
     mode: "object-swap",
-    styleId: "hollywood-action",
-    views: "3.1M",
+    styleId: "none",
   },
   {
-    id: "anime-restyle-couch",
-    title: "3D Stylized Living Room Recast",
-    author: "@fayaa_official",
-    category: "new",
-    aspect: "landscape",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-dancing-40033-large.mp4",
-    sourceVideoUrl:
-      "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    posterUrl:
-      "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80",
-    sourcePosterUrl:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&q=80",
-    referenceImages: [
-      {
-        url: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80",
-        name: "Stylized_Character.jpg",
-      },
-    ],
-    prompt:
-      "Restyle the entire video into @Image1 with warm afternoon window light and stylized 3D character rendering.",
+    id: "grwm-anime",
+    title: "GRWM anime switch",
+    category: "restyle",
+    videoUrl: studioClip("grwm-anime"),
+    sourceVideoUrl: studioClip("grwm-anime"),
+    referenceImages: [],
+    prompt: "Restyle the whole clip as a 90s cel-shaded anime opening. Motion stays as filmed.",
+    mode: "restyle",
+    styleId: "anime-cel",
+  },
+  {
+    id: "snap-transition",
+    title: "Snap outfit transition",
+    category: "trends",
+    videoUrl: studioClip("snap-transition"),
+    sourceVideoUrl: studioClip("snap-transition"),
+    referenceImages: [],
+    prompt: "Recast the person into @Image1 and keep the snap transition into the evening look.",
+    mode: "motion-transfer",
+    styleId: "none",
+  },
+  {
+    id: "perfume-spin",
+    title: "Perfume spin ad",
+    category: "products",
+    videoUrl: studioClip("perfume-spin"),
+    sourceVideoUrl: studioClip("perfume-spin"),
+    referenceImages: [],
+    prompt: "Swap the bottle for @Image1 with the same light ribbons and hand catch.",
+    mode: "object-swap",
+    styleId: "none",
+  },
+  {
+    id: "night-market-pov",
+    title: "Night market POV",
+    category: "restyle",
+    videoUrl: studioClip("night-market-pov"),
+    sourceVideoUrl: studioClip("night-market-pov"),
+    referenceImages: [],
+    prompt: "Restyle the POV run as an anamorphic action film with teal and amber grading.",
+    mode: "restyle",
+    styleId: "hollywood-action",
+  },
+  {
+    id: "ember-dance",
+    title: "Ember dance break",
+    category: "trends",
+    videoUrl: studioClip("ember-dance"),
+    sourceVideoUrl: studioClip("ember-dance"),
+    referenceImages: [],
+    prompt: "Recast the dancer into @Image1 with flame trails on every move.",
+    mode: "motion-transfer",
+    styleId: "none",
+  },
+  {
+    id: "sneaker-unbox",
+    title: "Glow unboxing",
+    category: "products",
+    videoUrl: studioClip("sneaker-unbox"),
+    sourceVideoUrl: studioClip("sneaker-unbox"),
+    referenceImages: [],
+    prompt: "Swap the product in the box for @Image1, same light spill and floating spin.",
+    mode: "object-swap",
+    styleId: "none",
+  },
+  {
+    id: "ember-skate",
+    title: "Ember skate line",
+    category: "restyle",
+    videoUrl: studioClip("ember-skate"),
+    sourceVideoUrl: studioClip("ember-skate"),
+    referenceImages: [],
+    prompt: "Restyle the skate line as stylised feature-film 3D animation.",
     mode: "restyle",
     styleId: "cinematic-3d",
-    views: "520K",
+  },
+  {
+    id: "gym-spin",
+    title: "Box jump 360",
+    category: "trends",
+    videoUrl: studioClip("gym-spin"),
+    sourceVideoUrl: studioClip("gym-spin"),
+    referenceImages: [],
+    prompt: "Recast the athlete into @Image1 with the same box jump and 360 spin.",
+    mode: "motion-transfer",
+    styleId: "none",
+  },
+  {
+    id: "burger-drop",
+    title: "Burger drop",
+    category: "products",
+    videoUrl: studioClip("burger-drop"),
+    sourceVideoUrl: studioClip("burger-drop"),
+    referenceImages: [],
+    prompt: "Swap the burger for @Image1 with the same slow-motion drop and chef reveal.",
+    mode: "object-swap",
+    styleId: "none",
+  },
+  {
+    id: "cliff-freeze",
+    title: "Cliff jump freeze",
+    category: "restyle",
+    videoUrl: studioClip("cliff-freeze"),
+    sourceVideoUrl: studioClip("cliff-freeze"),
+    referenceImages: [],
+    prompt: "Restyle the cliff jump with a 35mm anamorphic look and film grain.",
+    mode: "restyle",
+    styleId: "hollywood-action",
+  },
+  {
+    id: "skate-dog",
+    title: "Skater dog",
+    category: "trends",
+    videoUrl: studioClip("skate-dog"),
+    sourceVideoUrl: studioClip("skate-dog"),
+    referenceImages: [],
+    prompt: "Recast the dog into @Image1, same skateboard line down the boardwalk.",
+    mode: "motion-transfer",
+    styleId: "none",
+  },
+  {
+    id: "street-interview",
+    title: "Street interview twist",
+    category: "trends",
+    videoUrl: studioClip("street-interview"),
+    sourceVideoUrl: studioClip("street-interview"),
+    referenceImages: [],
+    prompt: "Recast the presenter into @Image1 for the same street interview.",
+    mode: "motion-transfer",
+    styleId: "none",
   },
 ]
 
 interface MotionControlSample {
   id: string
   title: string
-  author: string
-  posterUrl: string
   videoUrl: string
 }
 
 const MOTION_CONTROL_SAMPLES: MotionControlSample[] = [
-  {
-    id: "motion-sweater-dance",
-    title: "Kitchen Sweater Groove",
-    author: "@chloe.dance",
-    posterUrl:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&q=80",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-dancing-40033-large.mp4",
-  },
-  {
-    id: "motion-parking-freestyle",
-    title: "Parking Lot Freestyle",
-    author: "@marcus_moves",
-    posterUrl:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-man-dancing-under-changing-lights-1240-large.mp4",
-  },
-  {
-    id: "motion-living-room-flex",
-    title: "Living Room Energy Flex",
-    author: "@tasha_flow",
-    posterUrl:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&q=80",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-woman-modeling-in-a-studio-with-colored-lights-42407-large.mp4",
-  },
-  {
-    id: "motion-night-park-groove",
-    title: "Midnight Park Flow",
-    author: "@jaylen_step",
-    posterUrl:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-fashion-model-posing-in-neon-light-39879-large.mp4",
-  },
-  {
-    id: "motion-hallway-runway",
-    title: "Hallway Fashion Pose",
-    author: "@hailey_vogue",
-    posterUrl:
-      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&q=80",
-    videoUrl:
-      "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-dancing-40033-large.mp4",
-  },
+  { id: "motion-trend-dance", title: "Bedroom dance trend", videoUrl: studioClip("trend-dance") },
+  { id: "motion-ember-dance", title: "Ember dance break", videoUrl: studioClip("ember-dance") },
+  { id: "motion-gym-spin", title: "Box jump 360", videoUrl: studioClip("gym-spin") },
+  { id: "motion-snap-transition", title: "Snap outfit transition", videoUrl: studioClip("snap-transition") },
+  { id: "motion-skate-dog", title: "Skater dog", videoUrl: studioClip("skate-dog") },
 ]
 
 const EMPTY_HISTORY_IMAGES: readonly [string, string, string] = [
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&q=80",
-  "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&q=80",
-  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&q=80",
+  studioClip("trend-dance"),
+  studioClip("grwm-anime"),
+  studioClip("sneaker-hook"),
 ]
 
 /* ── Main Workbench Component ─────────────────────────────────────────────── */
@@ -491,7 +432,7 @@ export function GenjutsuWorkbench({
   const [sidebarTab, setSidebarTab] = useState<TopSidebarTab>("create-video")
   const [mode, setMode] = useState<GenjutsuMode>("motion-transfer")
   const [stageTab, setStageTab] = useState<StageTab>("motion-library")
-  const [feedFilter, setFeedFilter] = useState<FeedFilter>("trending")
+  const [feedFilter, setFeedFilter] = useState<FeedFilter>("all")
 
   // Model selection modal
   const [isModelModalOpen, setIsModelModalOpen] = useState<boolean>(false)
@@ -511,7 +452,6 @@ export function GenjutsuWorkbench({
     }
   })
   const [showCreditPopup, setShowCreditPopup] = useState<boolean>(false)
-  const [restyleSliderPos, setRestyleSliderPos] = useState<number>(62)
 
   // Style Drawer / Selector state
   const [selectedStyleId, setSelectedStyleId] = useState<string>("none")
@@ -666,7 +606,7 @@ export function GenjutsuWorkbench({
       setStageTab("styles")
       setMode("restyle")
     }
-    setShowCreditPopup(true)
+    if (authUser) setShowCreditPopup(true)
   }
 
   // Upload helper used by both AssetLibraryModal and drag-and-drop on slots
@@ -977,15 +917,13 @@ export function GenjutsuWorkbench({
     }
   }, [isGuestPreview, sourceVideo, referenceImages])
 
-  const filteredMasonry = useMemo(() => {
-    if (feedFilter === "fayaa") {
-      return COMMUNITY_MASONRY.filter((item) => item.category === "fayaa")
-    }
-    if (feedFilter === "new") {
-      return [...COMMUNITY_MASONRY].reverse()
-    }
-    return COMMUNITY_MASONRY
-  }, [feedFilter])
+  const filteredMasonry = useMemo(
+    () =>
+      feedFilter === "all"
+        ? COMMUNITY_MASONRY
+        : COMMUNITY_MASONRY.filter((item) => item.category === feedFilter),
+    [feedFilter]
+  )
 
   // Credit calculations for the top-right credit popup
   const displayCredits = userCredits ?? 0
@@ -1247,40 +1185,12 @@ export function GenjutsuWorkbench({
               redrawn in it. Motion stays as filmed.
             </DialogDescription>
 
-            {/* Top Split Before/After Interactive Preview */}
-            <div
-              className="relative h-[230px] w-full cursor-ew-resize overflow-hidden bg-zinc-900"
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect()
-                const pct = ((e.clientX - rect.left) / rect.width) * 100
-                setRestyleSliderPos(Math.min(92, Math.max(8, pct)))
-              }}
-            >
-              {/* Right / Underlying Original Video Frame */}
-              <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=900&q=80"
-                alt="Original filmed motion"
-                className="size-full object-cover"
-              />
-              {/* Left / Restyled 3D Character Frame */}
-              <div
-                className="absolute inset-0 overflow-hidden"
-                style={{
-                  clipPath: `inset(0 ${100 - restyleSliderPos}% 0 0)`,
-                }}
-              >
-                <img
-                  src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=900&q=80"
-                  alt="Restyled 3D video"
-                  className="size-full object-cover saturate-125"
-                />
-              </div>
-
-              {/* Vertical Split Line */}
-              <div
-                className="pointer-events-none absolute inset-y-0 w-[1.5px] bg-white/80 shadow-[0_0_12px_rgba(255,255,255,0.9)]"
-                style={{ left: `${restyleSliderPos}%` }}
-              />
+            {/* Restyle preview: a FAYAA anime restyle render */}
+            <div className="relative h-[230px] w-full overflow-hidden bg-fy-surface-2">
+              <MediaThumb src={studioClip("grwm-anime")} alt="Video restyled as anime" mode="always" />
+              <span className="absolute bottom-3 left-3 z-[2] rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-md">
+                Restyle: anime
+              </span>
 
               {/* Bottom Gradient Fade */}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-fy-surface-1 to-transparent" />
@@ -1321,7 +1231,7 @@ export function GenjutsuWorkbench({
         {/* ══════════════════════════════════════════════════════════════════════
           POPUP 2: TOP-RIGHT CREDIT USAGE POPOVER (Appears after closing Popup 1)
          ══════════════════════════════════════════════════════════════════════ */}
-        {showCreditPopup ? (
+        {showCreditPopup && authUser ? (
           <div
             role="status"
             aria-live="polite"
@@ -1432,11 +1342,7 @@ export function GenjutsuWorkbench({
               <>
                 {/* Motion Control Banner */}
                 <div className="relative h-[92px] w-full shrink-0 overflow-hidden rounded-xl border border-white/10 bg-zinc-900">
-                  <img
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=700&q=80"
-                    alt="Motion Control"
-                    className="size-full object-cover opacity-60"
-                  />
+                  <MediaThumb src={studioClip("ember-dance")} alt="Motion Control" className="opacity-70" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10" />
 
                   <button
@@ -1892,11 +1798,7 @@ export function GenjutsuWorkbench({
               <>
                 {/* 1. Model Identity Banner Card */}
                 <div className="relative h-[108px] w-full shrink-0 overflow-hidden rounded-xl border border-white/10 bg-zinc-900">
-                  <img
-                    src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=700&q=80"
-                    alt="Higgsfield Genjutsu"
-                    className="size-full object-cover opacity-75"
-                  />
+                  <MediaThumb src={studioClip("snap-transition")} alt="FAYAA Genjutsu" className="opacity-80" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10" />
 
                   <button
@@ -1956,11 +1858,7 @@ export function GenjutsuWorkbench({
                   >
                     <div className="flex items-center gap-2.5">
                       <div className="relative h-8 w-11 shrink-0 overflow-hidden rounded-lg border border-white/15 bg-zinc-800">
-                        <img
-                          src={activeStyle.thumb}
-                          alt={activeStyle.name}
-                          className="size-full object-cover"
-                        />
+                        <MediaThumb src={activeStyle.thumb} alt={activeStyle.name} mode="hover" />
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-semibold text-white">
@@ -2003,11 +1901,7 @@ export function GenjutsuWorkbench({
                             )}
                           >
                             <div className="relative h-14 w-full overflow-hidden bg-zinc-900">
-                              <img
-                                src={preset.thumb}
-                                alt={preset.name}
-                                className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
-                              />
+                              <MediaThumb src={preset.thumb} alt={preset.name} mode="hover" />
                               {active ? (
                                 <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-fy-accent text-black">
                                   <Check className="size-2.5 stroke-[3]" />
@@ -2669,25 +2563,13 @@ export function GenjutsuWorkbench({
                     {/* Fanned 3 Polaroid Character Images */}
                     <div className="relative flex items-center justify-center pr-4 py-3 shrink-0">
                       <div className="relative h-44 w-32 -rotate-12 rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl transition-transform hover:scale-105 hover:z-20">
-                        <img
-                          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80"
-                          alt="Motion Character 1"
-                          className="size-full object-cover"
-                        />
+                        <MediaThumb src={studioClip("trend-dance")} alt="Motion Character 1" />
                       </div>
                       <div className="relative h-48 w-36 -ml-8 -rotate-2 rounded-xl overflow-hidden border-2 border-white/30 shadow-2xl z-10 transition-transform hover:scale-105 hover:z-20">
-                        <img
-                          src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80"
-                          alt="Motion Character 2"
-                          className="size-full object-cover"
-                        />
+                        <MediaThumb src={studioClip("ember-dance")} alt="Motion Character 2" />
                       </div>
                       <div className="relative h-44 w-32 -ml-8 rotate-12 rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl transition-transform hover:scale-105 hover:z-20">
-                        <img
-                          src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80"
-                          alt="Motion Character 3"
-                          className="size-full object-cover"
-                        />
+                        <MediaThumb src={studioClip("gym-spin")} alt="Motion Character 3" />
                       </div>
                     </div>
                   </div>
@@ -2725,124 +2607,96 @@ export function GenjutsuWorkbench({
               {/* ── TAB 1: MOTION LIBRARY (Default View from Screenshot) ──────── */}
               {sidebarTab !== "motion-control" && stageTab === "motion-library" ? (
                 <>
-                  {/* Hero Banner: "TURN ONE VIDEO INTO MANY" + Split Video Preview */}
-                  <div className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-2xl border border-white/[0.06] bg-[radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:20px_20px] p-6 lg:flex-row lg:items-center">
-                    <div className="flex max-w-[520px] flex-col gap-2.5">
-                      <h1 className="font-display text-2xl font-black tracking-tight text-white uppercase sm:text-[30px]">
-                        TURN ONE VIDEO INTO MANY
+                  {/* Hero: copy on the left, a fan of live FAYAA renders on the right */}
+                  <div className="fy-grain relative isolate flex flex-col gap-6 overflow-hidden rounded-fy-xl border border-white/[0.07] bg-[radial-gradient(90%_120%_at_0%_0%,rgb(255_91_31/0.16),transparent_55%),radial-gradient(70%_100%_at_100%_100%,rgb(255_46_126/0.10),transparent_60%)] bg-fy-surface-1 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex max-w-[520px] flex-col gap-3">
+                      <span className="fy-eyebrow text-fy-accent-300">Genjutsu motion library</span>
+                      <h1 className="fy-display text-[34px] text-white sm:text-[44px]">
+                        One video in.
+                        <span className="fy-text-heat block">Many viral posts out.</span>
                       </h1>
-                      <p className="text-sm leading-relaxed text-zinc-400">
-                        Take the motion and recast it with your characters,
-                        locations, and products, or swap specific elements while
-                        keeping the rest untouched.
+                      <p className="max-w-[440px] text-sm leading-relaxed text-fy-muted">
+                        Pick a clip below to load its motion, then recast it with your
+                        character, swap in your product, or redraw it in a new style.
                       </p>
-                    </div>
-
-                    {/* Right Split-Comparison Preview Card */}
-                    <div className="relative h-[168px] w-full shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-zinc-900 shadow-2xl sm:w-[320px]">
-                      {/* Underlying output frame */}
-                      <img
-                        src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80"
-                        alt="Genjutsu Output"
-                        className="size-full object-cover"
-                      />
-                      {/* Left clipped original input frame */}
-                      <div
-                        className="absolute inset-0 overflow-hidden"
-                        style={{ clipPath: "inset(0 65% 0 0)" }}
-                      >
-                        <img
-                          src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80"
-                          alt="Original Motion"
-                          className="size-full object-cover"
-                        />
+                      <div className="mt-1 flex flex-wrap gap-2">
+                        {[
+                          { label: "Motion transfer", tab: "create-video" as const, mode: "motion-transfer" as const },
+                          { label: "Product swap", tab: "edit-video" as const, mode: "object-swap" as const },
+                          { label: "Restyle", tab: "create-video" as const, mode: "restyle" as const },
+                        ].map((chip) => (
+                          <button
+                            key={chip.label}
+                            type="button"
+                            onClick={() => {
+                              setSidebarTab(chip.tab)
+                              setMode(chip.mode)
+                              if (chip.mode === "restyle") setStageTab("styles")
+                            }}
+                            className={cn(
+                              "cursor-pointer rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                              mode === chip.mode
+                                ? "border-fy-accent/60 bg-fy-accent/15 text-fy-accent-200"
+                                : "border-white/12 bg-white/[0.04] text-fy-muted hover:border-white/25 hover:text-white"
+                            )}
+                          >
+                            {chip.label}
+                          </button>
+                        ))}
                       </div>
-                      <div
-                        className="pointer-events-none absolute inset-y-0 w-[1.5px] bg-white/90 shadow"
-                        style={{ left: "35%" }}
+                    </div>
+
+                    <div className="relative hidden h-[220px] w-[300px] shrink-0 items-center justify-center sm:flex" aria-hidden>
+                      <div className="absolute left-0 h-[190px] w-[108px] -rotate-[8deg] overflow-hidden rounded-fy-md border border-white/15 shadow-2xl">
+                        <MediaThumb src={studioClip("trend-dance")} />
+                      </div>
+                      <div className="relative z-10 h-[220px] w-[124px] overflow-hidden rounded-fy-lg border border-white/25 shadow-[0_24px_60px_-12px_rgb(255_91_31/0.45)]">
+                        <MediaThumb src={studioClip("grwm-anime")} />
+                      </div>
+                      <div className="absolute right-0 h-[190px] w-[108px] rotate-[8deg] overflow-hidden rounded-fy-md border border-white/15 shadow-2xl">
+                        <MediaThumb src={studioClip("sneaker-hook")} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Category chips */}
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-sm font-semibold text-white">Start from a clip</h2>
+                    <div className="flex gap-1.5 overflow-x-auto rounded-full border border-white/[0.07] bg-fy-surface-1 p-1">
+                      {(
+                        [
+                          { id: "all", label: "All" },
+                          { id: "trends", label: "Trends" },
+                          { id: "products", label: "Products" },
+                          { id: "restyle", label: "Restyle" },
+                        ] as const
+                      ).map((chip) => (
+                        <button
+                          key={chip.id}
+                          type="button"
+                          onClick={() => setFeedFilter(chip.id)}
+                          className={cn(
+                            "cursor-pointer whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                            feedFilter === chip.id
+                              ? "bg-white text-fy-ink"
+                              : "text-fy-muted hover:text-white"
+                          )}
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Vertical clip grid: every tile is a live FAYAA render */}
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                    {filteredMasonry.map((item) => (
+                      <MasonryVideoCard
+                        key={item.id}
+                        item={item}
+                        onRemix={() => loadExampleIntoWorkspace(item)}
                       />
-                      <span className="absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
-                        INPUT
-                      </span>
-                      <span className="absolute right-2 bottom-2 rounded bg-fy-accent px-1.5 py-0.5 text-[10px] font-bold text-black">
-                        GENJUTSU
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Centered Pill Filter Bar: Fayaa | Community trending | Community new (Higgsfield Tabs) */}
-                  <div className="flex justify-center">
-                    <Tabs
-                      variant="segmented"
-                      shape="pill"
-                      value={feedFilter}
-                      onValueChange={(val) => setFeedFilter(val as FeedFilter)}
-                    >
-                      <TabsList>
-                        <TabsTrigger
-                          value="fayaa"
-                          start={<Sparkles className="size-3.5" />}
-                        >
-                          Fayaa
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="trending"
-                          start={<TrendingUp className="size-3.5" />}
-                        >
-                          Community trending
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="new"
-                          start={<Clock className="size-3.5" />}
-                        >
-                          Community new
-                        </TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  </div>
-
-                  {/* 3-Column Masonry Video Grid matching Screenshot 3 using Higgsfield GenerationTile */}
-                  <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
-                    {/* Column 1: Two stacked landscape cards */}
-                    <div className="flex flex-col gap-3.5">
-                      {filteredMasonry
-                        .filter((_, i) => i % 3 === 0)
-                        .map((item) => (
-                          <MasonryVideoCard
-                            key={item.id}
-                            item={item}
-                            onRemix={() => loadExampleIntoWorkspace(item)}
-                          />
-                        ))}
-                    </div>
-
-                    {/* Column 2: Landscape card + Taller stadium card */}
-                    <div className="flex flex-col gap-3.5">
-                      {filteredMasonry
-                        .filter((_, i) => i % 3 === 1)
-                        .map((item) => (
-                          <MasonryVideoCard
-                            key={item.id}
-                            item={item}
-                            tall={item.aspect === "square"}
-                            onRemix={() => loadExampleIntoWorkspace(item)}
-                          />
-                        ))}
-                    </div>
-
-                    {/* Column 3: Full-height vertical portrait card */}
-                    <div className="flex flex-col gap-3.5">
-                      {filteredMasonry
-                        .filter((_, i) => i % 3 === 2)
-                        .map((item) => (
-                          <MasonryVideoCard
-                            key={item.id}
-                            item={item}
-                            portrait={item.aspect === "portrait"}
-                            onRemix={() => loadExampleIntoWorkspace(item)}
-                          />
-                        ))}
-                    </div>
+                    ))}
                   </div>
                 </>
               ) : null}
@@ -2886,11 +2740,7 @@ export function GenjutsuWorkbench({
                           )}
                         >
                           <div className="relative h-44 w-full overflow-hidden bg-zinc-900">
-                            <img
-                              src={preset.thumb}
-                              alt={preset.name}
-                              className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
+                            <MediaThumb src={preset.thumb} alt={preset.name} mode="hover" className="transition-transform duration-500 ease-fy-out group-hover:scale-[1.04]" />
                             {preset.badge ? (
                               <span className="absolute top-3 left-3 rounded-md bg-fy-accent px-2 py-0.5 text-[10px] font-bold text-black">
                                 {preset.badge}
@@ -3333,102 +3183,57 @@ export function GenjutsuWorkbench({
   )
 }
 
-/* ── Masonry Community Video Card (Uses Higgsfield GenerationTile) ─────────── */
+/* ── Motion library tile: a live 9:16 FAYAA render with a Remix action ──── */
+
+const CATEGORY_LABEL: Record<CommunityExample["category"], string> = {
+  trends: "Trend",
+  products: "Product swap",
+  restyle: "Restyle",
+}
 
 function MasonryVideoCard({
   item,
-  tall = false,
-  portrait = false,
   onRemix,
 }: {
   item: CommunityExample
-  tall?: boolean
-  portrait?: boolean
   onRemix: () => void
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [hovered, setHovered] = useState(false)
-
   return (
-    <GenerationTile
-      src={item.posterUrl}
-      alt={item.title}
-      title={item.title}
-      generation={{
-        src: item.videoUrl,
-        poster: item.posterUrl,
-        mediaType: "video",
-        prompt: item.prompt,
-        model: genjutsu.label,
-        settings: {
-          mode: item.mode,
-          author: item.author,
-          views: item.views,
-        },
-      }}
-      actions={[
-        {
-          id: "remix",
-          label: "Remix in Sidebar",
-          icon: Sparkles,
-          onSelect: onRemix,
-        },
-        {
-          id: "download",
-          label: "Download MP4",
-          icon: Download,
-        },
-      ]}
-      onMouseEnter={() => {
-        setHovered(true)
-        void videoRef.current?.play().catch(() => { })
-      }}
-      onMouseLeave={() => {
-        setHovered(false)
-        if (videoRef.current) {
-          videoRef.current.pause()
-          videoRef.current.currentTime = 0
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Remix ${item.title}`}
+      onClick={onRemix}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          onRemix()
         }
       }}
-      media={
-        <>
-          <img
-            src={item.posterUrl}
-            alt={item.title}
-            className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            loading="lazy"
-          />
-          <video
-            ref={videoRef}
-            src={item.videoUrl}
-            poster={item.posterUrl}
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            className={cn(
-              "absolute inset-0 size-full object-cover transition-opacity duration-200",
-              hovered ? "opacity-100" : "opacity-0"
-            )}
-          />
-        </>
-      }
-      className={cn(
-        "overflow-hidden rounded-2xl border border-white/[0.08] bg-fy-surface-2 transition-all hover:border-white/25",
-        portrait
-          ? "h-[520px]"
-          : tall
-            ? "h-[310px]"
-            : "h-[200px]"
-      )}
+      className="group relative aspect-[9/16] cursor-pointer overflow-hidden rounded-fy-lg border border-white/[0.07] bg-fy-surface-2 transition-all duration-300 ease-fy-out hover:-translate-y-0.5 hover:border-white/25 hover:shadow-[0_24px_50px_-20px_rgb(0_0_0/0.9)] focus-visible:ring-2 focus-visible:ring-fy-accent/70 focus-visible:outline-none"
     >
-      {/* Subtle bottom-left Remix badge on hover */}
-      <div className="pointer-events-none absolute top-2.5 left-2.5 z-[2] flex items-center gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-        <span className="rounded-md bg-black/65 px-2 py-0.5 text-[10px] font-medium text-zinc-200 backdrop-blur-md">
-          {item.author} • {item.views}
+      <MediaThumb
+        src={item.videoUrl}
+        alt={item.title}
+        className="transition-transform duration-700 ease-fy-out group-hover:scale-[1.04]"
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/30" />
+
+      <span className="absolute top-2.5 left-2.5 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white/90 backdrop-blur-md">
+        {CATEGORY_LABEL[item.category]}
+      </span>
+
+      <div className="absolute inset-x-3 bottom-3 flex items-end justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-white">{item.title}</p>
+          <p className="truncate text-[11px] text-white/60">Made with FAYAA</p>
+        </div>
+        <span className="inline-flex shrink-0 translate-y-1 items-center gap-1 rounded-full bg-fy-accent px-2.5 py-1 text-[11px] font-bold text-fy-on-accent opacity-0 transition-all duration-300 ease-fy-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+          <Sparkles className="size-3" />
+          Remix
         </span>
       </div>
-    </GenerationTile>
+    </div>
   )
 }
 
@@ -3441,66 +3246,37 @@ function MotionLibraryVerticalCard({
   isSelected: boolean
   onSelect: () => void
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [hovered, setHovered] = useState(false)
-
   return (
-    <div
+    <button
+      type="button"
       onClick={onSelect}
-      onMouseEnter={() => {
-        setHovered(true)
-        void videoRef.current?.play().catch(() => { })
-      }}
-      onMouseLeave={() => {
-        setHovered(false)
-        if (videoRef.current) {
-          videoRef.current.pause()
-          videoRef.current.currentTime = 0
-        }
-      }}
+      aria-pressed={isSelected}
       className={cn(
-        "group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border transition-all aspect-[9/16] bg-fy-surface-2",
+        "group relative flex aspect-[9/16] cursor-pointer flex-col overflow-hidden rounded-fy-lg border bg-fy-surface-2 text-left transition-all duration-300 ease-fy-out",
         isSelected
           ? "border-fy-accent ring-2 ring-fy-accent/40 shadow-[0_0_24px_rgba(255,91,31,0.25)]"
-          : "border-white/[0.08] hover:border-white/25 hover:shadow-xl"
+          : "border-white/[0.08] hover:-translate-y-0.5 hover:border-white/25 hover:shadow-xl"
       )}
     >
-      <img
-        src={sample.posterUrl}
-        alt={sample.title}
-        className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
-        loading="lazy"
-      />
-      <video
-        ref={videoRef}
+      <MediaThumb
         src={sample.videoUrl}
-        poster={sample.posterUrl}
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        className={cn(
-          "absolute inset-0 size-full object-cover transition-opacity duration-200",
-          hovered ? "opacity-100" : "opacity-0"
-        )}
+        alt={sample.title}
+        className="transition-transform duration-700 ease-fy-out group-hover:scale-[1.04]"
       />
-
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
 
       {isSelected ? (
-        <span className="absolute top-2.5 right-2.5 flex size-5 items-center justify-center rounded-full bg-fy-accent text-black">
+        <span className="absolute top-2.5 right-2.5 flex size-5 items-center justify-center rounded-full bg-fy-accent text-fy-on-accent">
           <Check className="size-3 stroke-[3]" />
         </span>
       ) : null}
 
       <div className="pointer-events-none absolute inset-x-2.5 bottom-2.5 flex flex-col gap-0.5">
-        <span className="truncate text-xs font-semibold text-white">
-          {sample.title}
-        </span>
-        <span className="truncate text-[10px] text-zinc-400">
-          {sample.author}
+        <span className="truncate text-xs font-semibold text-white">{sample.title}</span>
+        <span className="truncate text-[10px] text-white/60">
+          {isSelected ? "Loaded as motion" : "Use this motion"}
         </span>
       </div>
-    </div>
+    </button>
   )
 }
