@@ -1,0 +1,59 @@
+name: Marketing site
+
+# Checks the marketing site (site/) on PRs, and deploys it to Fly
+# (app "fayaa-marketing") on every push to main and once a night. The nightly
+# deploy picks up new /admin/site-media clips and switches dated campaigns
+# in src/marketing/landingContent.ts on and off.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "src/marketing/**"
+      - "src/landing-page/homepageConfig.ts"
+      - "src/client/design/tokens.css"
+  pull_request:
+    paths:
+      - "site/**"
+      - "src/marketing/**"
+      - "src/landing-page/homepageConfig.ts"
+      - "src/client/design/tokens.css"
+      - ".github/workflows/site.yml"
+  schedule:
+    - cron: "15 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+      - run: npx astro check
+      - run: npm test
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency: fly-marketing-deploy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy to Fly
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if [ -z "$FLY_API_TOKEN" ]; then echo "FLY_API_TOKEN not set; skipping deploy."; exit 0; fi
+          flyctl deploy --config site/fly.toml --remote-only

@@ -10,7 +10,7 @@ import {
   clientEnvValidationSchema,
   serverEnvValidationSchema,
 } from "./src/env" with { type: "ref" };
-import { LandingPage } from "./src/landing-page/LandingPage" with { type: "ref" };
+import { RootPage } from "./src/marketing/RootPage" with { type: "ref" };
 import { seedMockUsers } from "./src/server/scripts/dbSeeds" with { type: "ref" };
 
 import { adminSpec } from "./src/admin/admin.wasp";
@@ -49,7 +49,9 @@ export default app({
   spec: [
     // Prerendering routes with static content creates HTML files at build time that are served immediately,
     // improving SEO, search engine/AI crawling, and performance: https://wasp.sh/docs/advanced/prerendering
-    route("LandingPageRoute", "/", page(LandingPage), { prerender: true }),
+    // RootPage renders the app's LandingPage, or redirects to the marketing
+    // site (site/) once REACT_APP_MARKETING_SITE_URL is set for app.fayaa.tech.
+    route("LandingPageRoute", "/", page(RootPage), { prerender: true }),
     route("NotFoundRoute", "*", page(NotFoundPage)),
     authSpec,
     userSpec,

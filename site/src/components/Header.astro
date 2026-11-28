@@ -1,0 +1,41 @@
+---
+import { app } from "../config";
+import { LANDING_PAGES } from "../lib/landingPages";
+import Button from "./Button.astro";
+import Logo from "./Logo.astro";
+---
+<header class="sticky top-0 z-40 border-b border-fy-line bg-fy-ink/75 backdrop-blur-xl">
+  <nav class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6" aria-label="Main">
+    <Logo />
+    <ul class="hidden items-center gap-1 text-sm text-fy-muted md:flex">
+      <li class="group relative">
+        <button type="button" class="rounded-full px-3 py-2 hover:text-fy-text" aria-haspopup="true">Use cases</button>
+        <ul class="fy-glass invisible absolute left-0 top-full mt-1 w-60 rounded-fy-lg p-2 opacity-0 transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+          {LANDING_PAGES.map((p) => (
+            <li><a href={`/${p.slug}`} class="block rounded-fy-sm px-3 py-2 hover:bg-white/5 hover:text-fy-text">{p.nav}</a></li>
+          ))}
+        </ul>
+      </li>
+      <li><a href="/pricing" class="rounded-full px-3 py-2 hover:text-fy-text">Pricing</a></li>
+      <li><a href="/blog" class="rounded-full px-3 py-2 hover:text-fy-text">Blog</a></li>
+      <li><a href={app.studio()} class="rounded-full px-3 py-2 hover:text-fy-text" data-event="Studio Open">Studio</a></li>
+    </ul>
+    <div class="flex items-center gap-2">
+      <a href={app.login} class="hidden px-3 text-sm text-fy-muted hover:text-fy-text sm:inline">Log in</a>
+      <Button href={app.signup} size="sm" event="Signup CTA Click">Start free</Button>
+      <details class="relative md:hidden">
+        <summary class="flex size-9 cursor-pointer list-none items-center justify-center rounded-full fy-glass" aria-label="Menu">
+          <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round" /></svg>
+        </summary>
+        <ul class="fy-glass absolute right-0 top-full mt-2 w-64 rounded-fy-lg p-2 text-sm">
+          {LANDING_PAGES.map((p) => <li><a href={`/${p.slug}`} class="block rounded-fy-sm px-3 py-2 text-fy-muted hover:text-fy-text">{p.nav}</a></li>)}
+          <li class="my-1 border-t border-fy-line" />
+          <li><a href="/pricing" class="block px-3 py-2">Pricing</a></li>
+          <li><a href="/blog" class="block px-3 py-2">Blog</a></li>
+          <li><a href={app.studio()} class="block px-3 py-2">Studio</a></li>
+          <li><a href={app.login} class="block px-3 py-2">Log in</a></li>
+        </ul>
+      </details>
+    </div>
+  </nav>
+</header>

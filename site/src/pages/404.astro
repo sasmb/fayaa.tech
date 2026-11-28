@@ -1,0 +1,16 @@
+---
+import Button from "../components/Button.astro";
+import { app } from "../config";
+import Base from "../layouts/Base.astro";
+---
+<Base title="Page not found" description="This page doesn't exist." noindex>
+  <section class="mx-auto max-w-2xl px-4 py-32 text-center">
+    <p class="fy-eyebrow text-fy-accent-300">404</p>
+    <h1 class="fy-display mt-4 text-6xl">Cut. <span class="fy-text-heat">Wrong take.</span></h1>
+    <p class="mt-6 text-fy-muted">That page doesn't exist. Looking for the studio? It moved to app.fayaa.tech.</p>
+    <div class="mt-8 flex justify-center gap-3">
+      <Button href="/">Home</Button>
+      <Button href={app.studio()} variant="ghost">Open the studio</Button>
+    </div>
+  </section>
+</Base>

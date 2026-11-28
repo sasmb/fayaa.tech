@@ -1,0 +1,259 @@
+---
+import Button from "../components/Button.astro";
+import Clip from "../components/Clip.astro";
+import Faq from "../components/Faq.astro";
+import PromptBar from "../components/PromptBar.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+import Variants from "../components/Variants.astro";
+import { BRAND, app, resolveHref } from "../config";
+import Base from "../layouts/Base.astro";
+import { getClip, loadHomepage, type LandingContent } from "../lib/content";
+import { LANDING_PAGES } from "../lib/landingPages";
+import { PRICING_FAQ } from "../lib/pricing";
+import { faqPage, softwareApplication } from "../lib/schema";
+import { inferPlatform, getYouTubeId } from "../../../src/marketing/siteMedia";
+
+const home = await loadHomepage();
+const { content: c, clips } = home;
+const clip = (id: string) => getClip(clips, id);
+
+/** Values of one field across control and every variant of an experiment. */
+function across(exp: string, pick: (content: LandingContent) => string): Record<string, string> {
+  const values: Record<string, string> = { control: pick(c) };
+  for (const [key, content] of Object.entries(home.variants)) {
+    const [expId, variantId] = key.split(":");
+    if (expId === exp && variantId) values[variantId] = pick(content);
+  }
+  return values;
+}
+
+const headlineLines = c.hero.headline.map((_, i) => across("hero-copy", (x) => x.hero.headline[i] ?? ""));
+const heroSubhead = across("hero-copy", (x) => x.hero.subhead);
+const heroCta = across("primary-cta", (x) => x.hero.primaryCta.label);
+const finalCta = across("primary-cta", (x) => x.finalCta.primaryCta.label);
+
+const communityIds = Array.from(new Set(c.reel.rows.flat())).filter((id) => !id.startsWith("ember-")).slice(0, 8);
+
+const homeFaq = [
+  {
+    q: "What is FAYAA?",
+    a: "FAYAA is an AI video studio for short-form content. You start from a clip, a trend or a prompt, and FAYAA turns it into a vertical video for TikTok, Reels and Shorts in seconds.",
+  },
+  {
+    q: "What can I make with it?",
+    a: "Trend dances with your face, product ads that swap your product into proven shots, restyled clips like anime or movie-trailer edits, and longer edits that run past two minutes.",
+  },
+  ...PRICING_FAQ.slice(0, 2),
+];
+
+const title = `${BRAND.name}: ${BRAND.tagline} | AI Video Generator for TikTok & Reels`;
+const description =
+  "Make viral short-form videos in seconds with AI. Join trends with one photo, swap your product into viral shots and restyle any clip. Free to start.";
+---
+
+<Base title={title} description={description} path="/" home={home} schema={[softwareApplication(), faqPage(homeFaq)]}>
+  {c.announcement.enabled && (
+    <div class="border-b border-fy-line bg-fy-surface-1 text-center text-sm">
+      <a href={resolveHref(c.announcement.cta.href)} data-event={c.announcement.cta.event} class="mx-auto flex max-w-7xl items-center justify-center gap-3 px-4 py-2 text-fy-muted hover:text-fy-text">
+        <span class="rounded-full bg-fy-accent/15 px-2 py-0.5 text-xs font-semibold text-fy-accent-300">{c.announcement.badge}</span>
+        <span>{c.announcement.message}</span>
+        <span class="hidden text-fy-accent-300 sm:inline">{c.announcement.cta.label} →</span>
+      </a>
+    </div>
+  )}
+
+  <div class="flex flex-col">
+    <!-- Hero -->
+    <section id="hero-showcase" class="fy-grain relative flex min-h-[88svh] items-end overflow-hidden" aria-label="FAYAA video studio">
+      <div class="absolute inset-0">
+        <Clip clip={clip(c.hero.backgroundClipId)} eager class="!absolute inset-0 !aspect-auto size-full !rounded-none" />
+        <div class="absolute inset-0" style="background: var(--fy-gradient-veil)"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-fy-ink/80 via-fy-ink/30 to-transparent"></div>
+      </div>
+      <div class="relative mx-auto grid w-full max-w-7xl items-end gap-10 px-4 pb-16 pt-28 sm:px-6 lg:grid-cols-[1.4fr_1fr]">
+        <div>
+          <p class="fy-eyebrow text-fy-accent-300">{c.hero.eyebrow}</p>
+          <h1 class="fy-display mt-5 text-[clamp(3rem,10vw,7.5rem)]">
+            {headlineLines.map((line, i) => (
+              <span class:list={["block", i === c.hero.accentLine && "fy-text-heat"]}><Variants exp="hero-copy" values={line} /></span>
+            ))}
+          </h1>
+          <p class="mt-6 max-w-xl text-lg text-fy-muted text-pretty"><Variants exp="hero-copy" values={heroSubhead} /></p>
+          <PromptBar examples={c.hero.promptExamples} class="mt-8" />
+          <div class="mt-6 flex flex-wrap gap-3">
+            <Button href={resolveHref(c.hero.primaryCta.href)} size="lg" event={c.hero.primaryCta.event}><Variants exp="primary-cta" values={heroCta} /></Button>
+            <Button href={resolveHref(c.hero.secondaryCta.href)} size="lg" variant="ghost" event={c.hero.secondaryCta.event}>{c.hero.secondaryCta.label}</Button>
+          </div>
+          <dl class="mt-10 flex flex-wrap gap-x-10 gap-y-4">
+            {c.hero.stats.map((s) => (
+              <div><dt class="sr-only">{s.label}</dt><dd><span class="font-display text-2xl font-bold">{s.value}</span> <span class="text-sm text-fy-muted">{s.label}</span></dd></div>
+            ))}
+          </dl>
+        </div>
+        <div class="hidden grid-cols-3 gap-3 lg:grid">
+          {c.hero.floatingClipIds.map((id, i) => (
+            <Clip clip={clip(id)} class:list={["fy-glow animate-fy-float", i === 1 && "mt-10"]} />
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Reels -->
+    <section id="reel-marquee" class="overflow-hidden py-20" aria-labelledby="reel-title">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6">
+        <SectionHeading eyebrow={c.reel.eyebrow} title={c.reel.title} id="reel-title" />
+      </div>
+      <div class="fy-mask-x mt-10 space-y-4">
+        {c.reel.rows.map((row, r) => (
+          <div class:list={["fy-marquee-track flex w-max gap-4", r % 2 ? "animate-fy-marquee-reverse" : "animate-fy-marquee"]} style="--fy-marquee-duration: 70s">
+            {[...row, ...row].map((id, i) => (
+              <div class="w-40 shrink-0 sm:w-52" aria-hidden={i >= row.length ? "true" : undefined}>
+                <Clip clip={clip(id)} label />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="capabilities-story" class="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6" aria-labelledby="how-title">
+      <SectionHeading eyebrow={c.capabilities.eyebrow} title={c.capabilities.title} description={c.capabilities.description} id="how-title" />
+      <ol class="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {c.capabilities.steps.map((step) => (
+          <li class="fy-card overflow-hidden">
+            <Clip clip={clip(step.clipId)} class="!rounded-none" />
+            <div class="p-5">
+              <p class="fy-eyebrow text-fy-accent-300">{step.tag}</p>
+              <h3 class="mt-2 font-display text-xl font-bold">{step.title}</h3>
+              <p class="mt-2 text-sm text-fy-muted">{step.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <div class="mt-10"><Button href={resolveHref(c.capabilities.cta.href)} event={c.capabilities.cta.event}>{c.capabilities.cta.label}</Button></div>
+    </section>
+
+    <!-- Community / remix -->
+    <section id="community-showcase" class="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6" aria-labelledby="community-title">
+      <SectionHeading eyebrow={c.community.eyebrow} title={c.community.title} description={c.community.description} id="community-title" />
+      <ul class="mt-12 columns-2 gap-4 md:columns-4">
+        {communityIds.map((id) => {
+          const item = clip(id);
+          return item && (
+            <li class="mb-4 break-inside-avoid">
+              <a href={app.studio(item.prompt)} data-event="Remix Click" class="group block">
+                <Clip clip={item} label />
+                <span class="mt-2 inline-block text-xs text-fy-muted group-hover:text-fy-accent-300">Remix this →</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+      <Button href={resolveHref(c.community.primaryCta.href)} event={c.community.primaryCta.event}>{c.community.primaryCta.label}</Button>
+    </section>
+
+    <!-- Tools -->
+    <section id="tools-bento" class="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6" aria-labelledby="tools-title">
+      <SectionHeading eyebrow={c.tools.eyebrow} title={c.tools.title} description={c.tools.description} id="tools-title" />
+      <div class="mt-12 grid gap-4 lg:grid-cols-3">
+        <div class="fy-card overflow-hidden lg:row-span-2 lg:col-span-2">
+          <Clip clip={clip(home.toolsClipId)} class="!rounded-none" />
+          <div class="p-6">
+            <h3 class="font-display text-2xl font-bold">FAYAA Genjutsu</h3>
+            <p class="mt-2 text-fy-muted">Motion transfer, object swap and restyle in one model. Light for speed, Pro for cinematic detail.</p>
+          </div>
+        </div>
+        {[
+          { t: "Reference lock", b: "Up to four images keep a face, body and outfit steady across every frame." },
+          { t: "Long edits", b: "Go past two minutes. FAYAA splits, renders and stitches the clips into one MP4." },
+          { t: "Built for 9:16", b: "Vertical by default, at up to 1080p, ready for TikTok, Reels and Shorts." },
+          { t: "Pay per video", b: "The exact credit cost shows before you generate. Failed renders are refunded." },
+        ].map((tool) => (
+          <div class="fy-card p-6">
+            <h3 class="font-display text-lg font-bold">{tool.t}</h3>
+            <p class="mt-2 text-sm text-fy-muted">{tool.b}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Templates: one card per SEO landing page -->
+    <section id="workflow-templates" class="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6" aria-labelledby="templates-title">
+      <SectionHeading eyebrow={c.templates.eyebrow} title={c.templates.title} description={c.templates.description} id="templates-title" />
+      <ul class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {LANDING_PAGES.map((page) => (
+          <li class="fy-card overflow-hidden">
+            <a href={`/${page.slug}`} class="group block">
+              <Clip clip={clip(page.heroClipId)} class="!rounded-none" />
+              <div class="p-4">
+                <h3 class="font-semibold group-hover:text-fy-accent-300">{page.nav}</h3>
+                <p class="mt-1 line-clamp-2 text-xs text-fy-muted">{page.h1}</p>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- Festival -->
+    <section id="film-festival" class="relative overflow-hidden py-28" aria-labelledby="festival-title">
+      <div class="absolute inset-0 opacity-60">
+        <Clip clip={clip(c.festival.clipId)} class="!absolute inset-0 !aspect-auto size-full !rounded-none" />
+        <div class="absolute inset-0 bg-fy-ink/60"></div>
+      </div>
+      <div class="relative mx-auto max-w-7xl px-4 sm:px-6">
+        <SectionHeading eyebrow={c.festival.eyebrow} title={c.festival.title} description={c.festival.description} id="festival-title" />
+        <div class="mt-8"><Button href="#community-showcase" variant="ghost" event={c.festival.cta.event}>{c.festival.cta.label}</Button></div>
+      </div>
+    </section>
+
+    <!-- Around the web (owner-managed; hidden when empty) -->
+    {home.web.length > 0 && (
+      <section id="around-the-web" class="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6" aria-labelledby="web-title">
+        <SectionHeading eyebrow={c.aroundTheWeb.eyebrow} title={c.aroundTheWeb.title} description={c.aroundTheWeb.description} id="web-title" />
+        <ul class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {home.web.map((item) => {
+            const yt = getYouTubeId(item.sourceUrl);
+            const poster = item.posterUrl ?? (yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : null);
+            return (
+              <li class="fy-card overflow-hidden">
+                <a href={item.sourceUrl ?? "#"} target="_blank" rel="noopener nofollow ugc" class="group block">
+                  <div class="relative aspect-video bg-fy-surface-2">
+                    {poster && <img src={poster} alt={item.title} loading="lazy" class="absolute inset-0 size-full object-cover" />}
+                  </div>
+                  <div class="p-4">
+                    <p class="fy-eyebrow">{inferPlatform(item)}</p>
+                    <h3 class="mt-1 font-semibold group-hover:text-fy-accent-300">{item.title}</h3>
+                    <p class="mt-1 text-xs text-fy-muted">by {item.creditName}</p>
+                  </div>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+        <p class="mt-6 text-xs text-fy-subtle">{c.aroundTheWeb.disclaimer}</p>
+      </section>
+    )}
+
+    <!-- Final CTA -->
+    <section id="final-cta" class="relative overflow-hidden py-32 text-center" aria-labelledby="final-title">
+      <div class="absolute inset-0 opacity-50">
+        <Clip clip={clip(c.finalCta.clipId)} class="!absolute inset-0 !aspect-auto size-full !rounded-none" />
+        <div class="absolute inset-0" style="background: var(--fy-gradient-veil)"></div>
+      </div>
+      <div class="relative mx-auto max-w-4xl px-4">
+        <h2 id="final-title" class="fy-display text-[clamp(2.5rem,7vw,5.5rem)]">
+          {c.finalCta.title.map((line, i) => <span class:list={["block", i === c.finalCta.title.length - 1 && "fy-text-heat"]}>{line}</span>)}
+        </h2>
+        <p class="mx-auto mt-6 max-w-xl text-lg text-fy-muted">{c.finalCta.subhead}</p>
+        <div class="mt-8 flex flex-wrap justify-center gap-3">
+          <Button href={resolveHref(c.finalCta.primaryCta.href)} size="lg" event={c.finalCta.primaryCta.event}><Variants exp="primary-cta" values={finalCta} /></Button>
+          <Button href={resolveHref(c.finalCta.secondaryCta.href)} size="lg" variant="ghost" event={c.finalCta.secondaryCta.event}>{c.finalCta.secondaryCta.label}</Button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <Faq items={homeFaq} />
+</Base>

@@ -4,6 +4,7 @@ import * as z from "zod";
 import { googleAnalyticsEnvSchema, plausibleEnvSchema } from "./analytics/env";
 import { authEnvSchema } from "./auth/env";
 import { fileUploadEnvSchema } from "./file-upload/env";
+import { marketingClientEnvSchema } from "./marketing/env";
 import { lemonSqueezyEnvSchema } from "./payment/lemonSqueezy/env";
 import { paddleClientEnvSchema, paddleEnvSchema } from "./payment/paddle/env";
 import { polarEnvSchema } from "./payment/polar/env";
@@ -15,7 +16,7 @@ import { videoStudioEnvSchema } from "./video-studio/env";
 // with `import { env } from 'wasp/server'` instead of using `process.env` directly.
 // https://wasp.sh/docs/project/env-vars#custom-env-var-validations
 //
-// Active payment processor is Paddle (`paddleEnvSchema`); inactive payment,
+// Active payment processor is Stripe (see src/payment/paymentProcessor.ts); inactive payment,
 // analytics, and demo schemas are marked `.partial()` so production deployment
 // only requires the active service credentials.
 export const serverEnvValidationSchema = defineEnvValidationSchema(
@@ -37,5 +38,6 @@ export const serverEnvValidationSchema = defineEnvValidationSchema(
 export const clientEnvValidationSchema = defineEnvValidationSchema(
   z.object({
     ...paddleClientEnvSchema.shape,
+    ...marketingClientEnvSchema.shape,
   }),
 );

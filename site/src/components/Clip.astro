@@ -1,0 +1,42 @@
+---
+import type { MediaClip } from "../lib/content";
+
+interface Props {
+  clip: MediaClip | undefined;
+  class?: string;
+  /** Load and play right away (hero). Everything else waits for the viewport. */
+  eager?: boolean;
+  /** Show the tag/title overlay. */
+  label?: boolean;
+}
+const { clip, class: className = "", eager = false, label = false } = Astro.props;
+const aspect = clip?.aspect === "portrait" ? "aspect-[9/16]" : clip?.aspect === "square" ? "aspect-square" : "aspect-video";
+---
+{clip && (
+  <figure class:list={["relative overflow-hidden rounded-fy-lg bg-fy-surface-2", aspect, className]}>
+    {clip.videoUrl ? (
+      <video
+        data-clip
+        data-src={eager ? undefined : clip.videoUrl}
+        src={eager ? clip.videoUrl : undefined}
+        poster={clip.poster || undefined}
+        class="absolute inset-0 size-full object-cover"
+        muted
+        loop
+        playsinline
+        autoplay={eager}
+        preload={eager ? "auto" : "none"}
+        aria-label={clip.title}
+        disablepictureinpicture
+      />
+    ) : clip.poster ? (
+      <img src={clip.poster} alt={clip.title} loading={eager ? "eager" : "lazy"} class="absolute inset-0 size-full object-cover animate-fy-kenburns" />
+    ) : null}
+    {label && (
+      <figcaption class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-10">
+        <span class="fy-eyebrow text-fy-accent-300">{clip.tag}</span>
+        <span class="block text-sm font-medium text-fy-text">{clip.title}</span>
+      </figcaption>
+    )}
+  </figure>
+)}

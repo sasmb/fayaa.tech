@@ -1,0 +1,29 @@
+---
+import Base from "../../layouts/Base.astro";
+import { formatDate, getPosts } from "../../lib/blog";
+import { breadcrumbs } from "../../lib/schema";
+const posts = await getPosts();
+---
+<Base
+  title="Blog: Guides to Making Viral AI Videos"
+  description="Guides, formats and playbooks for making viral short-form video with AI: trends, hooks, product ads and more from the FAYAA team."
+  path="/blog"
+  schema={[breadcrumbs([{ name: "Home", path: "/" }, { name: "Blog", path: "/blog" }])]}
+>
+  <section class="mx-auto max-w-5xl px-4 py-20 sm:px-6">
+    <p class="fy-eyebrow text-fy-accent-300">Blog</p>
+    <h1 class="fy-display mt-4 text-[clamp(2.5rem,6vw,4.5rem)]">Make it <span class="fy-text-heat">go viral.</span></h1>
+    <p class="mt-6 max-w-2xl text-lg text-fy-muted">Playbooks for short-form video made with AI.</p>
+    <ul class="mt-14 grid gap-6 md:grid-cols-2">
+      {posts.map((post) => (
+        <li class="fy-card p-6">
+          <a href={`/blog/${post.id}`} class="group block">
+            <time datetime={post.data.published.toISOString()} class="fy-eyebrow">{formatDate(post.data.published)}</time>
+            <h2 class="mt-3 font-display text-2xl font-bold group-hover:text-fy-accent-300">{post.data.title}</h2>
+            <p class="mt-3 text-fy-muted">{post.data.description}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>
