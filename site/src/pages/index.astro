@@ -3,6 +3,7 @@ import Button from "../components/Button.astro";
 import Clip from "../components/Clip.astro";
 import Faq from "../components/Faq.astro";
 import PromptBar from "../components/PromptBar.astro";
+import SeedanceBand from "../components/SeedanceBand.astro";
 import SectionHeading from "../components/SectionHeading.astro";
 import Variants from "../components/Variants.astro";
 import { BRAND, app, resolveHref } from "../config";
@@ -97,6 +98,9 @@ const description =
         </div>
       </div>
     </section>
+
+    <!-- Seedance Week launch (hides itself after the launch) -->
+    <SeedanceBand clip={clip(c.festival.clipId)} />
 
     <!-- Reels -->
     <section id="reel-marquee" class="overflow-hidden py-20" aria-labelledby="reel-title">

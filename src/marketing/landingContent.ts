@@ -12,6 +12,7 @@
  */
 import { HOMEPAGE_LAYOUT, type HomepageSectionId } from "../landing-page/homepageConfig";
 import { CONTROL, type ExperimentAssignments } from "./experiments";
+import { SEEDANCE_LAUNCH, SEEDANCE_LAUNCH_COPY } from "./seedanceLaunch";
 
 export interface Cta {
   label: string;
@@ -241,6 +242,38 @@ export interface Campaign {
 }
 
 export const CAMPAIGNS: Campaign[] = [
+  // Seedance Week: teaser until launch, then the live deal. Dates and copy live in seedanceLaunch.ts.
+  ...(SEEDANCE_LAUNCH.enabled
+    ? [
+        {
+          id: "seedance-teaser",
+          startsAt: "2026-11-28T00:00:00Z",
+          endsAt: SEEDANCE_LAUNCH.startsAt,
+          patch: {
+            announcement: {
+              enabled: true,
+              badge: "Coming Dec 1",
+              message: SEEDANCE_LAUNCH_COPY.announcement.upcoming,
+              cta: { label: "Get ready", href: SEEDANCE_LAUNCH.path, event: "Announcement Click" },
+            },
+          },
+        },
+        {
+          id: "seedance-week",
+          startsAt: SEEDANCE_LAUNCH.startsAt,
+          endsAt: SEEDANCE_LAUNCH.endsAt,
+          patch: {
+            announcement: {
+              enabled: true,
+              badge: "Seedance 2.5",
+              message: SEEDANCE_LAUNCH_COPY.announcement.live,
+              cta: { label: "Try it now", href: SEEDANCE_LAUNCH.path, event: "Announcement Click" },
+            },
+            hero: { eyebrow: "New · Seedance 2.5 text to video" },
+          },
+        },
+      ]
+    : []),
   // Example: uncomment and adjust for the next sale.
   // {
   //   id: "black-friday-2026",

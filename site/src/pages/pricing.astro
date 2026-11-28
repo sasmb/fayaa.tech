@@ -5,6 +5,9 @@ import { app } from "../config";
 import Base from "../layouts/Base.astro";
 import { CREDIT_PACKS, LIGHT_720_5S, PLANS, PRICING_FAQ, videosFor } from "../lib/pricing";
 import { breadcrumbs, faqPage, softwareApplication } from "../lib/schema";
+import { SEEDANCE_LAUNCH, SEEDANCE_LAUNCH_DATES, seedanceLaunchPhase } from "../../../src/marketing/seedanceLaunch";
+
+const launchPhase = seedanceLaunchPhase();
 
 const offers = [
   ...PLANS.map((p) => ({ name: `FAYAA ${p.name} (monthly)`, price: p.monthly })),
@@ -25,6 +28,12 @@ const fmt = (n: number) => n.toLocaleString("en-US");
       <p class="fy-eyebrow text-fy-accent-300">Pricing</p>
       <h1 class="fy-display mx-auto mt-4 max-w-4xl text-[clamp(2.5rem,7vw,5rem)]">Viral videos, <span class="fy-text-heat">priced per post.</span></h1>
       <p class="mx-auto mt-6 max-w-2xl text-lg text-fy-muted">Start free. Upgrade when you are posting every week. Every video shows its exact credit cost before you generate.</p>
+      {(launchPhase === "upcoming" || launchPhase === "live") && (
+        <a href={SEEDANCE_LAUNCH.path} data-event="Seedance Banner Click" class="mx-auto mt-8 flex max-w-2xl flex-col items-center justify-center gap-1 rounded-2xl border border-fy-accent/30 bg-fy-accent/10 px-5 py-4 text-sm sm:flex-row sm:gap-3">
+          <span class="font-semibold text-fy-text">{SEEDANCE_LAUNCH.name}, {SEEDANCE_LAUNCH_DATES}</span>
+          <span class="text-fy-muted">+{SEEDANCE_LAUNCH.bonusPercent}% bonus credits on every pack and new plan →</span>
+        </a>
+      )}
     </div>
   </section>
 

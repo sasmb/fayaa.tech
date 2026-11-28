@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ComponentProps } from "react"
+import { useSearchParams } from "react-router"
 import { login, useAuth } from "wasp/client/auth"
 
 import {
@@ -17,6 +18,7 @@ import {
 } from "../../seedancePlanning"
 import { creditCostForResolution } from "../../taskSync"
 import { GenjutsuWorkbench } from "../components/studio/genjutsu-workbench"
+import { SeedanceStudioStrip } from "../components/studio/seedance-studio-strip"
 import {
   GuestJourneyExpiredDialog,
   GuestSignupGateDialog,
@@ -202,6 +204,25 @@ export function StudioTemplate({
     setMedia([])
     setPrompt("")
   }, [currentUserId, projectsStore.setActiveUserId, setUploadsUserId])
+
+  // /studio?model=seedance[&prompt=...] (Seedance launch links) opens the
+  // Seedance prompt dock with the prompt filled in. Declared after the reset
+  // above so the prompt survives the user loading in.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [seedancePrompt, setSeedancePrompt] = useState<string | null>(null)
+  useEffect(() => {
+    if (searchParams.get("model") !== SEEDANCE_MODEL_ID) return
+    setActiveModel(SEEDANCE_MODEL_ID)
+    setView({ kind: "all" })
+    setSeedancePrompt((searchParams.get("prompt") ?? "").slice(0, 2000))
+    const next = new URLSearchParams(searchParams)
+    next.delete("model")
+    next.delete("prompt")
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams, setActiveModel])
+  useEffect(() => {
+    if (seedancePrompt) setPrompt(seedancePrompt)
+  }, [seedancePrompt, currentUserId])
 
   const uploads = useMemo(
     () =>
@@ -559,6 +580,14 @@ export function StudioTemplate({
               onBackToStudio={() => setView({ kind: "home" })}
             />
           ) : view.kind === "home" ? (
+            <>
+            <SeedanceStudioStrip
+              onOpen={() => {
+                setLocalError(null)
+                setActiveModel(SEEDANCE_MODEL_ID)
+                setView({ kind: "all" })
+              }}
+            />
             <GenjutsuWorkbench
               libraryItems={libraryItems}
               runs={runs.records}
@@ -578,6 +607,7 @@ export function StudioTemplate({
               onOpenSubscriptions={() => setView({ kind: "subscription" })}
               onOpenAllGenerations={() => setView({ kind: "all" })}
             />
+            </>
           ) : (
             <FeedState
               items={visibleItems}

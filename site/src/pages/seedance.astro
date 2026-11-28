@@ -1,0 +1,111 @@
+---
+import Button from "../components/Button.astro";
+import Faq from "../components/Faq.astro";
+import SeedanceBand from "../components/SeedanceBand.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+import { APP_URL, app } from "../config";
+import Base from "../layouts/Base.astro";
+import { getClip, loadHomepage } from "../lib/content";
+import { breadcrumbs, faqPage } from "../lib/schema";
+import { estimateSeedancePlan } from "../../../src/video-studio/seedancePlanning";
+import {
+  SEEDANCE_LAUNCH,
+  SEEDANCE_LAUNCH_COPY,
+  SEEDANCE_LAUNCH_DATES,
+  seedanceLaunchPhase,
+} from "../../../src/marketing/seedanceLaunch";
+
+const home = await loadHomepage();
+const clip = getClip(home.clips, home.content.festival.clipId);
+const phase = seedanceLaunchPhase();
+const bonus = SEEDANCE_LAUNCH.bonusPercent;
+const fmt = (n: number) => n.toLocaleString("en-US");
+const studio = (prompt?: string) =>
+  `${APP_URL}/studio?${new URLSearchParams({ model: "seedance", ...(prompt ? { prompt } : {}) }).toString()}`;
+
+const bonusRows = [
+  { name: "Starter Pack", credits: 360 },
+  { name: "Creator Pack", credits: 1170 },
+  { name: "Studio Pack", credits: 2670 },
+  { name: "Ultra, first month", credits: 3900 },
+].map((r) => ({ ...r, extra: Math.floor((r.credits * bonus) / 100) }));
+
+const priceRows = [
+  { label: "10s at 480p", plan: estimateSeedancePlan({ totalDurationSec: 10, resolution: "480p" }) },
+  { label: "10s at 720p", plan: estimateSeedancePlan({ totalDurationSec: 10, resolution: "720p" }) },
+  { label: "30s at 720p", plan: estimateSeedancePlan({ totalDurationSec: 30, resolution: "720p" }) },
+];
+
+const faq = [
+  { q: "What is Seedance 2.5?", a: "Seedance 2.5 is a text-to-video model. You describe a scene and it generates the video from scratch, so you don't need a source clip or a photo. It sits next to Genjutsu in the FAYAA studio." },
+  { q: "How does the launch bonus work?", a: `Buy any credit pack, or start a new Plus or Ultra plan, between ${SEEDANCE_LAUNCH_DATES} and you get ${bonus}% extra credits on top, added automatically. No code needed.` },
+  { q: "Can I use the bonus credits on Genjutsu too?", a: "Yes. Credits work across every model in the studio, and they never expire while your account is active." },
+  { q: "How long can a Seedance video be?", a: "From 4 seconds up to 2 minutes. Anything over 30 seconds is made in pieces that continue from each other and are joined into one video." },
+  { q: "What does a video cost?", a: "The exact credit cost shows before you generate, based on length and resolution. If a render fails, the credits come back automatically." },
+];
+
+const title = phase === "live"
+  ? `Seedance 2.5 is live: AI text to video, +${bonus}% launch bonus`
+  : "Seedance 2.5 on FAYAA: AI text to video";
+const description = `Seedance 2.5 turns a prompt into a cinematic video up to 2 minutes long, at up to 1080p. ${SEEDANCE_LAUNCH.name}, ${SEEDANCE_LAUNCH_DATES}: +${bonus}% bonus credits.`;
+---
+
+<Base title={title} description={description} path="/seedance" schema={[faqPage(faq), breadcrumbs([{ name: "Home", path: "/" }, { name: "Seedance 2.5", path: "/seedance" }])]}>
+  {phase === "upcoming" || phase === "live" ? (
+    <SeedanceBand clip={clip} heading="h1" showPageLink={false} />
+  ) : (
+    <section class="mx-auto max-w-7xl px-4 py-20 sm:px-6">
+      <p class="fy-eyebrow text-fy-accent-300">Now in the studio</p>
+      <h1 class="fy-display mt-4 text-[clamp(2.75rem,7vw,5.5rem)]">Seedance 2.5 <span class="fy-text-heat">text to video.</span></h1>
+      <p class="mt-4 max-w-xl text-lg text-fy-muted">{SEEDANCE_LAUNCH_COPY.tagline}</p>
+      <div class="mt-8"><Button href={studio()} size="lg" event="Seedance Try Click">Open Seedance →</Button></div>
+    </section>
+  )}
+
+  <section class="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6" aria-labelledby="sd-what">
+    <SectionHeading eyebrow="What it does" title="One prompt. A whole scene." description={SEEDANCE_LAUNCH_COPY.description} id="sd-what" />
+    <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {SEEDANCE_LAUNCH_COPY.features.map((f) => (
+        <li class="fy-card p-6">
+          <h3 class="font-display text-lg font-bold">{f.title}</h3>
+          <p class="mt-2 text-sm text-fy-muted">{f.body}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="mx-auto grid w-full max-w-7xl gap-6 px-4 py-16 sm:px-6 lg:grid-cols-2">
+    <div class="fy-card p-8">
+      <p class="fy-eyebrow text-fy-accent-300">{SEEDANCE_LAUNCH.name} deal</p>
+      <h2 class="fy-display mt-4 text-4xl">+{bonus}% <span class="fy-text-heat">bonus credits</span></h2>
+      <p class="mt-3 text-sm text-fy-muted">On every credit pack and the first payment of any new plan, {SEEDANCE_LAUNCH_DATES}. Added automatically, no code needed.</p>
+      <table class="mt-6 w-full text-sm">
+        <thead><tr class="text-left text-fy-subtle"><th class="pb-2 font-medium">You buy</th><th class="pb-2 font-medium">Credits</th><th class="pb-2 text-right font-medium">Launch bonus</th></tr></thead>
+        <tbody>
+          {bonusRows.map((r) => (
+            <tr class="border-t border-fy-line"><td class="py-2.5">{r.name}</td><td class="py-2.5 tabular-nums text-fy-muted">{fmt(r.credits)}</td><td class="py-2.5 text-right font-semibold tabular-nums text-fy-accent-300">+{fmt(r.extra)}</td></tr>
+          ))}
+        </tbody>
+      </table>
+      <div class="mt-8"><Button href={app.pricing} size="lg" event="Seedance Deal Click">See plans →</Button></div>
+    </div>
+    <div class="fy-card p-8">
+      <p class="fy-eyebrow text-fy-subtle">What a video costs</p>
+      <h2 class="fy-display mt-4 text-4xl">Pay per second.</h2>
+      <p class="mt-3 text-sm text-fy-muted">The exact price shows before you generate. Failed renders are refunded automatically.</p>
+      <ul class="mt-6 flex flex-col gap-2 text-sm">
+        {priceRows.map(({ label, plan }) => (
+          <li class="flex justify-between border-t border-fy-line pt-2.5"><span>{label}</span><span class="font-semibold tabular-nums">{fmt(plan.credits)} credits</span></li>
+        ))}
+      </ul>
+      <p class="fy-eyebrow mt-8 text-fy-subtle">Prompts to start with</p>
+      <div class="mt-3 flex flex-col gap-2">
+        {SEEDANCE_LAUNCH_COPY.prompts.map((p) => (
+          <a href={studio(p)} data-event="Seedance Prompt Click" class="flex items-center justify-between gap-3 rounded-xl border border-fy-line px-4 py-3 text-sm text-fy-muted hover:border-fy-accent/40 hover:text-fy-text"><span>{p}</span><span aria-hidden="true">→</span></a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <Faq items={faq} />
+</Base>
