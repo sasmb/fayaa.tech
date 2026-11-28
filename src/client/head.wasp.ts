@@ -5,7 +5,7 @@ export const head: App["head"] = [
   "<link rel='icon' href='/favicon.svg' type='image/svg+xml' />",
   "<link rel='apple-touch-icon' href='/app-icon.png' />",
   "<link rel='preconnect' href='https://fonts.googleapis.com' />",
-  "<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin />",
+  "<link rel='preconnect' href='https://fonts.gstatic.com' />",
   "<link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap' />",
 
   "<meta name='description' content='FAYAA — The All-in-One Content Creation Studio. Pick trending templates, copy TikTok dances, build consistent virtual creators, and generate viral videos at 10x speed.' />",
