@@ -41,7 +41,7 @@ export function GuestJourneyInviteDialog({
     >
       <DialogContent
         size="sm"
-        className="w-full max-w-[440px] overflow-hidden rounded-[28px] border border-[#C8FF00]/30 bg-[#111114] p-0 text-white shadow-[0_32px_100px_rgba(0,0,0,0.92)]"
+        className="w-full max-w-[440px] overflow-hidden rounded-[28px] border border-fy-accent/30 bg-fy-surface-1 p-0 text-white shadow-[0_32px_100px_rgba(0,0,0,0.92)]"
       >
         <DialogTitle className="sr-only">
           Come on a journey to when you are logged in
@@ -71,13 +71,13 @@ export function GuestJourneyInviteDialog({
 
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-[45%] w-1 -skew-x-12 bg-[#C8FF00] shadow-[0_0_20px_rgba(200,255,0,0.95)]"
+            className="pointer-events-none absolute inset-y-0 left-[45%] w-1 -skew-x-12 bg-fy-accent shadow-[0_0_20px_rgba(255,91,31,0.95)]"
           />
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#111114] via-[#111114]/70 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-fy-surface-1 via-fy-surface-1/70 to-transparent" />
 
           {/* Floating 8-Hour Pass Badge */}
-          <div className="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 rounded-full border border-[#C8FF00]/40 bg-black/75 px-3 py-1 text-[11px] font-extrabold tracking-wider text-[#C8FF00] uppercase backdrop-blur-md">
+          <div className="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 rounded-full border border-fy-accent/40 bg-black/75 px-3 py-1 text-[11px] font-extrabold tracking-wider text-fy-accent uppercase backdrop-blur-md">
             <Sparkles className="size-3.5" />
             <span>8-Hour All-Access Pass</span>
           </div>
@@ -93,7 +93,7 @@ export function GuestJourneyInviteDialog({
 
         {/* Body Copy & Actions */}
         <div className="flex flex-col items-center px-6 pt-2 pb-6 text-center">
-          <span className="text-[11px] font-extrabold tracking-[0.16em] text-[#C8FF00] uppercase">
+          <span className="text-[11px] font-extrabold tracking-[0.16em] text-fy-accent uppercase">
             UNLOCKED FOR NEXT 8 HOURS
           </span>
 
@@ -105,13 +105,13 @@ export function GuestJourneyInviteDialog({
             Step straight inside the full{" "}
             <span className="font-semibold text-white">FAYAA Studio</span>{" "}
             experience. Load motion videos, wire up{" "}
-            <code className="text-[#C8FF00]">@Image1</code> references, and
+            <code className="text-fy-accent">@Image1</code> references, and
             explore every tool—no account needed until you hit{" "}
             <span className="font-semibold text-white">Generate</span>.
           </p>
 
           <div className="mt-3.5 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-[11px] text-zinc-300">
-            <Clock className="size-3.5 shrink-0 text-[#C8FF00]" />
+            <Clock className="size-3.5 shrink-0 text-fy-accent" />
             <span>
               Available for <strong className="text-white">8 hours</strong>{" "}
               before this sneak peek disappears.
@@ -121,7 +121,7 @@ export function GuestJourneyInviteDialog({
           <Button
             size="lg"
             onClick={onAccept}
-            className="mt-5 h-11 w-full cursor-pointer rounded-xl bg-[#C8FF00] px-6 text-sm font-extrabold text-black shadow-[0_10px_30px_rgba(200,255,0,0.28)] transition-transform hover:scale-[1.01] hover:bg-[#d4ff33]"
+            className="mt-5 h-11 w-full cursor-pointer rounded-xl bg-fy-accent px-6 text-sm font-extrabold text-black shadow-[0_10px_30px_rgba(255,91,31,0.28)] transition-transform hover:scale-[1.01] hover:bg-fy-accent-hover"
           >
             <span>Start my journey</span>
             <ArrowRight className="ml-1.5 size-4" />
@@ -151,10 +151,10 @@ export function GuestJourneyCountdownPill({
   compact?: boolean
 }) {
   return (
-    <div className="inline-flex items-center gap-1.5 rounded-xl border border-[#C8FF00]/35 bg-[#C8FF00]/10 px-2.5 py-1 text-[11px] font-semibold text-[#C8FF00]">
+    <div className="inline-flex items-center gap-1.5 rounded-xl border border-fy-accent/35 bg-fy-accent/10 px-2.5 py-1 text-[11px] font-semibold text-fy-accent">
       <span className="relative flex size-2">
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#C8FF00] opacity-75" />
-        <span className="relative inline-flex size-2 rounded-full bg-[#C8FF00]" />
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-fy-accent opacity-75" />
+        <span className="relative inline-flex size-2 rounded-full bg-fy-accent" />
       </span>
 
       <Clock className="size-3 shrink-0" />
@@ -168,7 +168,7 @@ export function GuestJourneyCountdownPill({
 
       <Link
         to="/signup"
-        className="ml-0.5 rounded-md bg-[#C8FF00] px-2 py-0.5 text-[10px] font-extrabold text-black transition-colors hover:bg-[#d8ff3e]"
+        className="ml-0.5 rounded-md bg-fy-accent px-2 py-0.5 text-[10px] font-extrabold text-black transition-colors hover:bg-fy-accent-hover"
       >
         Sign up
       </Link>
@@ -194,14 +194,14 @@ export function GuestSignupGateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         size="sm"
-        className="w-full max-w-[420px] overflow-hidden rounded-[26px] border border-[#D9FF00]/35 bg-[#121215] p-6 text-white shadow-[0_28px_90px_rgba(0,0,0,0.9)]"
+        className="w-full max-w-[420px] overflow-hidden rounded-[26px] border border-fy-accent/35 bg-fy-surface-1 p-6 text-white shadow-[0_28px_90px_rgba(0,0,0,0.9)]"
       >
         <div className="flex flex-col items-center text-center">
-          <div className="flex size-12 items-center justify-center rounded-2xl border border-[#D9FF00]/35 bg-[#D9FF00]/15 text-[#D9FF00]">
+          <div className="flex size-12 items-center justify-center rounded-2xl border border-fy-accent/35 bg-fy-accent/15 text-fy-accent">
             <WandSparkles className="size-6" />
           </div>
 
-          <span className="mt-3 rounded-full border border-[#D9FF00]/30 bg-[#D9FF00]/10 px-3 py-0.5 text-[10px] font-bold tracking-wider text-[#D9FF00] uppercase">
+          <span className="mt-3 rounded-full border border-fy-accent/30 bg-fy-accent/10 px-3 py-0.5 text-[10px] font-bold tracking-wider text-fy-accent uppercase">
             {formattedRemaining} left in preview
           </span>
 
@@ -218,7 +218,7 @@ export function GuestSignupGateDialog({
             <Button
               size="lg"
               onClick={() => void navigate("/signup")}
-              className="h-11 w-full cursor-pointer rounded-xl bg-[#D9FF00] text-sm font-extrabold text-black shadow-[0_8px_24px_rgba(217,255,0,0.28)] hover:bg-[#e3ff38]"
+              className="h-11 w-full cursor-pointer rounded-xl bg-fy-accent text-sm font-extrabold text-black shadow-[0_8px_24px_rgba(255,91,31,0.28)] hover:bg-fy-accent-hover"
             >
               Sign up free &amp; start generating
             </Button>
@@ -273,9 +273,9 @@ export function GuestJourneyExpiredDialog({
     >
       <DialogContent
         size="sm"
-        className="w-full max-w-[430px] overflow-hidden rounded-[28px] border border-amber-400/35 bg-[#121110] p-0 text-white shadow-[0_32px_100px_rgba(0,0,0,0.95)]"
+        className="w-full max-w-[430px] overflow-hidden rounded-[28px] border border-amber-400/35 bg-fy-surface-1 p-0 text-white shadow-[0_32px_100px_rgba(0,0,0,0.95)]"
       >
-        <div className="relative flex flex-col items-center overflow-hidden bg-gradient-to-b from-amber-500/20 via-[#181510] to-[#121110] px-6 pt-7 pb-6 text-center">
+        <div className="relative flex flex-col items-center overflow-hidden bg-gradient-to-b from-amber-500/20 via-[#181510] to-fy-surface-1 px-6 pt-7 pb-6 text-center">
           {!lockStudio && onDismissOnLanding ? (
             <DialogClose
               onClick={onDismissOnLanding}
@@ -309,7 +309,7 @@ export function GuestJourneyExpiredDialog({
             <Button
               size="lg"
               onClick={() => void navigate("/signup")}
-              className="h-11 w-full cursor-pointer rounded-xl bg-[#C8FF00] text-sm font-extrabold text-black shadow-[0_10px_28px_rgba(200,255,0,0.25)] hover:bg-[#d8ff3e]"
+              className="h-11 w-full cursor-pointer rounded-xl bg-fy-accent text-sm font-extrabold text-black shadow-[0_10px_28px_rgba(255,91,31,0.25)] hover:bg-fy-accent-hover"
             >
               Sign up to unlock Studio now
             </Button>

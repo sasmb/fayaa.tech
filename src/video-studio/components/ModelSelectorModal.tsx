@@ -49,7 +49,7 @@ export function ModelSelectorModal({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search..."
-                  className="w-full bg-[#1F2025] border border-white/10 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#D9FF00]"
+                  className="w-full bg-[#1F2025] border border-white/10 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-fy-accent"
                 />
                 {search && (
                   <button
@@ -82,7 +82,7 @@ export function ModelSelectorModal({
                     }}
                     className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-white/[0.08] border-[#D9FF00]/40 text-white"
+                        ? "bg-white/[0.08] border-fy-accent/40 text-white"
                         : "border-transparent hover:bg-white/[0.04] text-zinc-300"
                     }`}
                   >
@@ -90,7 +90,7 @@ export function ModelSelectorModal({
                       {/* Provider Icon Square */}
                       <div className="w-9 h-9 rounded-xl bg-[#23242A] border border-white/10 flex items-center justify-center shrink-0">
                         {model.id.includes("genjutsu-light") ? (
-                          <span className="text-xs font-black text-[#D9FF00]">⚡</span>
+                          <span className="text-xs font-black text-fy-accent">⚡</span>
                         ) : (
                           <span className="text-xs font-black text-amber-400">👑</span>
                         )}
@@ -104,7 +104,7 @@ export function ModelSelectorModal({
                           {model.badge && (
                             <span
                               className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase ${
-                                model.badgeColor || "bg-[#D9FF00] text-black"
+                                model.badgeColor || "bg-fy-accent text-black"
                               }`}
                             >
                               {model.badge}
@@ -115,7 +115,7 @@ export function ModelSelectorModal({
                           <span>💎 {model.resolution}</span>
                           <span>• ⏱ {model.durationRange}</span>
                           {model.usdPerSecByRes && (
-                            <span className="text-[#D9FF00]">
+                            <span className="text-fy-accent">
                               • from ${model.usdPerSecByRes["480p"].toFixed(3).replace(/0+$/, "").replace(/\.$/, "")}/s ({model.creditsPer5s} cr / 5s)
                             </span>
                           )}
@@ -124,7 +124,7 @@ export function ModelSelectorModal({
                     </div>
 
                     {isSelected && (
-                      <Check className="w-4 h-4 text-[#D9FF00] shrink-0 ml-2" />
+                      <Check className="w-4 h-4 text-fy-accent shrink-0 ml-2" />
                     )}
                   </button>
                 );

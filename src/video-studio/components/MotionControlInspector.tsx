@@ -117,12 +117,12 @@ export function MotionControlInspector({
             onClick={() => onSubTabChange("motion")}
             className={`transition-colors pb-1 relative ${
               activeSubTab === "motion"
-                ? "text-white border-b-2 border-lime-400 font-bold"
+                ? "text-white border-b-2 border-fy-accent-400 font-bold"
                 : "text-neutral-400 hover:text-white"
             }`}
           >
             Motion Control
-            <span className="w-1.5 h-1.5 rounded-full bg-lime-400 inline-block ml-1"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-fy-accent-400 inline-block ml-1"></span>
           </button>
         </div>
 
@@ -165,7 +165,7 @@ export function MotionControlInspector({
           </label>
 
           {characterImageUrl ? (
-            <div className="relative group rounded-xl overflow-hidden border border-lime-500/40 bg-black/95 aspect-[4/3] flex items-center justify-center">
+            <div className="relative group rounded-xl overflow-hidden border border-fy-accent-500/40 bg-black/95 aspect-[4/3] flex items-center justify-center">
               <img
                 src={characterImageUrl}
                 alt="Target Character"
@@ -188,9 +188,9 @@ export function MotionControlInspector({
               </div>
             </div>
           ) : (
-            <label className="border-2 border-dashed border-white/15 hover:border-lime-400/50 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-white/[0.02] hover:bg-white/[0.04] group">
+            <label className="border-2 border-dashed border-white/15 hover:border-fy-accent-400/50 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-white/[0.02] hover:bg-white/[0.04] group">
               <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
-                <ImageIcon className="w-6 h-6 text-neutral-400 group-hover:text-lime-400 transition-colors" />
+                <ImageIcon className="w-6 h-6 text-neutral-400 group-hover:text-fy-accent-400 transition-colors" />
               </div>
               <span className="text-xs font-semibold text-neutral-200">
                 {isUploadingImage ? "Uploading to Cloud..." : "Add your character or photo"}
@@ -224,16 +224,16 @@ export function MotionControlInspector({
           </label>
 
           {referenceVideoUrl ? (
-            <div className="relative group rounded-xl overflow-hidden border border-lime-500/40 bg-black/60 p-3 flex items-center justify-between">
+            <div className="relative group rounded-xl overflow-hidden border border-fy-accent-500/40 bg-black/60 p-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-lime-400/20 text-lime-400 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-lg bg-fy-accent-400/20 text-fy-accent-400 flex items-center justify-center font-bold">
                   <Film className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="text-xs font-semibold text-white truncate max-w-[180px]">
                     {referenceVideoTitle || "Selected Motion Video"}
                   </div>
-                  <div className="text-[11px] text-lime-400 font-mono">
+                  <div className="text-[11px] text-fy-accent-400 font-mono">
                     Ready to extract motion
                   </div>
                 </div>
@@ -247,9 +247,9 @@ export function MotionControlInspector({
             </div>
           ) : (
             <div className="space-y-2">
-              <label className="border-2 border-dashed border-white/15 hover:border-lime-400/50 rounded-xl p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-white/[0.02] hover:bg-white/[0.04] group">
+              <label className="border-2 border-dashed border-white/15 hover:border-fy-accent-400/50 rounded-xl p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-white/[0.02] hover:bg-white/[0.04] group">
                 <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform">
-                  <Video className="w-5 h-5 text-neutral-400 group-hover:text-lime-400 transition-colors" />
+                  <Video className="w-5 h-5 text-neutral-400 group-hover:text-fy-accent-400 transition-colors" />
                 </div>
                 <span className="text-xs font-semibold text-neutral-200">
                   {isUploadingVideo ? "Uploading Video..." : "Upload reference motion video"}
@@ -266,7 +266,7 @@ export function MotionControlInspector({
 
               <button
                 onClick={onOpenLibrary}
-                className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium text-lime-400 flex items-center justify-center gap-1.5 transition-colors"
+                className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium text-fy-accent-400 flex items-center justify-center gap-1.5 transition-colors"
               >
                 <span>⚡ Pick from Motion Library (Templates)</span>
               </button>
@@ -341,7 +341,7 @@ export function MotionControlInspector({
               type="button"
               onClick={onToggleSceneControl}
               className={`w-9 h-5 rounded-full transition-colors relative flex items-center p-0.5 ${
-                sceneControlEnabled ? "bg-lime-400" : "bg-neutral-700"
+                sceneControlEnabled ? "bg-fy-accent-400" : "bg-neutral-700"
               }`}
             >
               <div
@@ -360,7 +360,7 @@ export function MotionControlInspector({
                   onClick={() => onSceneControlModeChange("video")}
                   className={`py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 border transition-all ${
                     sceneControlMode === "video"
-                      ? "bg-lime-400/20 border-lime-400 text-lime-300 font-bold"
+                      ? "bg-fy-accent-400/20 border-fy-accent-400 text-fy-accent-300 font-bold"
                       : "border-white/10 text-neutral-400 hover:text-white"
                   }`}
                 >
@@ -372,7 +372,7 @@ export function MotionControlInspector({
                   onClick={() => onSceneControlModeChange("image")}
                   className={`py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 border transition-all ${
                     sceneControlMode === "image"
-                      ? "bg-lime-400/20 border-lime-400 text-lime-300 font-bold"
+                      ? "bg-fy-accent-400/20 border-fy-accent-400 text-fy-accent-300 font-bold"
                       : "border-white/10 text-neutral-400 hover:text-white"
                   }`}
                 >
@@ -408,7 +408,7 @@ export function MotionControlInspector({
                 value={prompt}
                 onChange={(e) => onPromptChange(e.target.value)}
                 placeholder="Optional: adjust outfit, lighting, or motion realism..."
-                className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-lime-400"
+                className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-fy-accent-400"
               />
             </div>
           )}
@@ -423,7 +423,7 @@ export function MotionControlInspector({
           className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg ${
             submitting || isRendering
               ? "bg-neutral-800 text-neutral-500 cursor-not-allowed"
-              : "bg-lime-400 hover:bg-lime-300 text-black shadow-lime-500/20 hover:scale-[1.01]"
+              : "bg-fy-accent-400 hover:bg-fy-accent-300 text-black shadow-fy-accent-500/20 hover:scale-[1.01]"
           }`}
         >
           {submitting || isRendering ? (

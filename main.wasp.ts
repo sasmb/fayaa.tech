@@ -23,6 +23,7 @@ import { emailSender } from "./src/server/emailSender.wasp";
 import { userSpec } from "./src/user/user.wasp";
 import { videoStudioSpec } from "./src/video-studio/video-studio.wasp";
 import { legalSpec } from "./src/legal/legal.wasp";
+import { marketingSpec } from "./src/marketing/marketing.wasp";
 
 export default app({
   name: "FayaaAI",
@@ -58,5 +59,6 @@ export default app({
     adminSpec,
     videoStudioSpec,
     legalSpec,
+    marketingSpec,
   ],
 });

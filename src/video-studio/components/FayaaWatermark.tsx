@@ -41,14 +41,14 @@ export function FayaaWatermark({
       <div
         className={`flex items-center rounded-xl bg-black/85 backdrop-blur-md border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.85)] ${sizeClasses}`}
       >
-        <span className="flex size-2 sm:size-2.5 rounded-full bg-[#D9FF00] shadow-[0_0_10px_#D9FF00] animate-pulse shrink-0" />
+        <span className="flex size-2 sm:size-2.5 rounded-full bg-fy-accent shadow-[0_0_10px_#ff5b1f] animate-pulse shrink-0" />
         <div className="flex items-center gap-1.5 font-mono leading-none">
           <span className="text-[11px] sm:text-xs text-zinc-300 font-medium">Created with</span>
           <span className="text-xs sm:text-sm font-black tracking-wider text-white">
-            FAYAA<span className="text-[#D9FF00]">.AI</span>
+            FAYAA<span className="text-fy-accent">.AI</span>
           </span>
           <span className="hidden sm:inline text-zinc-500">•</span>
-          <span className="hidden sm:inline text-[11px] font-semibold text-[#D9FF00]/90">
+          <span className="hidden sm:inline text-[11px] font-semibold text-fy-accent/90">
             fayaa.tech
           </span>
         </div>

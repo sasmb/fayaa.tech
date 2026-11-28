@@ -14,7 +14,7 @@ export function TermsPage() {
       activePath="/terms"
     >
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           1. Agreement to Terms
         </h2>
         <p>
@@ -26,7 +26,7 @@ export function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           2. Merchant of Record & Payment Reseller
         </h2>
         <p>
@@ -38,7 +38,7 @@ export function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           3. Description of Service
         </h2>
         <p>
@@ -47,7 +47,7 @@ export function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           4. Eligibility & User Accounts
         </h2>
         <p>
@@ -56,10 +56,10 @@ export function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           5. Subscriptions, Credits, and Billing
         </h2>
-        <ul className="list-disc pl-5 space-y-2 text-[#a1a1aa]">
+        <ul className="list-disc pl-5 space-y-2 text-fy-muted">
           <li>
             <strong>Credit Economics:</strong> FAYAA charges video generation in credits. Each render deducts credits based on the model (such as Genjutsu Light, Genjutsu Pro or Seedance), output resolution (480p, 720p, 1080p) and duration in billable seconds. The cost is shown before you generate, and failed renders are refunded.
           </li>
@@ -76,13 +76,13 @@ export function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           6. Acceptable Use & Prohibited Content
         </h2>
         <p>
           You agree not to use FAYAA to generate, upload, distribute, or facilitate any of the following:
         </p>
-        <ul className="list-disc pl-5 space-y-2 text-[#a1a1aa]">
+        <ul className="list-disc pl-5 space-y-2 text-fy-muted">
           <li>Non-consensual sexual, intimate, or defamatory deepfakes of real individuals.</li>
           <li>Content that depicts child sexual exploitation or abuse.</li>
           <li>Hate speech, harassment, incitement of violence, or terrorism.</li>
@@ -95,7 +95,7 @@ export function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           7. Intellectual Property & Output Ownership
         </h2>
         <p>
@@ -107,7 +107,7 @@ export function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           8. Disclaimer of Warranties & Limitation of Liability
         </h2>
         <p>
@@ -116,16 +116,16 @@ export function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white tracking-tight border-b border-[#1f1f28] pb-2">
+        <h2 className="text-lg font-bold text-white tracking-tight border-b border-fy-surface-3 pb-2">
           9. Contact Us
         </h2>
         <p>
           If you have questions regarding these Terms, please contact:
         </p>
-        <div className="p-4 rounded-xl bg-[#131317] border border-[#22222b] space-y-1 text-xs">
+        <div className="p-4 rounded-xl bg-fy-surface-1 border border-fy-surface-3 space-y-1 text-xs">
           <p className="font-semibold text-white">nexusbizz (FAYAA)</p>
-          <p>Email: <a href="mailto:sam@nepocommerce.com" className="text-[#c8ff00] hover:underline">sam@nepocommerce.com</a></p>
-          <p>Website: <a href="https://fayaa-studio-client.fly.dev" className="text-[#c8ff00] hover:underline">https://fayaa-studio-client.fly.dev</a></p>
+          <p>Email: <a href="mailto:sam@nepocommerce.com" className="text-fy-accent hover:underline">sam@nepocommerce.com</a></p>
+          <p>Website: <a href="https://fayaa-studio-client.fly.dev" className="text-fy-accent hover:underline">https://fayaa-studio-client.fly.dev</a></p>
         </div>
       </section>
     </LegalLayout>

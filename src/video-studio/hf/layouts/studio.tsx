@@ -518,7 +518,7 @@ export function StudioTemplate({
   const isStudioLockedForExpiredGuest = false
 
   return (
-    <div className="relative flex h-dvh overflow-hidden bg-[#09090A]">
+    <div className="relative flex h-dvh overflow-hidden bg-fy-ink">
       {/* 8h sneak peek modals stopped */}
 
       <div

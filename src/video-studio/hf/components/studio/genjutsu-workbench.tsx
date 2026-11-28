@@ -1,5 +1,6 @@
 "use client"
 
+import { FayaaMark } from "../../../../client/design/FayaaLogo"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { DragEvent } from "react"
 import { Link } from "react-router"
@@ -1000,21 +1001,19 @@ export function GenjutsuWorkbench({
   const activeError = localError ?? studioError ?? null
 
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden bg-[#09090A] text-white select-none">
+    <div className="relative flex h-full w-full flex-col overflow-hidden bg-fy-ink text-white select-none">
       {/* ══════════════════════════════════════════════════════════════════════
           GLOBAL TOP HEADER BAR (Matches Genjutsu Studio Screenshots 1, 2, 3)
          ══════════════════════════════════════════════════════════════════════ */}
-      <header className="flex h-[52px] w-full shrink-0 items-center justify-between border-b border-white/[0.07] bg-[#09090A] px-4">
+      <header className="flex h-[52px] w-full shrink-0 items-center justify-between border-b border-white/[0.07] bg-fy-ink px-4">
         <div className="flex items-center gap-5 overflow-x-auto">
           {/* FAYAA Brand Mark */}
           <Link
             to={routes.LandingPageRoute.to}
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-black transition-transform hover:scale-105"
+            className="fy-heat-bg flex size-8 shrink-0 items-center justify-center rounded-fy-sm text-fy-on-accent shadow-[0_8px_24px_-8px_rgb(255_91_31/0.8)] transition-transform duration-500 ease-fy-out hover:rotate-[-8deg] hover:scale-105"
             title="Back to Fayaa Explore"
           >
-            <span className="font-display text-base font-black tracking-tighter">
-              F
-            </span>
+            <FayaaMark className="size-[18px]" />
           </Link>
 
           {/* Primary Nav Links */}
@@ -1027,10 +1026,10 @@ export function GenjutsuWorkbench({
             </Link>
             <Link
               to={routes.StudioRoute.to}
-              className="inline-flex items-center gap-1.5 font-bold text-[#D9FF00]"
+              className="inline-flex items-center gap-1.5 font-bold text-fy-accent"
             >
               <span>Video Studio</span>
-              <span className="rounded bg-[#D9FF00]/15 px-1.5 py-0.5 text-[9px] font-bold text-[#D9FF00]">
+              <span className="rounded bg-fy-accent/15 px-1.5 py-0.5 text-[9px] font-bold text-fy-accent">
                 Genjutsu
               </span>
             </Link>
@@ -1046,7 +1045,7 @@ export function GenjutsuWorkbench({
                 setSidebarTab("edit-video")
                 setMode("object-swap")
               }}
-              className="hidden cursor-pointer items-center gap-1 rounded-full border border-[#D9FF00]/35 bg-[#D9FF00]/10 px-2.5 py-0.5 text-[11px] font-bold text-[#D9FF00] transition-colors hover:bg-[#D9FF00]/20 md:inline-flex"
+              className="hidden cursor-pointer items-center gap-1 rounded-full border border-fy-accent/35 bg-fy-accent/10 px-2.5 py-0.5 text-[11px] font-bold text-fy-accent transition-colors hover:bg-fy-accent/20 md:inline-flex"
             >
               <span>Also supports 2+ min videos</span>
               <ChevronRight className="size-3" />
@@ -1069,18 +1068,18 @@ export function GenjutsuWorkbench({
             className={cn(
               "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-all select-none",
               watermarkEnabled
-                ? "border-[#D9FF00]/40 bg-[#D9FF00]/10 text-white hover:bg-[#D9FF00]/20"
+                ? "border-fy-accent/40 bg-fy-accent/10 text-white hover:bg-fy-accent/20"
                 : "border-white/10 bg-white/[0.03] text-zinc-400 hover:bg-white/[0.08] hover:text-white"
             )}
           >
             <span
               className={cn(
                 "size-2 rounded-full transition-all",
-                watermarkEnabled ? "bg-[#D9FF00] shadow-[0_0_8px_#D9FF00]" : "bg-zinc-600"
+                watermarkEnabled ? "bg-fy-accent shadow-[0_0_8px_#ff5b1f]" : "bg-zinc-600"
               )}
             />
             <span className="font-mono text-[11px] hidden sm:inline">Watermark:</span>
-            <span className={watermarkEnabled ? "text-[#D9FF00] font-bold font-mono text-[11px]" : "text-zinc-400 font-mono text-[11px]"}>
+            <span className={watermarkEnabled ? "text-fy-accent font-bold font-mono text-[11px]" : "text-zinc-400 font-mono text-[11px]"}>
               {watermarkEnabled ? "ON" : "OFF"}
             </span>
           </button>
@@ -1098,9 +1097,9 @@ export function GenjutsuWorkbench({
             to={routes.PricingPageRoute.to}
             className="relative inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.05] px-3 text-xs font-semibold text-white transition-colors hover:bg-white/[0.1]"
           >
-            <Rocket className="size-3.5 text-[#D9FF00]" />
+            <Rocket className="size-3.5 text-fy-accent" />
             <span>Upgrade</span>
-            <span className=" -bottom-2 left-1/2 -translate-x-1/2 absolute rounded-full bg-[#FF2E93] px-1.5 py-0.2 text-[8px] font-extrabold tracking-wider text-white uppercase shadow">
+            <span className=" -bottom-2 left-1/2 -translate-x-1/2 absolute rounded-full bg-fy-rose px-1.5 py-0.2 text-[8px] font-extrabold tracking-wider text-white uppercase shadow">
               SAVE 20%
             </span>
           </Link>
@@ -1128,7 +1127,7 @@ export function GenjutsuWorkbench({
                 type="button"
                 className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-zinc-200 transition-colors hover:bg-white/[0.09]"
               >
-                <FolderOpen className="size-3.5 text-[#4ADE80]" />
+                <FolderOpen className="size-3.5 text-fy-success" />
                 <span>Assets</span>
               </button>
             }
@@ -1138,7 +1137,7 @@ export function GenjutsuWorkbench({
             type="button"
             onClick={() => setShowCreditPopup((v) => !v)}
             title="View credit usage"
-            className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 text-xs font-semibold text-[#FACC15] transition-colors hover:bg-white/[0.09]"
+            className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 text-xs font-semibold text-fy-amber transition-colors hover:bg-white/[0.09]"
           >
             <Coins className="size-3.5" />
             <span>{displayCredits}</span>
@@ -1152,7 +1151,7 @@ export function GenjutsuWorkbench({
                     type="button"
                     aria-label="Account profile and options"
                     title={authUser.email ?? "Account"}
-                    className="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.06] pr-2 pl-0.5 transition-colors hover:border-[#C8FF00]/60 focus:outline-none"
+                    className="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.06] pr-2 pl-0.5 transition-colors hover:border-fy-accent/60 focus:outline-none"
                   >
                     <img
                       src={getUserAvatarUrl(authUser)}
@@ -1164,7 +1163,7 @@ export function GenjutsuWorkbench({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="z-50 w-56 rounded-2xl border border-white/12 bg-[#141418] p-1.5 text-white shadow-2xl backdrop-blur-md"
+                  className="z-50 w-56 rounded-2xl border border-white/12 bg-fy-surface-1 p-1.5 text-white shadow-2xl backdrop-blur-md"
                 >
                   <div className="border-b border-white/[0.08] px-3 py-2">
                     <p className="truncate text-xs font-semibold text-white">
@@ -1190,7 +1189,7 @@ export function GenjutsuWorkbench({
                       to={routes.PricingPageRoute.to}
                       className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
                     >
-                      <Crown className="size-3.5 text-[#C8FF00]" />
+                      <Crown className="size-3.5 text-fy-accent" />
                       <span>Plans & Credits</span>
                     </Link>
                   </DropdownMenuItem>
@@ -1218,7 +1217,7 @@ export function GenjutsuWorkbench({
           ) : (
             <Link
               to={routes.LoginRoute.to}
-              className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-[#C8FF00] px-3 text-xs font-bold text-black transition-transform hover:scale-105 hover:bg-[#d8ff3e]"
+              className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-fy-accent px-3 text-xs font-bold text-black transition-transform hover:scale-105 hover:bg-fy-accent-hover"
             >
               <LogIn className="size-3.5" />
               <span>Log In</span>
@@ -1240,7 +1239,7 @@ export function GenjutsuWorkbench({
         >
           <DialogContent
             size="xs"
-            className="w-full max-w-[380px] overflow-hidden rounded-[26px] border border-white/15 bg-[#121215] p-0 shadow-[0_28px_90px_rgba(0,0,0,0.88)]"
+            className="w-full max-w-[380px] overflow-hidden rounded-[26px] border border-white/15 bg-fy-surface-1 p-0 shadow-[0_28px_90px_rgba(0,0,0,0.88)]"
           >
             <DialogTitle className="sr-only">New in Genjutsu: Restyle</DialogTitle>
             <DialogDescription className="sr-only">
@@ -1284,7 +1283,7 @@ export function GenjutsuWorkbench({
               />
 
               {/* Bottom Gradient Fade */}
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#121215] to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-fy-surface-1 to-transparent" />
 
               {/* Close X Button */}
               <DialogClose
@@ -1298,7 +1297,7 @@ export function GenjutsuWorkbench({
 
             {/* Bottom Content Copy */}
             <div className="flex flex-col items-center px-6 pt-3 pb-6 text-center">
-              <span className="text-[10px] font-bold tracking-[0.14em] text-[#D9FF00] uppercase">
+              <span className="text-[10px] font-bold tracking-[0.14em] text-fy-accent uppercase">
                 NEW IN GENJUTSU
               </span>
               <h2 className="mt-1 font-display text-[38px] leading-none font-black tracking-[0.04em] text-white uppercase">
@@ -1311,7 +1310,7 @@ export function GenjutsuWorkbench({
               <Button
                 size="lg"
                 onClick={() => closeRestyleModal(true)}
-                className="mt-5 h-10 rounded-xl bg-[#D9FF00] px-6 text-xs font-bold text-black shadow-[0_8px_24px_rgba(217,255,0,0.25)] hover:bg-[#e3ff38]"
+                className="mt-5 h-10 rounded-xl bg-fy-accent px-6 text-xs font-bold text-black shadow-[0_8px_24px_rgba(255,91,31,0.25)] hover:bg-fy-accent-hover"
               >
                 Explore styles
               </Button>
@@ -1326,18 +1325,18 @@ export function GenjutsuWorkbench({
           <div
             role="status"
             aria-live="polite"
-            className="fixed top-14 right-4 z-40 flex w-[360px] items-start gap-3.5 rounded-2xl border border-white/12 bg-[#161619]/95 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200"
+            className="fixed top-14 right-4 z-40 flex w-[360px] items-start gap-3.5 rounded-2xl border border-white/12 bg-fy-surface-2/95 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200"
           >
             {/* Circular yellow coin/gauge badge */}
-            <div className="relative flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-[#FACC15]/80 bg-[#FACC15]/10 text-[#FACC15]">
+            <div className="relative flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-fy-amber/80 bg-fy-amber/10 text-fy-amber">
               <Coins className="size-4" />
-              <span className=" -top-0.5 -right-0.5 absolute flex size-3.5 items-center justify-center rounded-full bg-[#FACC15] text-[9px] font-black text-black">
+              <span className=" -top-0.5 -right-0.5 absolute flex size-3.5 items-center justify-center rounded-full bg-fy-amber text-[9px] font-black text-black">
                 !
               </span>
             </div>
 
             <div className="flex min-w-0 flex-1 flex-col">
-              <p className="text-xs font-bold text-[#FACC15]">
+              <p className="text-xs font-bold text-fy-amber">
                 You&apos;ve used {usedPercent}% of your credits
               </p>
               <p className="mt-0.5 text-[11px] text-zinc-400">
@@ -1378,7 +1377,7 @@ export function GenjutsuWorkbench({
         {/* ══════════════════════════════════════════════════════════════════════
           LEFT PANEL: GENJUTSU CREATION SIDEBAR (308px)
          ══════════════════════════════════════════════════════════════════════ */}
-        <aside className="flex h-full w-[308px] shrink-0 flex-col border-r border-white/[0.07] bg-[#0C0C0E]">
+        <aside className="flex h-full w-[308px] shrink-0 flex-col border-r border-white/[0.07] bg-fy-ink">
           {/* Top Mode Tabs: Create Video | Edit Video | Motion Control (Higgsfield Tabs) */}
           <div className="shrink-0 border-b border-white/[0.07] px-3 pt-2">
             <Tabs
@@ -1419,10 +1418,10 @@ export function GenjutsuWorkbench({
 
           {/* Scrollable Left Form Controls */}
           <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto p-3">
-            <div className="flex items-start gap-2 rounded-xl border border-[#D9FF00]/25 bg-[#D9FF00]/[0.06] px-2.5 py-2 text-[11px] leading-snug text-zinc-200">
-              <ChevronRight className="mt-0.5 size-3.5 shrink-0 text-[#D9FF00]" />
+            <div className="flex items-start gap-2 rounded-xl border border-fy-accent/25 bg-fy-accent/[0.06] px-2.5 py-2 text-[11px] leading-snug text-zinc-200">
+              <ChevronRight className="mt-0.5 size-3.5 shrink-0 text-fy-accent" />
               <span>
-                <strong className="text-[#D9FF00]">Videos up to 2+ min supported:</strong>{" "}
+                <strong className="text-fy-accent">Videos up to 2+ min supported:</strong>{" "}
                 long uploads auto-split into 15s (Light) or 30s (Pro) passes and return one final video.
               </span>
             </div>
@@ -1450,7 +1449,7 @@ export function GenjutsuWorkbench({
                   </button>
 
                   <div className="absolute bottom-2.5 left-3 flex flex-col">
-                    <span className="font-display text-sm font-black tracking-wide text-[#D9FF00] uppercase">
+                    <span className="font-display text-sm font-black tracking-wide text-fy-accent uppercase">
                       MOTION CONTROL
                     </span>
                     <span className="text-[10px] text-zinc-300">
@@ -1470,8 +1469,8 @@ export function GenjutsuWorkbench({
                   className={cn(
                     "relative flex min-h-[128px] flex-col justify-center overflow-hidden rounded-xl border border-dashed transition-colors",
                     sourceVideo
-                      ? "border-white/15 bg-[#141417] p-2"
-                      : "border-white/12 bg-[#141417]/80 hover:border-white/25 hover:bg-[#18181C]"
+                      ? "border-white/15 bg-fy-surface-2 p-2"
+                      : "border-white/12 bg-fy-surface-2/80 hover:border-white/25 hover:bg-fy-surface-2"
                   )}
                 >
                   {sourceVideo ? (
@@ -1521,7 +1520,7 @@ export function GenjutsuWorkbench({
                             }
                             aria-label="View Full Frame"
                             title="Expand to Full Frame"
-                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-[#D9FF00] hover:text-black border border-white/10 backdrop-blur transition-all"
+                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-fy-accent hover:text-black border border-white/10 backdrop-blur transition-all"
                           >
                             <Maximize2 className="size-3.5" />
                           </button>
@@ -1552,7 +1551,7 @@ export function GenjutsuWorkbench({
                                 aspectRatio: sourceVideoAspect ?? undefined,
                               })
                             }
-                            className="text-[#D9FF00] hover:underline flex items-center gap-0.5 text-[10px] font-medium cursor-pointer"
+                            className="text-fy-accent hover:underline flex items-center gap-0.5 text-[10px] font-medium cursor-pointer"
                           >
                             <Maximize2 className="size-2.5" /> Inspect full
                           </button>
@@ -1576,7 +1575,7 @@ export function GenjutsuWorkbench({
                         >
                           <span className="flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300">
                             {uploadingVideo ? (
-                              <Loader2 className="size-4 animate-spin text-[#D9FF00]" />
+                              <Loader2 className="size-4 animate-spin text-fy-accent" />
                             ) : (
                               <VideoIcon className="size-4" />
                             )}
@@ -1585,7 +1584,7 @@ export function GenjutsuWorkbench({
                             <span className="text-xs font-semibold text-zinc-200">
                               {uploadingVideo ? "Uploading video…" : "Add motion or long video"}
                             </span>
-                            <span className="rounded-full border border-[#D9FF00]/35 bg-[#D9FF00]/10 px-2 py-0.5 text-[10px] font-bold text-[#D9FF00]">
+                            <span className="rounded-full border border-fy-accent/35 bg-fy-accent/10 px-2 py-0.5 text-[10px] font-bold text-fy-accent">
                               Long Video Ready • Auto Split
                             </span>
                             <span className="text-[11px] text-zinc-500">
@@ -1609,8 +1608,8 @@ export function GenjutsuWorkbench({
                   className={cn(
                     "relative flex min-h-[128px] flex-col justify-center overflow-hidden rounded-xl border border-dashed transition-colors",
                     referenceImages.length > 0
-                      ? "border-white/15 bg-[#141417] p-2"
-                      : "border-white/12 bg-[#141417]/80 hover:border-white/25 hover:bg-[#18181C]"
+                      ? "border-white/15 bg-fy-surface-2 p-2"
+                      : "border-white/12 bg-fy-surface-2/80 hover:border-white/25 hover:bg-fy-surface-2"
                   )}
                 >
                   {referenceImages.length > 0 ? (
@@ -1638,7 +1637,7 @@ export function GenjutsuWorkbench({
                             }
                             aria-label="View Full Frame"
                             title="Expand Full Photo"
-                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-[#D9FF00] hover:text-black border border-white/10 backdrop-blur transition-all"
+                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-fy-accent hover:text-black border border-white/10 backdrop-blur transition-all"
                           >
                             <Maximize2 className="size-3.5" />
                           </button>
@@ -1667,7 +1666,7 @@ export function GenjutsuWorkbench({
                               title: referenceImages[0].name ?? "Character Reference",
                             })
                           }
-                          className="text-[#D9FF00] hover:underline flex items-center gap-0.5 text-[10px] font-medium cursor-pointer"
+                          className="text-fy-accent hover:underline flex items-center gap-0.5 text-[10px] font-medium cursor-pointer"
                         >
                           <Maximize2 className="size-2.5" /> Inspect full
                         </button>
@@ -1688,7 +1687,7 @@ export function GenjutsuWorkbench({
                         >
                           <span className="flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300">
                             {uploadingImage ? (
-                              <Loader2 className="size-4 animate-spin text-[#D9FF00]" />
+                              <Loader2 className="size-4 animate-spin text-fy-accent" />
                             ) : (
                               <User className="size-4" />
                             )}
@@ -1708,7 +1707,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* Model Row */}
-                <div className="flex flex-col gap-1 rounded-xl border border-white/[0.07] bg-[#141417] p-2.5">
+                <div className="flex flex-col gap-1 rounded-xl border border-white/[0.07] bg-fy-surface-2 p-2.5">
                   <span className="text-[10px] text-zinc-400">Model</span>
                   <button
                     type="button"
@@ -1716,7 +1715,7 @@ export function GenjutsuWorkbench({
                     className="group flex cursor-pointer items-center justify-between"
                   >
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold text-white transition-colors group-hover:text-[#D9FF00]">
+                      <span className="text-xs font-semibold text-white transition-colors group-hover:text-fy-accent">
                         {selectedMotionModel.name}
                       </span>
                       <span className="text-xs">⚡</span>
@@ -1726,7 +1725,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* Quality Row */}
-                <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-[#141417] px-3 py-2.5">
+                <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-fy-surface-2 px-3 py-2.5">
                   <span className="text-xs font-medium text-zinc-200">Quality</span>
                   <div className="flex items-center gap-1.5">
                     {(["480p", "720p", "1080p"] as const).map((q) => (
@@ -1748,12 +1747,12 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* Video Length Row */}
-                <div className="flex flex-col gap-2 rounded-xl border border-white/[0.07] bg-[#141417] p-2.5">
+                <div className="flex flex-col gap-2 rounded-xl border border-white/[0.07] bg-fy-surface-2 p-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-zinc-200">
                       Video Length
                     </span>
-                    <span className="font-mono text-xs font-semibold text-[#D9FF00]">
+                    <span className="font-mono text-xs font-semibold text-fy-accent">
                       {selectedDurationSec.toFixed(1)}s ({realtimeCost.billableSeconds}s billed)
                     </span>
                   </div>
@@ -1773,7 +1772,7 @@ export function GenjutsuWorkbench({
                           className={cn(
                             "cursor-pointer rounded-md border py-1 text-[11px] font-semibold transition-colors",
                             active
-                              ? "border-[#D9FF00]/60 bg-[#D9FF00]/15 text-[#D9FF00]"
+                              ? "border-fy-accent/60 bg-fy-accent/15 text-fy-accent"
                               : "border-white/10 bg-white/[0.03] text-zinc-400 hover:text-white"
                           )}
                         >
@@ -1789,12 +1788,12 @@ export function GenjutsuWorkbench({
                     step={0.5}
                     value={Math.min(Math.max(4, videoDuration), selectedDurationSec)}
                     onChange={(e) => applyDurationPreset(Number(e.target.value))}
-                    className="h-1 w-full accent-[#D9FF00]"
+                    className="h-1 w-full accent-fy-accent"
                   />
                 </div>
 
                 {/* Scene Control Mode (Screenshot 3) */}
-                <div className="flex flex-col gap-2 rounded-xl border border-white/[0.07] bg-[#141417] p-2.5">
+                <div className="flex flex-col gap-2 rounded-xl border border-white/[0.07] bg-fy-surface-2 p-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-zinc-200">
                       Scene control mode
@@ -1806,7 +1805,7 @@ export function GenjutsuWorkbench({
                       onClick={() => setSceneControlEnabled((v) => !v)}
                       className={cn(
                         "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors",
-                        sceneControlEnabled ? "bg-[#D9FF00]" : "bg-white/15"
+                        sceneControlEnabled ? "bg-fy-accent" : "bg-white/15"
                       )}
                     >
                       <span
@@ -1829,7 +1828,7 @@ export function GenjutsuWorkbench({
                           className={cn(
                             "flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border py-1.5 text-xs font-medium transition-all",
                             sceneControlMode === "video"
-                              ? "border-[#D9FF00]/50 bg-white/10 text-white"
+                              ? "border-fy-accent/50 bg-white/10 text-white"
                               : "border-white/10 bg-white/[0.02] text-zinc-400 hover:text-white"
                           )}
                         >
@@ -1842,7 +1841,7 @@ export function GenjutsuWorkbench({
                           className={cn(
                             "flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border py-1.5 text-xs font-medium transition-all",
                             sceneControlMode === "image"
-                              ? "border-[#D9FF00]/50 bg-white/10 text-white"
+                              ? "border-fy-accent/50 bg-white/10 text-white"
                               : "border-white/10 bg-white/[0.02] text-zinc-400 hover:text-white"
                           )}
                         >
@@ -1859,7 +1858,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* Advanced Settings Drawer */}
-                <div className="flex flex-col rounded-xl border border-white/[0.07] bg-[#141417]">
+                <div className="flex flex-col rounded-xl border border-white/[0.07] bg-fy-surface-2">
                   <button
                     type="button"
                     onClick={() => setAdvancedSettingsOpen((v) => !v)}
@@ -1880,7 +1879,7 @@ export function GenjutsuWorkbench({
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
                         placeholder="Optional additional prompt details..."
-                        className="w-full resize-none rounded-lg border border-white/10 bg-black/50 p-2 text-xs leading-relaxed text-white placeholder:text-zinc-500 focus:border-[#D9FF00]/60 focus:outline-none"
+                        className="w-full resize-none rounded-lg border border-white/10 bg-black/50 p-2 text-xs leading-relaxed text-white placeholder:text-zinc-500 focus:border-fy-accent/60 focus:outline-none"
                       />
                     </div>
                   ) : null}
@@ -1910,7 +1909,7 @@ export function GenjutsuWorkbench({
                   </button>
 
                   <div className="absolute bottom-2.5 left-3 flex flex-col">
-                    <span className="font-display text-sm font-black tracking-wide text-[#D9FF00] uppercase">
+                    <span className="font-display text-sm font-black tracking-wide text-fy-accent uppercase">
                       {selectedMotionModel.name.toUpperCase()}
                     </span>
                     <span className="text-[11px] text-zinc-300">
@@ -1951,8 +1950,8 @@ export function GenjutsuWorkbench({
                     className={cn(
                       "flex w-full cursor-pointer items-center justify-between rounded-xl border p-2 transition-colors",
                       selectedStyleId !== "none"
-                        ? "border-[#D9FF00]/40 bg-[#D9FF00]/[0.06]"
-                        : "border-white/[0.07] bg-[#141417] hover:border-white/15"
+                        ? "border-fy-accent/40 bg-fy-accent/[0.06]"
+                        : "border-white/[0.07] bg-fy-surface-2 hover:border-white/15"
                     )}
                   >
                     <div className="flex items-center gap-2.5">
@@ -1967,7 +1966,7 @@ export function GenjutsuWorkbench({
                         <span className="text-xs font-semibold text-white">
                           {selectedStyleId === "none" ? "Style" : activeStyle.name}
                         </span>
-                        <span className="rounded bg-[#D9FF00]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[#D9FF00]">
+                        <span className="rounded bg-fy-accent/15 px-1.5 py-0.5 text-[10px] font-semibold text-fy-accent">
                           New
                         </span>
                       </div>
@@ -1984,7 +1983,7 @@ export function GenjutsuWorkbench({
                   </button>
 
                   {stylePickerOpen ? (
-                    <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-white/10 bg-[#141417] p-2">
+                    <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-white/10 bg-fy-surface-2 p-2">
                       {STYLE_PRESETS.map((preset) => {
                         const active = preset.id === selectedStyleId
                         return (
@@ -1999,7 +1998,7 @@ export function GenjutsuWorkbench({
                             className={cn(
                               "group relative flex cursor-pointer flex-col overflow-hidden rounded-lg border text-left transition-all",
                               active
-                                ? "border-[#D9FF00] ring-1 ring-[#D9FF00]/40"
+                                ? "border-fy-accent ring-1 ring-fy-accent/40"
                                 : "border-white/10 hover:border-white/25"
                             )}
                           >
@@ -2010,12 +2009,12 @@ export function GenjutsuWorkbench({
                                 className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
                               />
                               {active ? (
-                                <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-[#D9FF00] text-black">
+                                <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-fy-accent text-black">
                                   <Check className="size-2.5 stroke-[3]" />
                                 </span>
                               ) : null}
                             </div>
-                            <span className="truncate bg-[#18181B] px-2 py-1 text-[10px] font-medium text-zinc-200">
+                            <span className="truncate bg-fy-surface-3 px-2 py-1 text-[10px] font-medium text-zinc-200">
                               {preset.id === "none" ? "No Override" : preset.name}
                             </span>
                           </button>
@@ -2036,8 +2035,8 @@ export function GenjutsuWorkbench({
                   className={cn(
                     "relative flex min-h-[140px] flex-col justify-center overflow-hidden rounded-xl border border-dashed transition-colors",
                     sourceVideo
-                      ? "border-white/15 bg-[#141417] p-2"
-                      : "border-white/12 bg-[#141417]/80 hover:border-white/25 hover:bg-[#18181C]"
+                      ? "border-white/15 bg-fy-surface-2 p-2"
+                      : "border-white/12 bg-fy-surface-2/80 hover:border-white/25 hover:bg-fy-surface-2"
                   )}
                 >
                   {sourceVideo ? (
@@ -2087,7 +2086,7 @@ export function GenjutsuWorkbench({
                             }
                             aria-label="View Full Frame"
                             title="Expand to Full Frame"
-                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-[#D9FF00] hover:text-black border border-white/10 backdrop-blur transition-all"
+                            className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/80 text-zinc-300 hover:bg-fy-accent hover:text-black border border-white/10 backdrop-blur transition-all"
                           >
                             <Maximize2 className="size-3.5" />
                           </button>
@@ -2108,7 +2107,7 @@ export function GenjutsuWorkbench({
                           <span className="truncate font-medium text-zinc-200">
                             {sourceVideo.name ?? "Motion_Reference.mp4"}
                           </span>
-                          <span className="font-mono text-[#D9FF00]">
+                          <span className="font-mono text-fy-accent">
                             {trimRange.start.toFixed(1)}s – {trimRange.end.toFixed(1)}s
                           </span>
                         </div>
@@ -2128,7 +2127,7 @@ export function GenjutsuWorkbench({
                                 ),
                               }))
                             }
-                            className="h-1 flex-1 accent-[#D9FF00]"
+                            className="h-1 flex-1 accent-fy-accent"
                           />
                           <input
                             type="range"
@@ -2145,7 +2144,7 @@ export function GenjutsuWorkbench({
                                 ),
                               }))
                             }
-                            className="h-1 flex-1 accent-[#D9FF00]"
+                            className="h-1 flex-1 accent-fy-accent"
                           />
                         </div>
                       </div>
@@ -2164,7 +2163,7 @@ export function GenjutsuWorkbench({
                         >
                           <span className="flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300">
                             {uploadingVideo ? (
-                              <Loader2 className="size-4 animate-spin text-[#D9FF00]" />
+                              <Loader2 className="size-4 animate-spin text-fy-accent" />
                             ) : (
                               <VideoIcon className="size-4" />
                             )}
@@ -2177,7 +2176,7 @@ export function GenjutsuWorkbench({
                                   ? "Add a video (short or long) to edit"
                                   : "Add a short or long video to swap"}
                             </span>
-                            <span className="rounded-full border border-[#D9FF00]/35 bg-[#D9FF00]/10 px-2 py-0.5 text-[10px] font-bold text-[#D9FF00]">
+                            <span className="rounded-full border border-fy-accent/35 bg-fy-accent/10 px-2 py-0.5 text-[10px] font-bold text-fy-accent">
                               Long Video Ready • Auto Split
                             </span>
                             <span className="text-[11px] text-zinc-500">
@@ -2198,7 +2197,7 @@ export function GenjutsuWorkbench({
                     const files = Array.from(e.dataTransfer.files ?? [])
                     if (files.length) void handleDirectImagesDrop(files)
                   }}
-                  className="flex flex-col gap-1.5 rounded-xl border border-white/[0.07] bg-[#141417] p-2.5"
+                  className="flex flex-col gap-1.5 rounded-xl border border-white/[0.07] bg-fy-surface-2 p-2.5"
                 >
                   <div className="flex items-center gap-2">
                     <AssetLibraryModal
@@ -2211,11 +2210,11 @@ export function GenjutsuWorkbench({
                         <button
                           type="button"
                           disabled={uploadingImage}
-                          className="flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-dashed border-white/20 bg-white/[0.03] text-zinc-400 transition-colors hover:border-[#D9FF00]/50 hover:bg-white/[0.06] hover:text-white"
+                          className="flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-dashed border-white/20 bg-white/[0.03] text-zinc-400 transition-colors hover:border-fy-accent/50 hover:bg-white/[0.06] hover:text-white"
                           title="Add reference image"
                         >
                           {uploadingImage ? (
-                            <Loader2 className="size-4 animate-spin text-[#D9FF00]" />
+                            <Loader2 className="size-4 animate-spin text-fy-accent" />
                           ) : (
                             <Plus className="size-4" />
                           )}
@@ -2251,7 +2250,7 @@ export function GenjutsuWorkbench({
                               alt={img.name ?? `Reference ${idx + 1}`}
                               className="size-full object-contain"
                             />
-                            <span className="pointer-events-none absolute bottom-0.5 left-0.5 rounded bg-black/85 px-1 py-0.2 font-mono text-[8px] font-semibold text-[#D9FF00]">
+                            <span className="pointer-events-none absolute bottom-0.5 left-0.5 rounded bg-black/85 px-1 py-0.2 font-mono text-[8px] font-semibold text-fy-accent">
                               Ref {idx + 1}
                             </span>
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
@@ -2266,7 +2265,7 @@ export function GenjutsuWorkbench({
                                   })
                                 }}
                                 title="Inspect full frame"
-                                className="flex size-5 cursor-pointer items-center justify-center rounded-full bg-white/20 text-white hover:bg-[#D9FF00] hover:text-black transition-colors"
+                                className="flex size-5 cursor-pointer items-center justify-center rounded-full bg-white/20 text-white hover:bg-fy-accent hover:text-black transition-colors"
                               >
                                 <Maximize2 className="size-2.5" />
                               </button>
@@ -2292,7 +2291,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* 6. Prompt Toggle Row */}
-                <div className="flex flex-col rounded-xl border border-white/[0.07] bg-[#141417] px-3 py-2.5">
+                <div className="flex flex-col rounded-xl border border-white/[0.07] bg-fy-surface-2 px-3 py-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-zinc-200">
                       Prompt
@@ -2304,7 +2303,7 @@ export function GenjutsuWorkbench({
                       onClick={() => setPromptEnabled((v) => !v)}
                       className={cn(
                         "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors",
-                        promptEnabled ? "bg-[#D9FF00]" : "bg-white/15"
+                        promptEnabled ? "bg-fy-accent" : "bg-white/15"
                       )}
                     >
                       <span
@@ -2326,7 +2325,7 @@ export function GenjutsuWorkbench({
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
                         placeholder="Describe how to recast the video's motion using @Image1..."
-                        className="w-full resize-none rounded-lg border border-white/10 bg-black/50 p-2 text-xs leading-relaxed text-white placeholder:text-zinc-500 focus:border-[#D9FF00]/60 focus:outline-none"
+                        className="w-full resize-none rounded-lg border border-white/10 bg-black/50 p-2 text-xs leading-relaxed text-white placeholder:text-zinc-500 focus:border-fy-accent/60 focus:outline-none"
                       />
 
                       {referenceImages.length > 0 ? (
@@ -2336,7 +2335,7 @@ export function GenjutsuWorkbench({
                               key={img.id}
                               type="button"
                               onClick={() => injectImageToken(i + 1)}
-                              className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-[#D9FF00]/30 bg-[#D9FF00]/10 px-1.5 py-0.5 text-[10px] font-medium text-[#D9FF00] hover:bg-[#D9FF00]/20"
+                              className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-fy-accent/30 bg-fy-accent/10 px-1.5 py-0.5 text-[10px] font-medium text-fy-accent hover:bg-fy-accent/20"
                             >
                               @Image{i + 1}
                             </button>
@@ -2348,7 +2347,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* 7. Model Selector Row */}
-                <div className="flex flex-col gap-1 rounded-xl border border-white/[0.07] bg-[#141417] p-2.5">
+                <div className="flex flex-col gap-1 rounded-xl border border-white/[0.07] bg-fy-surface-2 p-2.5">
                   <span className="text-[10px] text-zinc-400">Model</span>
                   <button
                     type="button"
@@ -2356,10 +2355,10 @@ export function GenjutsuWorkbench({
                     className="group flex cursor-pointer items-center justify-between"
                   >
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold text-white transition-colors group-hover:text-[#D9FF00]">
+                      <span className="text-xs font-semibold text-white transition-colors group-hover:text-fy-accent">
                         {selectedMotionModel.name}
                       </span>
-                      <span className="rounded bg-[#D9FF00] px-1 py-0.2 text-[9px] font-bold text-black">
+                      <span className="rounded bg-fy-accent px-1 py-0.2 text-[9px] font-bold text-black">
                         New
                       </span>
                     </div>
@@ -2368,7 +2367,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* 8. Quality Row */}
-                <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-[#141417] px-3 py-2.5">
+                <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-fy-surface-2 px-3 py-2.5">
                   <span className="text-xs font-medium text-zinc-200">Quality</span>
                   <div className="flex items-center gap-1.5">
                     {(["480p", "720p", "1080p"] as const).map((q) => (
@@ -2390,12 +2389,12 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* 8b. Video Length Selector Row */}
-                <div className="flex flex-col gap-2 rounded-xl border border-white/[0.07] bg-[#141417] p-2.5">
+                <div className="flex flex-col gap-2 rounded-xl border border-white/[0.07] bg-fy-surface-2 p-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-zinc-200">
                       Video Length
                     </span>
-                    <span className="font-mono text-xs font-semibold text-[#D9FF00]">
+                    <span className="font-mono text-xs font-semibold text-fy-accent">
                       {selectedDurationSec.toFixed(1)}s ({realtimeCost.billableSeconds}s billed)
                     </span>
                   </div>
@@ -2415,7 +2414,7 @@ export function GenjutsuWorkbench({
                           className={cn(
                             "cursor-pointer rounded-md border py-1 text-[11px] font-semibold transition-colors",
                             active
-                              ? "border-[#D9FF00]/60 bg-[#D9FF00]/15 text-[#D9FF00]"
+                              ? "border-fy-accent/60 bg-fy-accent/15 text-fy-accent"
                               : "border-white/10 bg-white/[0.03] text-zinc-400 hover:text-white"
                           )}
                         >
@@ -2431,7 +2430,7 @@ export function GenjutsuWorkbench({
                     step={0.5}
                     value={Math.min(Math.max(4, videoDuration), selectedDurationSec)}
                     onChange={(e) => applyDurationPreset(Number(e.target.value))}
-                    className="h-1 w-full accent-[#D9FF00]"
+                    className="h-1 w-full accent-fy-accent"
                   />
                 </div>
               </>
@@ -2459,8 +2458,8 @@ export function GenjutsuWorkbench({
           </div>
 
           {/* Sticky Bottom Real-Time Cost Breakdown + Generate Button */}
-          <div className="shrink-0 border-t border-white/[0.07] bg-[#0C0C0E] p-3 space-y-2">
-            <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-[#141417] px-2.5 py-1.5 text-[11px]">
+          <div className="shrink-0 border-t border-white/[0.07] bg-fy-ink p-3 space-y-2">
+            <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-fy-surface-2 px-2.5 py-1.5 text-[11px]">
               <div className="flex flex-col min-w-0">
                 <span className="truncate font-semibold text-zinc-200">
                   {selectedMotionModel.name} • {resolution}
@@ -2471,7 +2470,7 @@ export function GenjutsuWorkbench({
                 </span>
               </div>
               <div className="flex flex-col items-end shrink-0">
-                <span className="font-mono text-xs font-bold text-[#D9FF00]">
+                <span className="font-mono text-xs font-bold text-fy-accent">
                   {realtimeCost.credits} cr (~${realtimeCost.totalUsd.toFixed(2)})
                 </span>
                 <span className="text-[9px] text-zinc-500">
@@ -2481,12 +2480,12 @@ export function GenjutsuWorkbench({
             </div>
 
             {realtimeCost.segmentCount > 1 ? (
-              <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-white/[0.08] bg-[#141417] px-2.5 py-1.5 text-[11px] text-zinc-300">
+              <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-white/[0.08] bg-fy-surface-2 px-2.5 py-1.5 text-[11px] text-zinc-300">
                 <input
                   type="checkbox"
                   checked={previewFirst}
                   onChange={(e) => setPreviewFirst(e.target.checked)}
-                  className="mt-0.5 accent-[#D9FF00]"
+                  className="mt-0.5 accent-fy-accent"
                 />
                 <span>
                   <strong className="text-zinc-100">Preview the first piece first</strong>
@@ -2512,8 +2511,8 @@ export function GenjutsuWorkbench({
               className={cn(
                 "h-11 w-full rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2",
                 canSubmit
-                  ? "bg-[#D9FF00] text-black shadow-[0_8px_28px_rgba(217,255,0,0.28)] hover:bg-[#e3ff38]"
-                  : "bg-[#8A9A2E]/60 text-black/80 hover:bg-[#8A9A2E]/80"
+                  ? "bg-fy-accent text-black shadow-[0_8px_28px_rgba(255,91,31,0.28)] hover:bg-fy-accent-hover"
+                  : "bg-fy-accent-700/60 text-black/80 hover:bg-fy-accent-700/80"
               )}
             >
               {submitting || generating ? (
@@ -2537,7 +2536,7 @@ export function GenjutsuWorkbench({
         {/* ══════════════════════════════════════════════════════════════════════
           RIGHT MAIN STAGE: TOP SUB-NAV + HERO + MASONRY DISCOVERY / HISTORY
          ══════════════════════════════════════════════════════════════════════ */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#09090A]">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-fy-ink">
           {/* Top Stage Navigation Bar: History | Motion Library | Styles New | How it works (Higgsfield Tabs) */}
           <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/[0.07] px-6">
             <Tabs
@@ -2604,7 +2603,7 @@ export function GenjutsuWorkbench({
                     value="styles"
                     start={<Wand2 className="size-3.5" />}
                     end={
-                      <span className="rounded bg-[#D9FF00]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[#D9FF00]">
+                      <span className="rounded bg-fy-accent/15 px-1.5 py-0.5 text-[10px] font-semibold text-fy-accent">
                         New
                       </span>
                     }
@@ -2623,7 +2622,7 @@ export function GenjutsuWorkbench({
 
             {/* Active In-Flight Telemetry Pill */}
             {activeGeneratingRun ? (
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#D9FF00]/30 bg-[#D9FF00]/10 px-3 py-1 text-xs font-medium text-[#D9FF00]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-fy-accent/30 bg-fy-accent/10 px-3 py-1 text-xs font-medium text-fy-accent">
                 <Loader2 className="size-3.5 animate-spin" />
                 <span>
                   Status: Processing Video •{" "}
@@ -2652,11 +2651,11 @@ export function GenjutsuWorkbench({
                 stageTab !== "how-it-works" ? (
                 <div className="flex flex-col gap-8">
                   {/* Hero Banner: RECREATE ANY [MOTION] WITH YOUR IMAGE */}
-                  <div className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#121215] p-6 lg:flex-row lg:items-center">
+                  <div className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-2xl border border-white/[0.08] bg-fy-surface-1 p-6 lg:flex-row lg:items-center">
                     <div className="flex max-w-[500px] flex-col gap-2.5">
                       <h1 className="font-display text-2xl font-black tracking-tight text-white uppercase sm:text-[32px] leading-tight">
                         RECREATE ANY{" "}
-                        <span className="text-[#D9FF00] font-mono">
+                        <span className="text-fy-accent font-mono">
                           [MOTION]
                         </span>{" "}
                         WITH YOUR IMAGE
@@ -2765,7 +2764,7 @@ export function GenjutsuWorkbench({
                       <span className="absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
                         INPUT
                       </span>
-                      <span className="absolute right-2 bottom-2 rounded bg-[#D9FF00] px-1.5 py-0.5 text-[10px] font-bold text-black">
+                      <span className="absolute right-2 bottom-2 rounded bg-fy-accent px-1.5 py-0.5 text-[10px] font-bold text-black">
                         GENJUTSU
                       </span>
                     </div>
@@ -2855,7 +2854,7 @@ export function GenjutsuWorkbench({
                     <div>
                       <div className="inline-flex items-center gap-2">
                         <IconTile as={Wand2} gradient="green" />
-                        <span className="text-[11px] font-bold tracking-widest text-[#D9FF00] uppercase">
+                        <span className="text-[11px] font-bold tracking-widest text-fy-accent uppercase">
                           NEW IN GENJUTSU
                         </span>
                       </div>
@@ -2880,9 +2879,9 @@ export function GenjutsuWorkbench({
                             if (preset.id !== "none") setMode("restyle")
                           }}
                           className={cn(
-                            "group flex cursor-pointer flex-col overflow-hidden rounded-2xl border bg-[#121215] transition-all",
+                            "group flex cursor-pointer flex-col overflow-hidden rounded-2xl border bg-fy-surface-1 transition-all",
                             isSelected
-                              ? "border-[#D9FF00] shadow-[0_0_28px_rgba(217,255,0,0.16)]"
+                              ? "border-fy-accent shadow-[0_0_28px_rgba(255,91,31,0.16)]"
                               : "border-white/10 hover:border-white/25"
                           )}
                         >
@@ -2893,12 +2892,12 @@ export function GenjutsuWorkbench({
                               className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                             />
                             {preset.badge ? (
-                              <span className="absolute top-3 left-3 rounded-md bg-[#D9FF00] px-2 py-0.5 text-[10px] font-bold text-black">
+                              <span className="absolute top-3 left-3 rounded-md bg-fy-accent px-2 py-0.5 text-[10px] font-bold text-black">
                                 {preset.badge}
                               </span>
                             ) : null}
                             {isSelected ? (
-                              <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-[#D9FF00] px-2.5 py-0.5 text-[10px] font-bold text-black">
+                              <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-fy-accent px-2.5 py-0.5 text-[10px] font-bold text-black">
                                 <Check className="size-3 stroke-[3]" />
                                 Active
                               </span>
@@ -2923,7 +2922,7 @@ export function GenjutsuWorkbench({
                                 className={cn(
                                   "w-full rounded-lg text-xs font-semibold",
                                   isSelected
-                                    ? "bg-[#D9FF00] text-black hover:bg-[#e3ff38]"
+                                    ? "bg-fy-accent text-black hover:bg-fy-accent-hover"
                                     : "border-white/15 bg-white/[0.04] text-white hover:bg-white/10"
                                 )}
                               >
@@ -2984,7 +2983,7 @@ export function GenjutsuWorkbench({
                       action={
                         <Button
                           onClick={() => setStageTab("motion-library")}
-                          className="rounded-xl bg-[#D9FF00] px-5 text-xs font-bold text-black hover:bg-[#e3ff38]"
+                          className="rounded-xl bg-fy-accent px-5 text-xs font-bold text-black hover:bg-fy-accent-hover"
                         >
                           Explore Motion Library
                         </Button>
@@ -3045,7 +3044,7 @@ export function GenjutsuWorkbench({
                                     className="size-full object-contain"
                                   />
                                   {isPublicRun && (
-                                    <span className="pointer-events-none absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-[#C8FF00] px-2 py-0.5 text-[10px] font-black text-black uppercase shadow">
+                                    <span className="pointer-events-none absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-fy-accent px-2 py-0.5 text-[10px] font-black text-black uppercase shadow">
                                       <Globe className="size-3" /> Public
                                     </span>
                                   )}
@@ -3091,7 +3090,7 @@ export function GenjutsuWorkbench({
                                 ]
                                 : undefined
                             }
-                            className="aspect-video overflow-hidden rounded-2xl border border-white/10 bg-[#121215]"
+                            className="aspect-video overflow-hidden rounded-2xl border border-white/10 bg-fy-surface-1"
                           >
                             {run.awaitingApproval ? (
                               <div className="absolute inset-x-3 bottom-3 z-[3] flex flex-col gap-2 rounded-xl bg-black/75 p-2.5 backdrop-blur-md">
@@ -3102,7 +3101,7 @@ export function GenjutsuWorkbench({
                                   <button
                                     type="button"
                                     onClick={() => onApprovePreview?.(run.id)}
-                                    className="flex-1 rounded-lg bg-[#D9FF00] px-2 py-1.5 text-[11px] font-bold text-black hover:bg-[#e3ff38]"
+                                    className="flex-1 rounded-lg bg-fy-accent px-2 py-1.5 text-[11px] font-bold text-black hover:bg-fy-accent-hover"
                                   >
                                     Render the rest ({run.awaitingApproval.remainingCredits} cr)
                                   </button>
@@ -3127,9 +3126,9 @@ export function GenjutsuWorkbench({
               {/* ── TAB 4: HOW IT WORKS GUIDE ─────────────────────────────────── */}
               {stageTab === "how-it-works" ? (
                 <div className="flex flex-col gap-6">
-                  <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-white/10 bg-[#121215] p-6 md:flex-row md:items-center">
+                  <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-white/10 bg-fy-surface-1 p-6 md:flex-row md:items-center">
                     <div>
-                      <span className="text-[11px] font-bold tracking-widest text-[#D9FF00] uppercase">
+                      <span className="text-[11px] font-bold tracking-widest text-fy-accent uppercase">
                         WORKFLOW ARCHITECTURE
                       </span>
                       <h2 className="mt-1 font-display text-2xl font-black text-white uppercase">
@@ -3149,8 +3148,8 @@ export function GenjutsuWorkbench({
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div className="flex flex-col gap-2.5 rounded-2xl border border-white/10 bg-[#121215] p-5">
-                      <span className="inline-flex size-8 items-center justify-center rounded-lg bg-[#D9FF00]/15 font-mono text-xs font-bold text-[#D9FF00]">
+                    <div className="flex flex-col gap-2.5 rounded-2xl border border-white/10 bg-fy-surface-1 p-5">
+                      <span className="inline-flex size-8 items-center justify-center rounded-lg bg-fy-accent/15 font-mono text-xs font-bold text-fy-accent">
                         01
                       </span>
                       <h3 className="text-sm font-bold text-white">
@@ -3163,8 +3162,8 @@ export function GenjutsuWorkbench({
                       </p>
                     </div>
 
-                    <div className="flex flex-col gap-2.5 rounded-2xl border border-white/10 bg-[#121215] p-5">
-                      <span className="inline-flex size-8 items-center justify-center rounded-lg bg-[#D9FF00]/15 font-mono text-xs font-bold text-[#D9FF00]">
+                    <div className="flex flex-col gap-2.5 rounded-2xl border border-white/10 bg-fy-surface-1 p-5">
+                      <span className="inline-flex size-8 items-center justify-center rounded-lg bg-fy-accent/15 font-mono text-xs font-bold text-fy-accent">
                         02
                       </span>
                       <h3 className="text-sm font-bold text-white">
@@ -3173,14 +3172,14 @@ export function GenjutsuWorkbench({
                       <p className="text-xs leading-relaxed text-zinc-400">
                         Upload up to 4 reference images in Motion Transfer or
                         Objects Swap mode (or 1 in Restyle). Click any thumbnail
-                        badge <code className="text-[#D9FF00]">[Ref 1]</code> to
-                        inject <code className="text-[#D9FF00]">@Image1</code>{" "}
+                        badge <code className="text-fy-accent">[Ref 1]</code> to
+                        inject <code className="text-fy-accent">@Image1</code>{" "}
                         into your prompt.
                       </p>
                     </div>
 
-                    <div className="flex flex-col gap-2.5 rounded-2xl border border-white/10 bg-[#121215] p-5">
-                      <span className="inline-flex size-8 items-center justify-center rounded-lg bg-[#D9FF00]/15 font-mono text-xs font-bold text-[#D9FF00]">
+                    <div className="flex flex-col gap-2.5 rounded-2xl border border-white/10 bg-fy-surface-1 p-5">
+                      <span className="inline-flex size-8 items-center justify-center rounded-lg bg-fy-accent/15 font-mono text-xs font-bold text-fy-accent">
                         03
                       </span>
                       <h3 className="text-sm font-bold text-white">
@@ -3191,7 +3190,7 @@ export function GenjutsuWorkbench({
                         <strong className="text-white">Restyle</strong> preset
                         (Anime, Claymation, Knitted Yarn, 3D Animation) or keep
                         photorealistic fidelity, then hit{" "}
-                        <strong className="text-[#D9FF00]">Generate</strong>.
+                        <strong className="text-fy-accent">Generate</strong>.
                       </p>
                     </div>
                   </div>
@@ -3206,7 +3205,7 @@ export function GenjutsuWorkbench({
       <button
         type="button"
         onClick={() => setStageTab("how-it-works")}
-        className="fixed bottom-4 right-4 z-30 flex size-7 items-center justify-center rounded-full border border-white/10 bg-[#161619] text-zinc-400 hover:text-white hover:bg-white/10 shadow-lg cursor-pointer transition-colors"
+        className="fixed bottom-4 right-4 z-30 flex size-7 items-center justify-center rounded-full border border-white/10 bg-fy-surface-2 text-zinc-400 hover:text-white hover:bg-white/10 shadow-lg cursor-pointer transition-colors"
         title="Need help? View how it works"
       >
         <span className="text-xs font-semibold">?</span>
@@ -3235,7 +3234,7 @@ export function GenjutsuWorkbench({
             className="relative flex flex-col w-full max-w-5xl max-h-[92vh] rounded-2xl bg-[#0E0E12] border border-white/15 overflow-hidden shadow-2xl"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 bg-[#141418]">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 bg-fy-surface-1">
               <div className="flex items-center gap-2.5 min-w-0">
                 <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
                   <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -3258,14 +3257,14 @@ export function GenjutsuWorkbench({
                   className={cn(
                     "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer select-none",
                     watermarkEnabled
-                      ? "border-[#D9FF00]/40 bg-[#D9FF00]/10 text-white"
+                      ? "border-fy-accent/40 bg-fy-accent/10 text-white"
                       : "border-white/10 bg-white/5 text-zinc-400 hover:text-white"
                   )}
                 >
                   <span
                     className={cn(
                       "size-1.5 rounded-full",
-                      watermarkEnabled ? "bg-[#D9FF00] shadow-[0_0_6px_#D9FF00]" : "bg-zinc-600"
+                      watermarkEnabled ? "bg-fy-accent shadow-[0_0_6px_#ff5b1f]" : "bg-zinc-600"
                     )}
                   />
                   <span>Watermark: {watermarkEnabled ? "ON" : "OFF"}</span>
@@ -3318,9 +3317,9 @@ export function GenjutsuWorkbench({
             </div>
 
             {/* Modal Footer: Informative Self-Explanatory Context */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t border-white/10 bg-[#121216] px-4 py-2.5 text-[11px] text-zinc-400">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t border-white/10 bg-fy-surface-1 px-4 py-2.5 text-[11px] text-zinc-400">
               <span className="flex items-center gap-1.5">
-                <Check className="size-3.5 text-[#D9FF00]" />
+                <Check className="size-3.5 text-fy-accent" />
                 Preserved 100% native aspect ratio — no borders, head, or feet are cropped during AI transfer.
               </span>
               <span className="text-[10px] text-zinc-500 font-mono">
@@ -3415,7 +3414,7 @@ function MasonryVideoCard({
         </>
       }
       className={cn(
-        "overflow-hidden rounded-2xl border border-white/[0.08] bg-[#141417] transition-all hover:border-white/25",
+        "overflow-hidden rounded-2xl border border-white/[0.08] bg-fy-surface-2 transition-all hover:border-white/25",
         portrait
           ? "h-[520px]"
           : tall
@@ -3460,9 +3459,9 @@ function MotionLibraryVerticalCard({
         }
       }}
       className={cn(
-        "group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border transition-all aspect-[9/16] bg-[#141417]",
+        "group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border transition-all aspect-[9/16] bg-fy-surface-2",
         isSelected
-          ? "border-[#D9FF00] ring-2 ring-[#D9FF00]/40 shadow-[0_0_24px_rgba(217,255,0,0.25)]"
+          ? "border-fy-accent ring-2 ring-fy-accent/40 shadow-[0_0_24px_rgba(255,91,31,0.25)]"
           : "border-white/[0.08] hover:border-white/25 hover:shadow-xl"
       )}
     >
@@ -3489,7 +3488,7 @@ function MotionLibraryVerticalCard({
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
 
       {isSelected ? (
-        <span className="absolute top-2.5 right-2.5 flex size-5 items-center justify-center rounded-full bg-[#D9FF00] text-black">
+        <span className="absolute top-2.5 right-2.5 flex size-5 items-center justify-center rounded-full bg-fy-accent text-black">
           <Check className="size-3 stroke-[3]" />
         </span>
       ) : null}

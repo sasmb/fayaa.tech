@@ -35,6 +35,7 @@ import { logout } from "wasp/client/auth";
 import { getUserAvatarUrl, DEFAULT_USER_AVATAR } from "./defaultAvatar";
 import { PaymentPlanId, prettyPaymentPlanName } from "../payment/plans";
 import { creditCostForResolution } from "../video-studio/taskSync";
+import { FayaaLogo } from "../client/design";
 
 interface AccountPageProps {
   user: User;
@@ -175,21 +176,14 @@ export function AccountPage({ user }: AccountPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090a] text-white flex flex-col font-sans selection:bg-[#c8ff00] selection:text-black">
+    <div className="min-h-screen bg-fy-ink text-white flex flex-col font-sans selection:bg-fy-accent selection:text-black">
       {/* 1. Global Dark Header */}
-      <header className="h-14 border-b border-[#1c1c22] bg-[#09090a]/95 backdrop-blur-md px-4 flex items-center justify-between sticky top-0 z-40">
+      <header className="h-14 border-b border-fy-surface-2 bg-fy-ink/95 backdrop-blur-md px-4 flex items-center justify-between sticky top-0 z-40">
         {/* Left: Brand + Nav Items */}
         <div className="flex items-center gap-5">
-          <Link to="/studio" className="flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#c8ff00] to-emerald-400 flex items-center justify-center font-black text-black text-sm shadow-[0_0_15px_rgba(200,255,0,0.3)] transition-transform group-hover:scale-105">
-              ⚡
-            </div>
-            <span className="font-bold tracking-tight text-sm text-white group-hover:text-[#c8ff00] transition-colors">
-              FAYAA
-            </span>
-          </Link>
+          <FayaaLogo to="/studio" />
 
-          <nav className="hidden sm:flex items-center gap-4 text-xs text-[#8e8e96]">
+          <nav className="hidden sm:flex items-center gap-4 text-xs text-fy-muted">
             <Link
               to="/"
               className="hover:text-white transition-colors"
@@ -201,7 +195,7 @@ export function AccountPage({ user }: AccountPageProps) {
               className="hover:text-white transition-colors flex items-center gap-1.5"
             >
               <span>Video Studio</span>
-              <span className="text-[9px] bg-[#c8ff00]/15 border border-[#c8ff00]/30 text-[#c8ff00] font-bold px-1.5 py-0.5 rounded leading-none">
+              <span className="text-[9px] bg-fy-accent/15 border border-fy-accent/30 text-fy-accent font-bold px-1.5 py-0.5 rounded leading-none">
                 Genjutsu
               </span>
             </Link>
@@ -218,7 +212,7 @@ export function AccountPage({ user }: AccountPageProps) {
         <div className="flex items-center gap-3">
           <Link
             to={routes.PricingPageRoute.to}
-            className="flex items-center gap-1.5 bg-[#141417] border border-[#2b2b35] hover:border-[#c8ff00]/40 text-[#c8ff00] text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+            className="flex items-center gap-1.5 bg-fy-surface-2 border border-fy-surface-4 hover:border-fy-accent/40 text-fy-accent text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
           >
             <Crown className="w-3.5 h-3.5" />
             <span>Get Credits</span>
@@ -227,7 +221,7 @@ export function AccountPage({ user }: AccountPageProps) {
           <button
             type="button"
             onClick={() => void logout()}
-            className="flex items-center gap-1.5 bg-[#141417] border border-[#2b2b35] hover:border-red-500/40 text-zinc-300 hover:text-red-400 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+            className="flex items-center gap-1.5 bg-fy-surface-2 border border-fy-surface-4 hover:border-red-500/40 text-zinc-300 hover:text-red-400 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer"
             title="Log out of your account"
           >
             <LogOut className="w-3.5 h-3.5" />
@@ -238,7 +232,7 @@ export function AccountPage({ user }: AccountPageProps) {
           <button
             type="button"
             onClick={() => setIsEditModalOpen(true)}
-            className="w-8 h-8 rounded-full overflow-hidden border border-white/20 hover:border-[#c8ff00] transition-colors focus:outline-none cursor-pointer"
+            className="w-8 h-8 rounded-full overflow-hidden border border-white/20 hover:border-fy-accent transition-colors focus:outline-none cursor-pointer"
             title="Edit profile"
           >
             <img
@@ -261,7 +255,7 @@ export function AccountPage({ user }: AccountPageProps) {
               navigate("/studio");
             }
           }}
-          className="flex items-center gap-1 text-xs text-[#8e8e96] hover:text-white transition-colors cursor-pointer"
+          className="flex items-center gap-1 text-xs text-fy-muted hover:text-white transition-colors cursor-pointer"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>Back</span>
@@ -274,7 +268,7 @@ export function AccountPage({ user }: AccountPageProps) {
         <aside className="w-full md:w-[320px] shrink-0 flex flex-col">
           {/* Avatar with diamond badge */}
           <div className="relative w-28 h-28 mb-5 group">
-            <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-[#26262e] bg-[#141418] shadow-xl">
+            <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-[#26262e] bg-fy-surface-1 shadow-xl">
               <img
                 src={profile.avatarUrl || getUserAvatarUrl(user)}
                 alt={profile.name}
@@ -283,8 +277,8 @@ export function AccountPage({ user }: AccountPageProps) {
             </div>
 
             {/* Level / Points Diamond Badge */}
-            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-[#17171d] border border-[#2b2b36] rounded-full px-2.5 py-0.5 flex items-center gap-1 text-[11px] font-semibold text-white shadow-md">
-              <span className="text-[#a1a1aa] text-[9px]">◆</span>
+            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-[#17171d] border border-fy-surface-4 rounded-full px-2.5 py-0.5 flex items-center gap-1 text-[11px] font-semibold text-white shadow-md">
+              <span className="text-fy-muted text-[9px]">◆</span>
               <span>{user.credits ?? 0}</span>
             </div>
 
@@ -304,48 +298,48 @@ export function AccountPage({ user }: AccountPageProps) {
             <h1 className="text-2xl font-bold tracking-tight text-white leading-tight">
               {profile.name || profile.username || "Creator"}
             </h1>
-            <p className="text-xs text-[#888892] mt-0.5">@{profile.username}</p>
+            <p className="text-xs text-fy-muted mt-0.5">@{profile.username}</p>
           </div>
 
           {/* Real Metrics Row: Tasks, Completed, Processing, Ratio */}
-          <div className="grid grid-cols-4 gap-2 py-3 border-y border-[#18181f] text-center my-2">
+          <div className="grid grid-cols-4 gap-2 py-3 border-y border-fy-surface-2 text-center my-2">
             <div className="flex flex-col">
               <span className="text-sm font-bold text-white">
                 {videoTasks?.length ?? 0}
               </span>
-              <span className="text-[10px] text-[#71717a]">Tasks</span>
+              <span className="text-[10px] text-fy-subtle">Tasks</span>
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-bold text-emerald-400">
                 {completedCount}
               </span>
-              <span className="text-[10px] text-[#71717a]">Completed</span>
+              <span className="text-[10px] text-fy-subtle">Completed</span>
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-bold text-amber-400">
                 {processingCount}
               </span>
-              <span className="text-[10px] text-[#71717a]">In Flight</span>
+              <span className="text-[10px] text-fy-subtle">In Flight</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-[#c8ff00]">
+              <span className="text-sm font-bold text-fy-accent">
                 30/$1
               </span>
-              <span className="text-[10px] text-[#71717a]">Rate</span>
+              <span className="text-[10px] text-fy-subtle">Rate</span>
             </div>
           </div>
 
           {/* Subscription & Credit Wallet Card */}
-          <div className="mt-3 p-4 rounded-2xl bg-gradient-to-b from-[#141419] to-[#0f0f13] border border-[#23232c] shadow-lg">
+          <div className="mt-3 p-4 rounded-2xl bg-gradient-to-b from-fy-surface-1 to-fy-surface-1 border border-fy-surface-3 shadow-lg">
             <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[11px] font-semibold tracking-wider uppercase text-[#8e8e96]">
+              <span className="text-[11px] font-semibold tracking-wider uppercase text-fy-muted">
                 Plan & Credits
               </span>
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   isSubscribed
                     ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                    : "bg-white/10 text-[#a1a1aa] border border-white/10"
+                    : "bg-white/10 text-fy-muted border border-white/10"
                 }`}
               >
                 {isSubscribed ? "Active Member" : "Free Starter"}
@@ -356,13 +350,13 @@ export function AccountPage({ user }: AccountPageProps) {
               <h3 className="text-sm font-bold text-white truncate pr-2">
                 {planName}
               </h3>
-              <div className="flex items-center gap-1 text-sm font-black text-[#c8ff00]">
+              <div className="flex items-center gap-1 text-sm font-black text-fy-accent">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>{(user.credits ?? 0).toLocaleString()}</span>
               </div>
             </div>
 
-            <p className="text-[11px] text-[#71717a] mb-3">
+            <p className="text-[11px] text-fy-subtle mb-3">
               5s at 720p: Light {creditCostForResolution("720p", "light", 5)} credits • Pro{" "}
               {creditCostForResolution("720p", "pro", 5)} credits
             </p>
@@ -370,7 +364,7 @@ export function AccountPage({ user }: AccountPageProps) {
             <div className="space-y-2">
               <Link
                 to={routes.PricingPageRoute.to}
-                className="w-full bg-[#c8ff00] hover:bg-[#d8ff33] text-black text-xs font-bold py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                className="w-full bg-fy-accent hover:bg-fy-accent text-black text-xs font-bold py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm"
               >
                 <Crown className="w-3.5 h-3.5" />
                 <span>Top Up / Upgrade Plan</span>
@@ -381,7 +375,7 @@ export function AccountPage({ user }: AccountPageProps) {
                   href={customerPortalUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full bg-[#18181f] hover:bg-[#22222b] border border-[#292936] text-[#a1a1aa] hover:text-white text-xs font-medium py-1.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                  className="w-full bg-fy-surface-2 hover:bg-fy-surface-3 border border-[#292936] text-fy-muted hover:text-white text-xs font-medium py-1.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
                 >
                   <CreditCard className="w-3.5 h-3.5" />
                   <span>Manage Billing & Invoices</span>
@@ -395,20 +389,20 @@ export function AccountPage({ user }: AccountPageProps) {
             <button
               type="button"
               onClick={() => setIsEditModalOpen(true)}
-              className="flex-1 bg-[#16161b] hover:bg-[#202027] border border-[#252530] text-white text-xs font-semibold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+              className="flex-1 bg-fy-surface-2 hover:bg-fy-surface-3 border border-fy-surface-4 text-white text-xs font-semibold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
             >
-              <Pencil className="w-3.5 h-3.5 text-[#9e9ea7]" />
+              <Pencil className="w-3.5 h-3.5 text-fy-muted" />
               <span>Edit profile</span>
             </button>
 
             <button
               type="button"
               onClick={handleCopyProfileLink}
-              className="p-2.5 rounded-xl border border-[#252530] bg-[#16161b] hover:bg-[#202027] text-[#9e9ea7] hover:text-white transition-all cursor-pointer"
+              className="p-2.5 rounded-xl border border-fy-surface-4 bg-fy-surface-2 hover:bg-fy-surface-3 text-fy-muted hover:text-white transition-all cursor-pointer"
               title={copiedLink ? "Link copied!" : "Copy profile link"}
             >
               {copiedLink ? (
-                <Check className="w-4 h-4 text-[#c8ff00]" />
+                <Check className="w-4 h-4 text-fy-accent" />
               ) : (
                 <Copy className="w-4 h-4" />
               )}
@@ -417,7 +411,7 @@ export function AccountPage({ user }: AccountPageProps) {
             <button
               type="button"
               onClick={() => void logout()}
-              className="p-2.5 rounded-xl border border-red-500/25 bg-[#16161b] hover:bg-red-500/15 text-red-400 hover:text-red-300 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold px-3"
+              className="p-2.5 rounded-xl border border-red-500/25 bg-fy-surface-2 hover:bg-red-500/15 text-red-400 hover:text-red-300 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold px-3"
               title="Log out of your account"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -428,34 +422,34 @@ export function AccountPage({ user }: AccountPageProps) {
           {/* Headline / Bio Snippet */}
           <div className="mt-5">
             {profile.headline ? (
-              <p className="text-xs text-[#a1a1aa] leading-relaxed">
+              <p className="text-xs text-fy-muted leading-relaxed">
                 {profile.headline}
               </p>
             ) : (
-              <p className="text-xs text-[#52525b] italic">
+              <p className="text-xs text-fy-subtle italic">
                 No headline set. Click "Edit profile" to add one.
               </p>
             )}
             {profile.bio && (
-              <p className="text-xs text-[#71717a] mt-2 whitespace-pre-line leading-relaxed">
+              <p className="text-xs text-fy-subtle mt-2 whitespace-pre-line leading-relaxed">
                 {profile.bio}
               </p>
             )}
           </div>
 
           {/* Location & Member Info */}
-          <div className="mt-6 space-y-3 text-xs text-[#8e8e96]">
+          <div className="mt-6 space-y-3 text-xs text-fy-muted">
             <button
               type="button"
               onClick={() => setIsEditModalOpen(true)}
               className="flex items-center gap-2 hover:text-white transition-colors text-left w-full group cursor-pointer"
             >
-              <MapPin className="w-3.5 h-3.5 text-[#71717a] group-hover:text-[#c8ff00] transition-colors shrink-0" />
+              <MapPin className="w-3.5 h-3.5 text-fy-subtle group-hover:text-fy-accent transition-colors shrink-0" />
               <span>{profile.location || "Add your location"}</span>
             </button>
 
             <div className="flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5 text-[#71717a] shrink-0" />
+              <Calendar className="w-3.5 h-3.5 text-fy-subtle shrink-0" />
               <span>Member since {memberSinceText}</span>
             </div>
           </div>
@@ -470,10 +464,10 @@ export function AccountPage({ user }: AccountPageProps) {
                     href={s.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between text-xs text-[#a1a1aa] hover:text-[#c8ff00] bg-[#121217] border border-[#1f1f26] rounded-lg px-3 py-1.5 transition-colors"
+                    className="flex items-center justify-between text-xs text-fy-muted hover:text-fy-accent bg-fy-surface-1 border border-fy-surface-3 rounded-lg px-3 py-1.5 transition-colors"
                   >
                     <span className="truncate">{s.platform || s.url}</span>
-                    <ExternalLink className="w-3 h-3 text-[#71717a]" />
+                    <ExternalLink className="w-3 h-3 text-fy-subtle" />
                   </a>
                 ))}
               </div>
@@ -482,7 +476,7 @@ export function AccountPage({ user }: AccountPageProps) {
             <button
               type="button"
               onClick={() => setIsSocialModalOpen(true)}
-              className="w-full border border-dashed border-[#262632] hover:border-white/30 text-[#8e8e96] hover:text-white text-xs font-medium py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              className="w-full border border-dashed border-[#262632] hover:border-white/30 text-fy-muted hover:text-white text-xs font-medium py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>
@@ -492,11 +486,11 @@ export function AccountPage({ user }: AccountPageProps) {
           </div>
 
           {/* Quick Sign Out Action */}
-          <div className="mt-8 pt-4 border-t border-[#1f1f26]">
+          <div className="mt-8 pt-4 border-t border-fy-surface-3">
             <button
               type="button"
               onClick={() => void logout()}
-              className="w-full bg-[#141418] hover:bg-red-500/10 border border-[#23232c] hover:border-red-500/30 text-zinc-400 hover:text-red-400 text-xs font-semibold py-2 px-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer"
+              className="w-full bg-fy-surface-1 hover:bg-red-500/10 border border-fy-surface-3 hover:border-red-500/30 text-zinc-400 hover:text-red-400 text-xs font-semibold py-2 px-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Sign Out</span>
@@ -507,31 +501,31 @@ export function AccountPage({ user }: AccountPageProps) {
         {/* Right Main Content Area: My Video Creations */}
         <section className="flex-1 flex flex-col min-w-0">
           {/* Section Header with filter buttons and New Video button */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#181820] pb-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-fy-surface-2 pb-4 mb-6">
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-white tracking-tight">
                   My Video Creations
                 </h2>
-                <span className="text-xs bg-[#1a1a22] text-[#c8ff00] font-semibold px-2 py-0.5 rounded-full border border-[#2a2a36]">
+                <span className="text-xs bg-fy-surface-2 text-fy-accent font-semibold px-2 py-0.5 rounded-full border border-[#2a2a36]">
                   {videoTasks?.length ?? 0}
                 </span>
               </div>
-              <p className="text-xs text-[#8e8e96] mt-0.5">
+              <p className="text-xs text-fy-muted mt-0.5">
                 Motion transfer and video-to-video generations from FAYAA Studio
               </p>
             </div>
 
             <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
               {/* Task filters */}
-              <div className="flex items-center gap-1 bg-[#121216] border border-[#23232c] p-1 rounded-xl">
+              <div className="flex items-center gap-1 bg-fy-surface-1 border border-fy-surface-3 p-1 rounded-xl">
                 <button
                   type="button"
                   onClick={() => setTaskFilter("all")}
                   className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     taskFilter === "all"
                       ? "bg-white text-black shadow-sm"
-                      : "text-[#8e8e96] hover:text-white"
+                      : "text-fy-muted hover:text-white"
                   }`}
                 >
                   All ({videoTasks?.length ?? 0})
@@ -542,7 +536,7 @@ export function AccountPage({ user }: AccountPageProps) {
                   className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     taskFilter === "completed"
                       ? "bg-emerald-500 text-black shadow-sm"
-                      : "text-[#8e8e96] hover:text-white"
+                      : "text-fy-muted hover:text-white"
                   }`}
                 >
                   Completed ({completedCount})
@@ -553,7 +547,7 @@ export function AccountPage({ user }: AccountPageProps) {
                   className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     taskFilter === "processing"
                       ? "bg-amber-400 text-black shadow-sm"
-                      : "text-[#8e8e96] hover:text-white"
+                      : "text-fy-muted hover:text-white"
                   }`}
                 >
                   In Flight ({processingCount})
@@ -562,7 +556,7 @@ export function AccountPage({ user }: AccountPageProps) {
 
               <Link
                 to="/studio"
-                className="bg-[#c8ff00] hover:bg-[#d8ff33] text-black text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                className="bg-fy-accent hover:bg-fy-accent text-black text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
               >
                 <Sparkles className="w-3.5 h-3.5 text-black" />
                 <span>New Video</span>
@@ -573,13 +567,13 @@ export function AccountPage({ user }: AccountPageProps) {
           {/* Video Creations Grid / States */}
           {isTasksLoading ? (
             <div className="py-24 flex flex-col items-center justify-center text-center">
-              <Loader2 className="w-8 h-8 text-[#c8ff00] animate-spin mb-3" />
-              <p className="text-xs text-[#8e8e96]">Loading your video creations...</p>
+              <Loader2 className="w-8 h-8 text-fy-accent animate-spin mb-3" />
+              <p className="text-xs text-fy-muted">Loading your video creations...</p>
             </div>
           ) : filteredTasks.length === 0 ? (
-            <div className="py-20 px-6 text-center border border-dashed border-[#23232e] rounded-2xl bg-[#0f0f13] flex flex-col items-center justify-center">
-              <div className="w-14 h-14 rounded-2xl bg-[#16161c] border border-[#2b2b36] flex items-center justify-center mb-4 text-[#8e8e96]">
-                <Film className="w-7 h-7 text-[#71717a]" />
+            <div className="py-20 px-6 text-center border border-dashed border-fy-surface-3 rounded-2xl bg-fy-surface-1 flex flex-col items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-fy-surface-2 border border-fy-surface-4 flex items-center justify-center mb-4 text-fy-muted">
+                <Film className="w-7 h-7 text-fy-subtle" />
               </div>
               <h3 className="text-sm font-semibold text-white">
                 {taskFilter === "all"
@@ -588,14 +582,14 @@ export function AccountPage({ user }: AccountPageProps) {
                   ? "No completed videos found"
                   : "No in-flight video tasks"}
               </h3>
-              <p className="text-xs text-[#71717a] mt-1.5 max-w-sm">
+              <p className="text-xs text-fy-subtle mt-1.5 max-w-sm">
                 {taskFilter === "all"
                   ? "Generate motion transfer animations and portrait videos using Genjutsu Light (6 creds/s) or Genjutsu Pro (12 creds/s)."
                   : "All completed tasks will appear here with direct playback, MP4 download, and shareable links."}
               </p>
               <Link
                 to="/studio"
-                className="mt-5 inline-flex items-center gap-1.5 bg-[#c8ff00] hover:bg-[#d8ff33] text-black text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-sm"
+                className="mt-5 inline-flex items-center gap-1.5 bg-fy-accent hover:bg-fy-accent text-black text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-sm"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Launch Video Studio</span>
@@ -626,11 +620,11 @@ export function AccountPage({ user }: AccountPageProps) {
                         />
                       ) : isProcessing ? (
                         <div className="flex flex-col items-center justify-center text-center p-6 text-neutral-400">
-                          <Loader2 className="w-8 h-8 text-[#c8ff00] animate-spin mb-3" />
+                          <Loader2 className="w-8 h-8 text-fy-accent animate-spin mb-3" />
                           <span className="text-xs font-semibold text-white">
                             Synthesizing Motion
                           </span>
-                          <span className="text-[11px] text-[#71717a] mt-1">
+                          <span className="text-[11px] text-fy-subtle mt-1">
                             Genjutsu {isPro ? "Pro" : "Light"} in progress
                           </span>
                         </div>
@@ -640,7 +634,7 @@ export function AccountPage({ user }: AccountPageProps) {
                           <span className="text-xs font-semibold text-white">
                             Generation Failed
                           </span>
-                          <span className="text-[11px] text-[#71717a] mt-1">
+                          <span className="text-[11px] text-fy-subtle mt-1">
                             Credits refunded if applicable
                           </span>
                         </div>
@@ -668,7 +662,7 @@ export function AccountPage({ user }: AccountPageProps) {
                     {/* Task Metadata & Actions */}
                     <div className="p-3.5 flex flex-col flex-1 justify-between gap-3">
                       <div>
-                        <div className="flex items-center justify-between text-[11px] text-[#8e8e96] mb-1">
+                        <div className="flex items-center justify-between text-[11px] text-fy-muted mb-1">
                           <span>{task.resolution || "720p"}</span>
                           <span>
                             {task.createdAt
@@ -688,15 +682,15 @@ export function AccountPage({ user }: AccountPageProps) {
 
                       {/* Card Action Buttons */}
                       {isCompleted && task.outputVideoUrl ? (
-                        <div className="flex items-center gap-1.5 pt-2 border-t border-[#1d1d25]">
+                        <div className="flex items-center gap-1.5 pt-2 border-t border-fy-surface-3">
                           <a
                             href={task.outputVideoUrl}
                             download={`fayaa-${task.id}.mp4`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 bg-[#181820] hover:bg-[#22222d] border border-[#2a2a38] text-white text-[11px] font-semibold py-1.5 px-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+                            className="flex-1 bg-fy-surface-2 hover:bg-fy-surface-3 border border-fy-surface-4 text-white text-[11px] font-semibold py-1.5 px-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
                           >
-                            <Download className="w-3.5 h-3.5 text-[#a1a1aa]" />
+                            <Download className="w-3.5 h-3.5 text-fy-muted" />
                             <span>Download MP4</span>
                           </a>
 
@@ -705,7 +699,7 @@ export function AccountPage({ user }: AccountPageProps) {
                             onClick={() =>
                               handleCopyVideoUrl(task.id, task.outputVideoUrl!)
                             }
-                            className="p-1.5 rounded-lg border border-[#2a2a38] bg-[#181820] hover:bg-[#22222d] text-[#a1a1aa] hover:text-white transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg border border-fy-surface-4 bg-fy-surface-2 hover:bg-fy-surface-3 text-fy-muted hover:text-white transition-colors cursor-pointer"
                             title={
                               copiedTaskId === task.id
                                 ? "Link copied!"
@@ -713,18 +707,18 @@ export function AccountPage({ user }: AccountPageProps) {
                             }
                           >
                             {copiedTaskId === task.id ? (
-                              <Check className="w-3.5 h-3.5 text-[#c8ff00]" />
+                              <Check className="w-3.5 h-3.5 text-fy-accent" />
                             ) : (
                               <Copy className="w-3.5 h-3.5" />
                             )}
                           </button>
                         </div>
                       ) : (
-                        <div className="pt-2 border-t border-[#1d1d25] flex items-center justify-between text-[11px] text-[#71717a]">
+                        <div className="pt-2 border-t border-fy-surface-3 flex items-center justify-between text-[11px] text-fy-subtle">
                           <span>ID: {task.id.slice(0, 8)}...</span>
                           <Link
                             to="/studio"
-                            className="text-[#c8ff00] hover:underline"
+                            className="text-fy-accent hover:underline"
                           >
                             Open in Studio →
                           </Link>
@@ -878,16 +872,16 @@ function EditProfileModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
       <div
-        className="relative w-full max-w-lg bg-[#141418] border border-[#272733] rounded-2xl p-6 shadow-2xl text-white max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg bg-fy-surface-1 border border-fy-surface-4 rounded-2xl p-6 shadow-2xl text-white max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#202029]">
+        <div className="flex items-center justify-between pb-4 border-b border-fy-surface-3">
           <h2 className="text-base font-semibold text-white">Edit profile</h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-[#71717a] hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+            className="text-fy-subtle hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -902,13 +896,13 @@ function EditProfileModal({
         <form onSubmit={handleSave} className="mt-5 space-y-5">
           {/* 1. Profile Picture Row */}
           <div>
-            <label className="block text-xs font-medium text-[#a1a1aa] mb-2">
+            <label className="block text-xs font-medium text-fy-muted mb-2">
               Profile picture
             </label>
             <div className="flex items-center gap-3">
               {/* Avatar thumbnail with camera hover */}
               <div
-                className="relative w-14 h-14 rounded-full overflow-hidden border border-[#2f2f3d] bg-[#1a1a22] shrink-0 cursor-pointer group"
+                className="relative w-14 h-14 rounded-full overflow-hidden border border-[#2f2f3d] bg-fy-surface-2 shrink-0 cursor-pointer group"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <img
@@ -935,7 +929,7 @@ function EditProfileModal({
                 <button
                   type="button"
                   onClick={handlePromptUrl}
-                  className="p-2.5 rounded-xl bg-[#1d1d24] hover:bg-[#272733] border border-[#2b2b3a] text-[#a1a1aa] hover:text-white transition-colors cursor-pointer"
+                  className="p-2.5 rounded-xl bg-fy-surface-3 hover:bg-fy-surface-4 border border-fy-surface-4 text-fy-muted hover:text-white transition-colors cursor-pointer"
                   title="Paste Image URL"
                 >
                   <LinkIcon className="w-4 h-4" />
@@ -944,7 +938,7 @@ function EditProfileModal({
                 <button
                   type="button"
                   onClick={handleResetAvatar}
-                  className="p-2.5 rounded-xl bg-[#1d1d24] hover:bg-rose-950/30 border border-[#2b2b3a] text-[#a1a1aa] hover:text-rose-400 transition-colors cursor-pointer"
+                  className="p-2.5 rounded-xl bg-fy-surface-3 hover:bg-rose-950/30 border border-fy-surface-4 text-fy-muted hover:text-rose-400 transition-colors cursor-pointer"
                   title="Reset to default avatar"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -958,19 +952,19 @@ function EditProfileModal({
             <div className="flex items-center justify-between mb-1.5">
               <label
                 htmlFor="edit-name"
-                className="text-xs font-medium text-[#a1a1aa]"
+                className="text-xs font-medium text-fy-muted"
               >
                 Name
               </label>
 
               {/* Toggle switch for show publicly */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-[#8e8e96]">Show publicly</span>
+                <span className="text-xs text-fy-muted">Show publicly</span>
                 <button
                   type="button"
                   onClick={() => setShowNamePublicly(!showNamePublicly)}
                   className={`w-9 h-5 flex items-center rounded-full p-0.5 transition-colors cursor-pointer ${
-                    showNamePublicly ? "bg-[#c8ff00]" : "bg-[#272733]"
+                    showNamePublicly ? "bg-fy-accent" : "bg-fy-surface-4"
                   }`}
                 >
                   <div
@@ -988,10 +982,10 @@ function EditProfileModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your full name"
-              className="w-full bg-[#1b1b22] border border-[#2b2b3a] focus:border-white/30 text-white text-sm rounded-xl px-3.5 py-2.5 outline-none transition-colors"
+              className="w-full bg-fy-surface-2 border border-fy-surface-4 focus:border-white/30 text-white text-sm rounded-xl px-3.5 py-2.5 outline-none transition-colors"
             />
 
-            <p className="text-[11px] text-[#71717a] mt-1.5">
+            <p className="text-[11px] text-fy-subtle mt-1.5">
               {showNamePublicly
                 ? "Visible. Visitors will see your real name."
                 : `Hidden. Visitors see @${username || "username"} instead`}
@@ -1002,7 +996,7 @@ function EditProfileModal({
           <div>
             <label
               htmlFor="edit-username"
-              className="block text-xs font-medium text-[#a1a1aa] mb-1.5"
+              className="block text-xs font-medium text-fy-muted mb-1.5"
             >
               Username
             </label>
@@ -1016,7 +1010,7 @@ function EditProfileModal({
                 )
               }
               placeholder="username"
-              className="w-full bg-[#1b1b22] border border-[#2b2b3a] focus:border-white/30 text-white text-sm rounded-xl px-3.5 py-2.5 outline-none transition-colors font-mono"
+              className="w-full bg-fy-surface-2 border border-fy-surface-4 focus:border-white/30 text-white text-sm rounded-xl px-3.5 py-2.5 outline-none transition-colors font-mono"
             />
           </div>
 
@@ -1024,7 +1018,7 @@ function EditProfileModal({
           <div>
             <label
               htmlFor="edit-headline"
-              className="block text-xs font-medium text-[#a1a1aa] mb-1.5"
+              className="block text-xs font-medium text-fy-muted mb-1.5"
             >
               Headline
             </label>
@@ -1034,9 +1028,9 @@ function EditProfileModal({
               value={headline}
               onChange={(e) => setHeadline(e.target.value)}
               placeholder="Examples: Film Director, Film Creator"
-              className="w-full bg-[#1b1b22] border border-[#2b2b3a] focus:border-white/30 text-white text-sm rounded-xl px-3.5 py-2.5 outline-none transition-colors"
+              className="w-full bg-fy-surface-2 border border-fy-surface-4 focus:border-white/30 text-white text-sm rounded-xl px-3.5 py-2.5 outline-none transition-colors"
             />
-            <p className="text-[11px] text-[#71717a] mt-1.5">
+            <p className="text-[11px] text-fy-subtle mt-1.5">
               Examples: Film Director, Film Creator
             </p>
           </div>
@@ -1045,7 +1039,7 @@ function EditProfileModal({
           <div>
             <label
               htmlFor="edit-bio"
-              className="block text-xs font-medium text-[#a1a1aa] mb-1.5"
+              className="block text-xs font-medium text-fy-muted mb-1.5"
             >
               Bio
             </label>
@@ -1055,9 +1049,9 @@ function EditProfileModal({
               onChange={(e) => setBio(e.target.value.slice(0, 300))}
               rows={4}
               placeholder="Type bio text here"
-              className="w-full bg-[#1b1b22] border border-[#2b2b3a] focus:border-white/30 text-white text-sm rounded-xl p-3 outline-none transition-colors resize-none"
+              className="w-full bg-fy-surface-2 border border-fy-surface-4 focus:border-white/30 text-white text-sm rounded-xl p-3 outline-none transition-colors resize-none"
             />
-            <p className="text-[11px] text-[#71717a] mt-1 text-right">
+            <p className="text-[11px] text-fy-subtle mt-1 text-right">
               {bio.length} / 300
             </p>
           </div>
@@ -1066,7 +1060,7 @@ function EditProfileModal({
           <div>
             <label
               htmlFor="edit-location"
-              className="block text-xs font-medium text-[#a1a1aa] mb-1.5"
+              className="block text-xs font-medium text-fy-muted mb-1.5"
             >
               Location
             </label>
@@ -1076,17 +1070,17 @@ function EditProfileModal({
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Where are you based?"
-              className="w-full bg-[#1b1b22] border border-[#2b2b3a] focus:border-white/30 text-white text-sm rounded-xl px-3.5 py-2.5 outline-none transition-colors"
+              className="w-full bg-fy-surface-2 border border-fy-surface-4 focus:border-white/30 text-white text-sm rounded-xl px-3.5 py-2.5 outline-none transition-colors"
             />
           </div>
 
           {/* Action Buttons: Cancel and Save */}
-          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#202029]">
+          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-fy-surface-3">
             <button
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="bg-[#1f1f26] hover:bg-[#2a2a35] text-white text-xs font-medium px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
+              className="bg-fy-surface-3 hover:bg-[#2a2a35] text-white text-xs font-medium px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -1156,15 +1150,15 @@ function SocialLinksModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="relative w-full max-w-md bg-[#141418] border border-[#272733] rounded-2xl p-6 shadow-2xl text-white">
-        <div className="flex items-center justify-between pb-3 border-b border-[#202029]">
+      <div className="relative w-full max-w-md bg-fy-surface-1 border border-fy-surface-4 rounded-2xl p-6 shadow-2xl text-white">
+        <div className="flex items-center justify-between pb-3 border-b border-fy-surface-3">
           <h2 className="text-base font-semibold text-white">
             Add social links
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-[#71717a] hover:text-white p-1 cursor-pointer"
+            className="text-fy-subtle hover:text-white p-1 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -1173,7 +1167,7 @@ function SocialLinksModal({
         <form onSubmit={handleSave} className="mt-4 space-y-3.5">
           {links.map((link, idx) => (
             <div key={idx}>
-              <label className="block text-xs font-medium text-[#a1a1aa] mb-1">
+              <label className="block text-xs font-medium text-fy-muted mb-1">
                 {link.platform}
               </label>
               <input
@@ -1181,23 +1175,23 @@ function SocialLinksModal({
                 value={link.url}
                 onChange={(e) => handleUpdate(idx, e.target.value)}
                 placeholder={`https://${link.platform.toLowerCase().replace(/[^a-z]/g, "")}.com/...`}
-                className="w-full bg-[#1b1b22] border border-[#2b2b3a] focus:border-white/30 text-white text-xs rounded-xl px-3.5 py-2.5 outline-none"
+                className="w-full bg-fy-surface-2 border border-fy-surface-4 focus:border-white/30 text-white text-xs rounded-xl px-3.5 py-2.5 outline-none"
               />
             </div>
           ))}
 
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#202029]">
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-fy-surface-3">
             <button
               type="button"
               onClick={onClose}
-              className="bg-[#1f1f26] text-white text-xs px-4 py-2 rounded-xl cursor-pointer"
+              className="bg-fy-surface-3 text-white text-xs px-4 py-2 rounded-xl cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="bg-[#c8ff00] text-black text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
+              className="bg-fy-accent text-black text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
             >
               {isSaving ? "Saving..." : "Save Links"}
             </button>

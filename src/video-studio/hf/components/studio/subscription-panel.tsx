@@ -1,5 +1,6 @@
 "use client"
 
+import { FayaaMark } from "../../../../client/design/FayaaLogo"
 import { useState } from "react"
 import { Link, useNavigate } from "react-router"
 import {
@@ -363,19 +364,17 @@ export function StudioSubscriptionPanel({
     : activeUltra.monthlyPrice
 
   return (
-    <div className="min-h-dvh w-full bg-[#09090A] text-white select-none">
+    <div className="min-h-dvh w-full bg-fy-ink text-white select-none">
       {/* ══════════════════════════════════════════════════════════════════════
           GLOBAL TOP HEADER BAR (Matches Screenshots 1–6)
          ══════════════════════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-40 flex h-[52px] w-full items-center justify-between border-b border-white/[0.07] bg-[#09090A]/95 px-4 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 flex h-[52px] w-full items-center justify-between border-b border-white/[0.07] bg-fy-ink/95 px-4 backdrop-blur-xl">
         <div className="flex items-center gap-5 overflow-x-auto">
           <Link
             to={routes.LandingPageRoute.to}
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-black transition-transform hover:scale-105"
+            className="fy-heat-bg flex size-8 shrink-0 items-center justify-center rounded-fy-sm text-fy-on-accent shadow-[0_8px_24px_-8px_rgb(255_91_31/0.8)] transition-transform duration-500 ease-fy-out hover:rotate-[-8deg] hover:scale-105"
           >
-            <span className="font-display text-base font-black tracking-tighter">
-              F
-            </span>
+            <FayaaMark className="size-[18px]" />
           </Link>
 
           <nav className="flex items-center gap-5 text-xs font-medium text-zinc-400">
@@ -387,14 +386,14 @@ export function StudioSubscriptionPanel({
             </Link>
             <Link
               to={routes.StudioRoute.to}
-              className="inline-flex items-center gap-1.5 transition-colors hover:text-[#D9FF00]"
+              className="inline-flex items-center gap-1.5 transition-colors hover:text-fy-accent"
             >
               <span>Video Studio</span>
               <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-zinc-300">
                 Genjutsu
               </span>
             </Link>
-            <span className="font-bold text-[#D9FF00]">Pricing</span>
+            <span className="font-bold text-fy-accent">Pricing</span>
           </nav>
         </div>
 
@@ -412,9 +411,9 @@ export function StudioSubscriptionPanel({
             href="#all-plans"
             className="relative inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.07] px-3 text-xs font-semibold text-white"
           >
-            <Rocket className="size-3.5 text-[#D9FF00]" />
+            <Rocket className="size-3.5 text-fy-accent" />
             <span>Upgrade</span>
-            <span className="-top-2 -right-1.5 absolute rounded-full bg-[#FF2E93] px-1.5 py-0.5 text-[8px] font-extrabold tracking-wider text-white uppercase shadow">
+            <span className="-top-2 -right-1.5 absolute rounded-full bg-fy-rose px-1.5 py-0.5 text-[8px] font-extrabold tracking-wider text-white uppercase shadow">
               Save 20%
             </span>
           </a>
@@ -434,7 +433,7 @@ export function StudioSubscriptionPanel({
             to={routes.StudioRoute.to}
             className="hidden h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-zinc-200 transition-colors hover:bg-white/[0.09] sm:inline-flex"
           >
-            <FolderOpen className="size-3.5 text-[#4ADE80]" />
+            <FolderOpen className="size-3.5 text-fy-success" />
             <span>Assets</span>
           </Link>
 
@@ -444,7 +443,7 @@ export function StudioSubscriptionPanel({
             <>
               <div
                 title="Your live credit balance"
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#D9FF00]/30 bg-[#D9FF00]/10 px-2.5 text-xs font-bold text-[#D9FF00]"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-fy-accent/30 bg-fy-accent/10 px-2.5 text-xs font-bold text-fy-accent"
               >
                 <Coins className="size-3.5" />
                 <span>{user.credits.toLocaleString("en-US")} cr</span>
@@ -490,7 +489,7 @@ export function StudioSubscriptionPanel({
               <Link to={routes.SignupRoute.to}>
                 <Button
                   size="sm"
-                  className="h-8 rounded-lg bg-[#D9FF00] px-3.5 text-xs font-bold text-black hover:bg-[#e3ff38]"
+                  className="h-8 rounded-lg bg-fy-accent px-3.5 text-xs font-bold text-black hover:bg-fy-accent-hover"
                 >
                   Sign up
                 </Button>
@@ -504,16 +503,16 @@ export function StudioSubscriptionPanel({
       <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-12 px-4 pt-7 pb-24 sm:px-6">
         {/* User Account / Balance Bar */}
         {user ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#121215] px-4 py-2.5 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-fy-surface-1 px-4 py-2.5 text-xs">
             <div className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-1.5 text-zinc-300">
-                <span className="size-2 rounded-full bg-[#4ADE80]" />
+                <span className="size-2 rounded-full bg-fy-success" />
                 Logged in as <strong className="text-white">{user.email}</strong>
               </span>
               <span className="text-white/20">•</span>
               <span className="text-zinc-300">
                 Plan:{" "}
-                <strong className="text-[#D9FF00]">
+                <strong className="text-fy-accent">
                   {user.subscriptionStatus === SubscriptionStatus.Active &&
                   user.subscriptionPlan
                     ? prettyPaymentPlanName(
@@ -559,13 +558,13 @@ export function StudioSubscriptionPanel({
             </div>
           </div>
         ) : (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#121215] px-4 py-2.5 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-fy-surface-1 px-4 py-2.5 text-xs">
             <span className="text-zinc-400">
               Sign in to subscribe to plans or buy instant credits.
             </span>
             <Link
               to="/login"
-              className="font-semibold text-[#D9FF00] hover:text-[#e3ff38]"
+              className="font-semibold text-fy-accent hover:text-fy-accent-hover"
             >
               Sign In →
             </Link>
@@ -579,7 +578,7 @@ export function StudioSubscriptionPanel({
             className={cn(
               "flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-xs font-medium",
               feedbackBanner.kind === "success"
-                ? "border-[#D9FF00]/40 bg-[#D9FF00]/10 text-[#D9FF00]"
+                ? "border-fy-accent/40 bg-fy-accent/10 text-fy-accent"
                 : "border-red-500/40 bg-red-500/10 text-red-200"
             )}
           >
@@ -595,18 +594,18 @@ export function StudioSubscriptionPanel({
         ) : null}
 
         {/* ════════════════════════════════════════════════════════════════════
-            1. TOP GLOWING LIME PROMO BANNER (FAYAA Genjutsu Studio)
+            1. TOP PROMO BANNER (FAYAA viral video studio)
            ════════════════════════════════════════════════════════════════════ */}
-        <section className="relative overflow-hidden rounded-[22px] border border-[#C8FF00]/55 bg-gradient-to-r from-[#2B3704] via-[#131703] to-[#2B3704] px-7 py-8 shadow-[0_0_50px_rgba(200,255,0,0.14),inset_0_0_55px_rgba(200,255,0,0.2)] sm:px-10 sm:py-9">
+        <section className="relative overflow-hidden rounded-[22px] fy-grain border border-fy-accent/40 bg-[radial-gradient(120%_140%_at_0%_0%,rgb(255_91_31/0.28),transparent_55%),radial-gradient(90%_120%_at_100%_100%,rgb(255_46_126/0.18),transparent_60%)] bg-fy-surface-1 px-7 py-8 shadow-[0_0_50px_rgba(255,91,31,0.14)] sm:px-10 sm:py-9">
           {user?.subscriptionPlan === PaymentPlanId.UltraMonthly ||
           user?.subscriptionPlan === PaymentPlanId.UltraAnnual ? (
             <div>
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-[#D9FF00]/40 bg-[#D9FF00]/10 px-3 py-1 text-xs font-semibold text-[#D9FF00] mb-2">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-fy-accent/40 bg-fy-accent/10 px-3 py-1 text-xs font-semibold text-fy-accent mb-2">
                 <Sparkles className="size-3.5" />
                 <span>ACTIVE MEMBERSHIP: FAYAA ULTRA</span>
               </div>
-              <h1 className="font-display text-xl leading-tight font-black tracking-tight uppercase sm:text-[28px] text-white">
-                FAYAA GENJUTSU VIDEO-TO-VIDEO STUDIO
+              <h1 className="fy-display text-2xl text-white sm:text-[34px]">
+                Viral videos <span className="fy-text-heat">in seconds.</span>
               </h1>
               <p className="mt-2 text-xs text-zinc-300 sm:text-sm">
                 You have active Ultra access with 3,900 monthly credits, 8 concurrent GPU generation slots, and full Genjutsu Light &amp; Pro access.
@@ -614,16 +613,13 @@ export function StudioSubscriptionPanel({
             </div>
           ) : (
             <div>
-              <h1 className="font-display text-xl leading-tight font-black tracking-tight uppercase sm:text-[28px]">
-                <span className="block text-[#D9FF00]">
-                  FAYAA GENJUTSU VIDEO-TO-VIDEO STUDIO
-                </span>
-                <span className="mt-0.5 block text-white">
-                  SAVE UP TO 20% ON ANNUAL PLANS
-                </span>
+              <p className="fy-eyebrow mb-3 text-fy-accent-300">FAYAA plans</p>
+              <h1 className="fy-display text-2xl sm:text-[34px]">
+                <span className="block text-white">Viral videos</span>
+                <span className="fy-text-heat mt-1 block">in seconds.</span>
               </h1>
               <p className="mt-2.5 text-xs text-zinc-300 sm:text-sm">
-                High-energy AI motion transfer, dance choreography, and video restyling powered by Genjutsu Light &amp; Pro.
+                Join trends, swap products and restyle any clip for TikTok, Reels and Shorts. Save up to 20% on annual plans.
               </p>
             </div>
           )}
@@ -670,7 +666,7 @@ export function StudioSubscriptionPanel({
               </div>
 
               {/* Monthly / Annual Save 20% Toggle Pill */}
-              <div className="flex h-10 items-center gap-2.5 rounded-full border border-white/10 bg-[#141417] px-4 text-xs">
+              <div className="flex h-10 items-center gap-2.5 rounded-full border border-white/10 bg-fy-surface-2 px-4 text-xs">
                 <span
                   className={cn(
                     "cursor-pointer transition-colors",
@@ -702,7 +698,7 @@ export function StudioSubscriptionPanel({
                   onClick={() => setAnnualBilling(true)}
                 >
                   Annual{" "}
-                  <strong className="font-bold text-[#D9FF00]">Save ~20%</strong>
+                  <strong className="font-bold text-fy-accent">Save ~20%</strong>
                 </span>
               </div>
             </div>
@@ -711,7 +707,7 @@ export function StudioSubscriptionPanel({
           {/* ══════════════════════════════════════════════════════════════════
               MAIN 2-COLUMN SUBSCRIPTION CARD CONTAINER (Screenshots 6, 2, 4)
              ══════════════════════════════════════════════════════════════════ */}
-          <div className="rounded-[28px] border border-white/[0.07] bg-[#111113] p-6 sm:p-10">
+          <div className="rounded-[28px] border border-white/[0.07] bg-fy-surface-1 p-6 sm:p-10">
             <div className="mx-auto grid max-w-[760px] grid-cols-1 gap-8 md:grid-cols-2">
               {/* ── LEFT COLUMN: PLUS PLAN ──────────────────────────────────── */}
               <div className="flex flex-col">
@@ -767,7 +763,7 @@ export function StudioSubscriptionPanel({
                             : "Subscribe to Plus"}
                         </span>
                         {annualBilling ? (
-                          <span className="rounded-full bg-[#FF2E93] px-2 py-0.5 text-[10px] font-extrabold text-white">
+                          <span className="rounded-full bg-fy-rose px-2 py-0.5 text-[10px] font-extrabold text-white">
                             -20%
                           </span>
                         ) : null}
@@ -812,7 +808,7 @@ export function StudioSubscriptionPanel({
                   </span>
                   <ul className="mt-3.5 flex flex-col gap-3 text-xs">
                     <li className="flex items-center gap-2.5">
-                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#D9FF00] text-black">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-fy-accent text-black">
                         <Check className="size-2.5 stroke-[3]" />
                       </span>
                       <span className="font-medium text-white">
@@ -820,7 +816,7 @@ export function StudioSubscriptionPanel({
                       </span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#D9FF00] text-black">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-fy-accent text-black">
                         <Check className="size-2.5 stroke-[3]" />
                       </span>
                       <span className="text-zinc-300">
@@ -828,7 +824,7 @@ export function StudioSubscriptionPanel({
                       </span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#D9FF00] text-black">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-fy-accent text-black">
                         <Check className="size-2.5 stroke-[3]" />
                       </span>
                       <span className="text-zinc-300">
@@ -836,7 +832,7 @@ export function StudioSubscriptionPanel({
                       </span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#D9FF00] text-black">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-fy-accent text-black">
                         <Check className="size-2.5 stroke-[3]" />
                       </span>
                       <span className="text-zinc-300">
@@ -844,7 +840,7 @@ export function StudioSubscriptionPanel({
                       </span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#D9FF00] text-black">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-fy-accent text-black">
                         <Check className="size-2.5 stroke-[3]" />
                       </span>
                       <span className="text-zinc-300">
@@ -868,8 +864,8 @@ export function StudioSubscriptionPanel({
 
               {/* ── RIGHT COLUMN: ULTRA PLAN (Hot Pink Gradient Card) ──────── */}
               <div className="flex flex-col">
-                {/* Ultra Top Hot-Pink Card */}
-                <div className="flex flex-col justify-between rounded-2xl border border-[#FF2E93]/50 bg-gradient-to-br from-[#FF61A3] via-[#E81B74] to-[#740736] p-6 shadow-[0_14px_45px_rgba(232,27,116,0.28)]">
+                {/* Ultra: the heat-gradient hero card */}
+                <div className="flex flex-col justify-between rounded-2xl border border-fy-rose/50 fy-heat-bg p-6 shadow-[0_14px_45px_rgba(255,91,31,0.32)]">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="text-3xl font-bold text-white">Ultra</h3>
 
@@ -952,7 +948,7 @@ export function StudioSubscriptionPanel({
                             : "Upgrade to Ultra"}
                         </span>
                         {annualBilling ? (
-                          <span className="rounded-full bg-[#FF2E93] px-2.5 py-0.5 text-[10px] font-extrabold text-white">
+                          <span className="rounded-full bg-fy-rose px-2.5 py-0.5 text-[10px] font-extrabold text-white">
                             -16% | Save $240/yr
                           </span>
                         ) : null}
@@ -964,24 +960,24 @@ export function StudioSubscriptionPanel({
                 {/* Ultra Credits Breakdown */}
                 <div className="mt-7 flex flex-col">
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="flex size-4 items-center justify-center rounded-full bg-[#FF2E93] text-white">
+                    <span className="flex size-4 items-center justify-center rounded-full bg-fy-rose text-white">
                       <Sparkles className="size-2.5 fill-current" />
                     </span>
-                    <strong className="font-bold text-[#FF2E93]">
+                    <strong className="font-bold text-fy-rose">
                       {(annualBilling ? 3270 : 3900).toLocaleString("en-US")} credits
                     </strong>
                     <span className="text-zinc-400">/ month</span>
                   </div>
-                  <div className="ml-2 flex flex-col border-l border-[#FF2E93]/50 pl-4 pt-2 text-xs">
+                  <div className="ml-2 flex flex-col border-l border-fy-rose/50 pl-4 pt-2 text-xs">
                     <div className="relative py-1">
-                      <span className=" -left-4 top-1/2 absolute h-px w-3 bg-[#FF2E93]/50" />
+                      <span className=" -left-4 top-1/2 absolute h-px w-3 bg-fy-rose/50" />
                       <strong className="text-white">
                         {annualBilling ? "Up to 545s" : "Up to 650s"}
                       </strong>{" "}
                       <span className="text-zinc-400">Genjutsu Light (6 creds/s)</span>
                     </div>
                     <div className="relative py-1">
-                      <span className=" -left-4 top-1/2 absolute h-px w-3 bg-[#FF2E93]/50" />
+                      <span className=" -left-4 top-1/2 absolute h-px w-3 bg-fy-rose/50" />
                       <strong className="text-white">
                         {annualBilling ? "Up to 272s" : "Up to 325s"}
                       </strong>{" "}
@@ -997,15 +993,15 @@ export function StudioSubscriptionPanel({
                   </span>
                   <ul className="mt-3.5 flex flex-col gap-3 text-xs">
                     <li className="flex items-center gap-2.5">
-                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#FF2E93] text-white">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-fy-rose text-white">
                         <Check className="size-2.5 stroke-[3]" />
                       </span>
-                      <span className="font-semibold text-[#FF2E93]">
+                      <span className="font-semibold text-fy-rose">
                         Lowest Cost Per Credit Across Platform
                       </span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#D9FF00] text-black">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-fy-accent text-black">
                         <Check className="size-2.5 stroke-[3]" />
                       </span>
                       <span className="font-medium text-white">
@@ -1013,7 +1009,7 @@ export function StudioSubscriptionPanel({
                       </span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#D9FF00] text-black">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-fy-accent text-black">
                         <Check className="size-2.5 stroke-[3]" />
                       </span>
                       <span className="text-zinc-300">
@@ -1021,7 +1017,7 @@ export function StudioSubscriptionPanel({
                       </span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#D9FF00] text-black">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-fy-accent text-black">
                         <Check className="size-2.5 stroke-[3]" />
                       </span>
                       <span className="text-zinc-300">
@@ -1029,7 +1025,7 @@ export function StudioSubscriptionPanel({
                       </span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#D9FF00] text-black">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-fy-accent text-black">
                         <Check className="size-2.5 stroke-[3]" />
                       </span>
                       <span className="text-zinc-300">
@@ -1048,7 +1044,7 @@ export function StudioSubscriptionPanel({
                       </span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#D9FF00] text-black">
+                      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-fy-accent text-black">
                         <Check className="size-2.5 stroke-[3]" />
                       </span>
                       <span className="text-zinc-300">
@@ -1104,7 +1100,7 @@ export function StudioSubscriptionPanel({
                   className={cn(
                     "flex min-h-[158px] flex-col justify-between rounded-2xl border p-6 transition-all",
                     pack.highlighted
-                      ? "border-[#84CC16]/60 bg-gradient-to-br from-[#3F6212]/55 via-[#1A2E05]/45 to-[#141417] shadow-[0_0_35px_rgba(132,204,22,0.18)]"
+                      ? "border-fy-accent-600/60 bg-gradient-to-br from-fy-accent-800/55 via-[#1A2E05]/45 to-fy-surface-2 shadow-[0_0_35px_rgba(132,204,22,0.18)]"
                       : "border-white/[0.08] bg-[#141416] hover:border-white/15"
                   )}
                 >
@@ -1113,7 +1109,7 @@ export function StudioSubscriptionPanel({
                       <span className="text-xl font-bold text-white">
                         {pack.credits.toLocaleString("en-US")} credits
                       </span>
-                      <span className="rounded-full bg-[#D9FF00] px-2 py-0.5 text-[10px] font-extrabold text-black">
+                      <span className="rounded-full bg-fy-accent px-2 py-0.5 text-[10px] font-extrabold text-black">
                         -{pack.discountPct}%
                       </span>
                     </div>
@@ -1180,7 +1176,7 @@ export function StudioSubscriptionPanel({
                   <span className="rounded-full border border-white/15 bg-white/[0.08] px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-zinc-200 uppercase">
                     Bulk Volume • Coming Soon
                   </span>
-                  <span className="rounded-full bg-[#D9FF00]/20 px-2 py-0.5 text-[10px] font-extrabold text-[#D9FF00]">
+                  <span className="rounded-full bg-fy-accent/20 px-2 py-0.5 text-[10px] font-extrabold text-fy-accent">
                     -{activeSliderPack.discountPct}%
                   </span>
                 </div>
@@ -1231,7 +1227,7 @@ export function StudioSubscriptionPanel({
 
                 <div className="relative flex h-8 items-center rounded-full bg-[#0E0E10] px-3">
                   <div
-                    className="pointer-events-none absolute top-1/2 left-3 h-1.5 -translate-y-1/2 rounded-full bg-[#D9FF00]/60 transition-all"
+                    className="pointer-events-none absolute top-1/2 left-3 h-1.5 -translate-y-1/2 rounded-full bg-fy-accent/60 transition-all"
                     style={{
                       width: `calc(${(sliderIdx / (SLIDER_STEPS.length - 1)) * 100}% - 1.5rem)`,
                     }}
@@ -1281,16 +1277,16 @@ export function StudioSubscriptionPanel({
             </p>
           </div>
 
-          <div className="overflow-x-auto rounded-[24px] border border-white/[0.08] bg-[#111113] p-6 sm:p-8">
+          <div className="overflow-x-auto rounded-[24px] border border-white/[0.08] bg-fy-surface-1 p-6 sm:p-8">
             <table className="w-full min-w-[720px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-white/[0.07]">
                   {/* Col 1: Annual Save 20% toggle */}
                   <th className="w-[28%] pb-6 align-bottom">
-                    <div className="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-[#18181B] px-3 py-2 text-xs">
+                    <div className="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-fy-surface-3 px-3 py-2 text-xs">
                       <span className="font-semibold text-white">
                         Annual{" "}
-                        <span className="text-[#D9FF00]">Save 20%</span>
+                        <span className="text-fy-accent">Save 20%</span>
                       </span>
                       <button
                         type="button"
@@ -1331,7 +1327,7 @@ export function StudioSubscriptionPanel({
                         </Link>
                       ) : isFreeUser ? (
                         <div className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-zinc-400">
-                          <Check className="size-3.5 text-[#D9FF00]" />
+                          <Check className="size-3.5 text-fy-accent" />
                           <span>Current Plan</span>
                         </div>
                       ) : (
@@ -1369,7 +1365,7 @@ export function StudioSubscriptionPanel({
                       </span>
                       {isPlusUser ? (
                         <div className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-bold text-white">
-                          <Check className="size-3.5 text-[#D9FF00]" />
+                          <Check className="size-3.5 text-fy-accent" />
                           <span>Current Plan</span>
                         </div>
                       ) : (
@@ -1421,7 +1417,7 @@ export function StudioSubscriptionPanel({
                         {annualBilling ? "Billed annually" : "Billed monthly"}
                       </span>
                       {isUltraUser ? (
-                        <div className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-[#D9FF00]/40 bg-[#D9FF00]/15 px-3 text-xs font-bold text-[#D9FF00]">
+                        <div className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-fy-accent/40 bg-fy-accent/15 px-3 text-xs font-bold text-fy-accent">
                           <Check className="size-3.5" />
                           <span>Current Plan</span>
                         </div>
@@ -1439,7 +1435,7 @@ export function StudioSubscriptionPanel({
                               label: `FAYAA Ultra (${annualBilling ? "3,270" : "3,900"} credits/mo)`,
                             })
                           }
-                          className="mt-3 flex h-9 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#D9FF00] px-3 text-xs font-bold text-black shadow transition-all hover:bg-[#e3ff38] disabled:opacity-60"
+                          className="mt-3 flex h-9 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-fy-accent px-3 text-xs font-bold text-black shadow transition-all hover:bg-fy-accent-hover disabled:opacity-60"
                         >
                           {busyActionId === "compare-ultra" ? (
                             <Loader2 className="size-3.5 animate-spin text-black" />
@@ -1471,7 +1467,7 @@ export function StudioSubscriptionPanel({
                   </td>
                   <td className="py-4 text-zinc-400">1 concurrent slot</td>
                   <td className="py-4 text-zinc-300">4 concurrent slots</td>
-                  <td className="py-4 font-semibold text-[#D9FF00]">
+                  <td className="py-4 font-semibold text-fy-accent">
                     8 concurrent slots
                   </td>
                 </tr>
@@ -1484,7 +1480,7 @@ export function StudioSubscriptionPanel({
                   <td className="py-4 text-zinc-200">
                     {annualBilling ? "1,170 credits" : "1,470 credits"} / mo
                   </td>
-                  <td className="py-4 font-semibold text-[#D9FF00]">
+                  <td className="py-4 font-semibold text-fy-accent">
                     {annualBilling ? "3,270 credits" : "3,900 credits"} / mo
                   </td>
                 </tr>
@@ -1502,7 +1498,7 @@ export function StudioSubscriptionPanel({
                   <td className="py-4 text-zinc-200">
                     Up to {videosPerMonth(annualBilling ? PLAN_CREDITS.plus.annual : PLAN_CREDITS.plus.monthly, LIGHT_720_5S)} videos / mo
                   </td>
-                  <td className="py-4 font-semibold text-[#D9FF00]">
+                  <td className="py-4 font-semibold text-fy-accent">
                     Up to {videosPerMonth(annualBilling ? PLAN_CREDITS.ultra.annual : PLAN_CREDITS.ultra.monthly, LIGHT_720_5S)} videos / mo
                   </td>
                 </tr>
@@ -1520,7 +1516,7 @@ export function StudioSubscriptionPanel({
                   <td className="py-4 text-zinc-200">
                     Up to {videosPerMonth(annualBilling ? PLAN_CREDITS.plus.annual : PLAN_CREDITS.plus.monthly, LIGHT_1080_5S)} videos / mo
                   </td>
-                  <td className="py-4 font-semibold text-[#D9FF00]">
+                  <td className="py-4 font-semibold text-fy-accent">
                     Up to {videosPerMonth(annualBilling ? PLAN_CREDITS.ultra.annual : PLAN_CREDITS.ultra.monthly, LIGHT_1080_5S)} videos / mo
                   </td>
                 </tr>
@@ -1538,7 +1534,7 @@ export function StudioSubscriptionPanel({
                   <td className="py-4 text-zinc-200">
                     Up to {videosPerMonth(annualBilling ? PLAN_CREDITS.plus.annual : PLAN_CREDITS.plus.monthly, PRO_1080_5S)} videos / mo
                   </td>
-                  <td className="py-4 font-semibold text-[#D9FF00]">
+                  <td className="py-4 font-semibold text-fy-accent">
                     Up to {videosPerMonth(annualBilling ? PLAN_CREDITS.ultra.annual : PLAN_CREDITS.ultra.monthly, PRO_1080_5S)} videos / mo
                   </td>
                 </tr>
@@ -1559,7 +1555,7 @@ export function StudioSubscriptionPanel({
                       </td>
                       <td className="py-4 text-zinc-500">1 reference image</td>
                       <td className="py-4 text-zinc-200">Up to 4 reference images</td>
-                      <td className="py-4 font-semibold text-[#D9FF00]">
+                      <td className="py-4 font-semibold text-fy-accent">
                         Up to 4 reference images
                       </td>
                     </tr>
@@ -1569,7 +1565,7 @@ export function StudioSubscriptionPanel({
                       </td>
                       <td className="py-4 text-zinc-500">Standard queue</td>
                       <td className="py-4 text-zinc-200">Priority GPU queue</td>
-                      <td className="py-4 font-semibold text-[#D9FF00]">
+                      <td className="py-4 font-semibold text-fy-accent">
                         Ultra-Priority Instant Dispatch
                       </td>
                     </tr>
@@ -1579,7 +1575,7 @@ export function StudioSubscriptionPanel({
                       </td>
                       <td className="py-4 text-zinc-500">Personal use only</td>
                       <td className="py-4 text-zinc-200">Full commercial license</td>
-                      <td className="py-4 font-semibold text-[#D9FF00]">
+                      <td className="py-4 font-semibold text-fy-accent">
                         Full commercial &amp; monetization
                       </td>
                     </tr>
@@ -1605,10 +1601,10 @@ export function StudioSubscriptionPanel({
                         <X className="size-4" />
                       </td>
                       <td className="py-4 text-zinc-200">
-                        <Check className="inline size-4 text-[#D9FF00]" /> 100% Watermark-free
+                        <Check className="inline size-4 text-fy-accent" /> 100% Watermark-free
                       </td>
-                      <td className="py-4 font-semibold text-[#D9FF00]">
-                        <Check className="inline size-4 text-[#D9FF00]" /> 100% Watermark-free
+                      <td className="py-4 font-semibold text-fy-accent">
+                        <Check className="inline size-4 text-fy-accent" /> 100% Watermark-free
                       </td>
                     </tr>
                   </>
@@ -1621,7 +1617,7 @@ export function StudioSubscriptionPanel({
             <button
               type="button"
               onClick={() => setShowAllCompareRows((v) => !v)}
-              className="h-10 cursor-pointer rounded-xl border border-white/15 bg-[#141417] px-6 text-xs font-semibold text-white transition-colors hover:bg-white/[0.08]"
+              className="h-10 cursor-pointer rounded-xl border border-white/15 bg-fy-surface-2 px-6 text-xs font-semibold text-white transition-colors hover:bg-white/[0.08]"
             >
               {showAllCompareRows ? "Show Less Features" : "Compare All Features"}
             </button>
@@ -1645,7 +1641,7 @@ export function StudioSubscriptionPanel({
               return (
                 <div
                   key={item.q}
-                  className="overflow-hidden rounded-xl border border-white/[0.07] bg-[#141417]"
+                  className="overflow-hidden rounded-xl border border-white/[0.07] bg-fy-surface-2"
                 >
                   <button
                     type="button"

@@ -220,3 +220,28 @@ model LongVideoSegment {
   @@unique([jobId, index])
   @@index([status])
 }
+
+// Marketing-site media the owner manages from /admin/site-media without a
+// deploy. `slot` says where a clip plays (hero, reel, story, tools, festival,
+// final, web). Rows in the "web" slot are other creators' work and must carry
+// a credit and a link back to the original.
+model SiteMedia {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  slot       String
+  title      String
+  tag        String   @default("")
+  videoUrl   String?
+  posterUrl  String?
+  aspect     String   @default("landscape")
+  sortOrder  Int      @default(0)
+  enabled    Boolean  @default(true)
+
+  creditName String?
+  sourceUrl  String?
+  platform   String?
+
+  @@index([slot, enabled, sortOrder])
+}

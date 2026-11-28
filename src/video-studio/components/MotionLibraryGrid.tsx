@@ -52,7 +52,7 @@ export function MotionLibraryGrid({
         <div>
           <h2 className="text-sm font-bold text-white flex items-center gap-2">
             <span>Curated Motion Templates</span>
-            <span className="text-[10px] bg-lime-400/20 text-lime-400 font-mono px-2 py-0.5 rounded-full">
+            <span className="text-[10px] bg-fy-accent-400/20 text-fy-accent-400 font-mono px-2 py-0.5 rounded-full">
               {templates.length} TEMPLATES
             </span>
           </h2>
@@ -66,7 +66,7 @@ export function MotionLibraryGrid({
           onClick={() => setIsAddModalOpen(true)}
           className="text-xs bg-white/5 hover:bg-white/10 border border-white/15 text-white font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors"
         >
-          <Plus className="w-3.5 h-3.5 text-lime-400" />
+          <Plus className="w-3.5 h-3.5 text-fy-accent-400" />
           <span>Add Motion Template</span>
         </button>
       </div>
@@ -83,7 +83,7 @@ export function MotionLibraryGrid({
               onClick={() => onSelectTemplate(template)}
               className={`group relative rounded-xl overflow-hidden aspect-[9/16] bg-neutral-900 border cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between p-3 ${
                 isSelected
-                  ? "border-lime-400 ring-2 ring-lime-400/30 shadow-lg shadow-lime-500/20"
+                  ? "border-fy-accent-400 ring-2 ring-fy-accent-400/30 shadow-lg shadow-fy-accent-500/20"
                   : "border-white/10 hover:border-white/30"
               }`}
             >
@@ -107,7 +107,7 @@ export function MotionLibraryGrid({
                   {template.duration}
                 </span>
                 {isSelected && (
-                  <span className="text-[10px] font-bold bg-lime-400 text-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow">
+                  <span className="text-[10px] font-bold bg-fy-accent-400 text-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow">
                     <Check className="w-3 h-3" /> Selected
                   </span>
                 )}
@@ -116,7 +116,7 @@ export function MotionLibraryGrid({
               {/* Bottom Info & Audio Toggle */}
               <div className="relative z-10 flex items-end justify-between">
                 <div className="space-y-0.5">
-                  <span className="text-[9px] font-mono text-lime-400 uppercase tracking-wider block">
+                  <span className="text-[9px] font-mono text-fy-accent-400 uppercase tracking-wider block">
                     {template.tag}
                   </span>
                   <h3 className="text-xs font-bold text-white line-clamp-1">
@@ -146,9 +146,9 @@ export function MotionLibraryGrid({
       {/* Add Custom Template Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-[#121217] border border-white/15 rounded-2xl p-5 space-y-4 shadow-2xl">
+          <div className="w-full max-w-sm bg-fy-surface-1 border border-white/15 rounded-2xl p-5 space-y-4 shadow-2xl">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-lime-400" />
+              <Sparkles className="w-4 h-4 text-fy-accent-400" />
               <span>Add Higgsfield Motion Template</span>
             </h3>
             <form onSubmit={handleCreateTemplate} className="space-y-3">
@@ -160,7 +160,7 @@ export function MotionLibraryGrid({
                   placeholder="e.g. Electric Shuffled Dance"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-lime-400"
+                  className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-fy-accent-400"
                 />
               </div>
 
@@ -172,7 +172,7 @@ export function MotionLibraryGrid({
                   placeholder="https://.../motion.mp4"
                   value={newVideoUrl}
                   onChange={(e) => setNewVideoUrl(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-lime-400"
+                  className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-fy-accent-400"
                 />
               </div>
 
@@ -183,7 +183,7 @@ export function MotionLibraryGrid({
                     type="text"
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-lime-400"
+                    className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-fy-accent-400"
                   />
                 </div>
                 <div>
@@ -192,7 +192,7 @@ export function MotionLibraryGrid({
                     type="text"
                     value={newDuration}
                     onChange={(e) => setNewDuration(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-lime-400"
+                    className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-fy-accent-400"
                   />
                 </div>
               </div>
@@ -200,7 +200,7 @@ export function MotionLibraryGrid({
               <div className="flex items-center gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2 bg-lime-400 hover:bg-lime-300 text-black font-bold text-xs rounded-lg transition-colors"
+                  className="flex-1 py-2 bg-fy-accent-400 hover:bg-fy-accent-300 text-black font-bold text-xs rounded-lg transition-colors"
                 >
                   Save & Select
                 </button>

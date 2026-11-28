@@ -1,5 +1,6 @@
 import { type AuthUser } from "wasp/auth";
-import { DarkModeSwitcher } from "../../client/components/DarkModeSwitcher";
+import { Link } from "react-router";
+import { ArrowUpRight, Clapperboard } from "lucide-react";
 import { cn } from "../../client/utils";
 import { UserDropdown } from "../../user/UserDropdown";
 import { MessageButton } from "../dashboards/messages/MessageButton";
@@ -10,8 +11,8 @@ export function Header(props: {
   user: AuthUser;
 }) {
   return (
-    <header className="bg-background border-border shadow-xs sticky top-0 z-10 flex w-full border-b">
-      <div className="flex grow items-center justify-between px-8 py-5 sm:justify-end sm:gap-5">
+    <header className="sticky top-0 z-10 flex w-full border-b border-fy-line bg-fy-ink/70 backdrop-blur-xl backdrop-saturate-150">
+      <div className="flex grow items-center justify-between px-4 py-3.5 sm:justify-end sm:gap-4 md:px-8">
         <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
           {/* <!-- Hamburger Toggle BTN --> */}
 
@@ -21,7 +22,7 @@ export function Header(props: {
               e.stopPropagation();
               props.setSidebarOpen(!props.sidebarOpen);
             }}
-            className="border-border bg-background z-99999 shadow-xs block rounded-sm border p-1.5 lg:hidden"
+            className="z-99999 block rounded-fy-sm border border-fy-line bg-fy-surface-2 p-1.5 lg:hidden"
           >
             <span className="h-5.5 w-5.5 relative block cursor-pointer">
               <span className="du-block absolute right-0 h-full w-full">
@@ -75,9 +76,24 @@ export function Header(props: {
         </div>
 
         <ul className="2xsm:gap-4 flex items-center gap-2">
-          {/* <!-- Dark Mode Toggler --> */}
-          <DarkModeSwitcher />
-          {/* <!-- Dark Mode Toggler --> */}
+          <li className="hidden sm:block">
+            <Link
+              to="/"
+              className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm text-fy-muted transition-colors hover:bg-white/5 hover:text-fy-text"
+            >
+              View site
+              <ArrowUpRight className="size-3.5" />
+            </Link>
+          </li>
+          <li className="hidden sm:block">
+            <Link
+              to="/studio"
+              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-fy-accent/30 bg-fy-accent/10 px-3.5 text-sm font-semibold text-fy-accent-300 transition-colors hover:bg-fy-accent/20"
+            >
+              <Clapperboard className="size-3.5" />
+              Studio
+            </Link>
+          </li>
 
           {/* <!-- Chat Notification Area --> */}
           <MessageButton />

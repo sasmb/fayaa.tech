@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useDarkSurface } from "../client/design";
+import { MarketingFooter } from "../landing-page/components/marketing/MarketingFooter";
 import { StudioSubscriptionPanel } from "../video-studio/hf/components/studio/subscription-panel";
 import { PaymentPlanId, prettyPaymentPlanName } from "./plans";
 
@@ -51,22 +52,20 @@ export const paymentPlanCards: Partial<Record<PaymentPlanId, PaymentPlanCard>> =
 };
 
 export function PricingPage() {
-  useEffect(() => {
-    const html = document.documentElement;
-    const prevTheme = html.getAttribute("data-theme");
-    const hadDark = html.classList.contains("dark");
-    html.setAttribute("data-theme", "default-dark");
-    html.classList.add("dark");
-    return () => {
-      if (prevTheme) html.setAttribute("data-theme", prevTheme);
-      else html.removeAttribute("data-theme");
-      if (!hadDark) html.classList.remove("dark");
-    };
-  }, []);
+  useDarkSurface();
 
   return (
-    <div className="min-h-dvh bg-background">
-      <StudioSubscriptionPanel />
+    <div className="min-h-dvh bg-fy-ink text-fy-text antialiased">
+      <div className="relative">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-32 left-1/2 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-fy-accent/15 blur-[140px]"
+        />
+        <div className="relative">
+          <StudioSubscriptionPanel />
+        </div>
+      </div>
+      <MarketingFooter />
     </div>
   );
 }
