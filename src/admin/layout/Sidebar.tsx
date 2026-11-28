@@ -3,6 +3,7 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
+  Clapperboard,
   FlaskConical,
   LayoutDashboard,
   LayoutTemplate,
@@ -165,6 +166,25 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                 </NavLink>
               </li>
               {/* <!-- Menu Item Users --> */}
+
+              {/* <!-- Menu Item Site media --> */}
+              <li>
+                <NavLink
+                  to={routes.AdminSiteMediaRoute.to}
+                  end
+                  className={({ isActive }) =>
+                    cn(
+                      "group relative flex items-center gap-2.5 rounded-fy-md px-4 py-2.5 text-sm font-medium text-fy-muted transition-colors duration-300 ease-fy-out hover:bg-white/5 hover:text-fy-text [&>svg]:size-4.5",
+                      {
+                        "bg-white/[0.07] text-fy-text before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-fy-accent": isActive,
+                      },
+                    )
+                  }
+                >
+                  <Clapperboard />
+                  Site media
+                </NavLink>
+              </li>
 
               {/* <!-- Menu Item Experiments --> */}
               <li>

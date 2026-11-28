@@ -85,6 +85,12 @@ export interface LandingContent {
     cta: Cta;
     clipId: string;
   };
+  aroundTheWeb: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    disclaimer: string;
+  };
   finalCta: {
     title: string[];
     subhead: string;
@@ -107,35 +113,35 @@ export type ContentPatch = DeepPartial<LandingContent>;
 export const BASE_CONTENT: LandingContent = {
   announcement: {
     enabled: true,
-    badge: "2+ min videos",
-    message: "Genjutsu Light & Pro now edit videos over two minutes long, in up to 1080p.",
+    badge: "New",
+    message: "Turn one clip into a week of viral posts. Longer edits, up to 1080p, on Light & Pro.",
     cta: { label: "See plans", href: "/pricing", event: "Announcement Click" },
   },
   hero: {
-    eyebrow: "FAYAA Genjutsu · AI video studio",
-    headline: ["Direct any", "motion."],
+    eyebrow: "FAYAA · AI video studio",
+    headline: ["Viral videos", "in seconds."],
     accentLine: 1,
     subhead:
-      "Upload a clip, drop in a face, product or world, and FAYAA recasts every frame. Motion transfer, object swap and full restyles, from 4 seconds to over 2 minutes.",
+      "Drop in any clip or idea. FAYAA turns it into scroll-stopping short-form video, with trending formats, hooks and swaps that are ready for TikTok, Reels and Shorts.",
     primaryCta: { label: "Start creating free", href: "/signup", event: "Signup CTA Click" },
     secondaryCta: { label: "Open the studio", href: "/studio", event: "Studio Open" },
     promptExamples: [
-      "Recast the dancer as @Image1 on a neon rooftop at night",
-      "Swap the sneakers for @Image1, keep every step",
-      "Restyle the whole clip as a 90s anime opening",
-      "Turn this street run into a rain-soaked chase scene",
+      "Put me in this trending dance, same moves, neon rooftop",
+      "Swap the sneakers for @Image1 and keep every step",
+      "Turn my product into a 3-second hook that stops the scroll",
+      "Make this street clip look like a movie trailer",
     ],
     backgroundClipId: "hero-genjutsu",
     floatingClipIds: ["locker-swap", "midnight-portrait", "studio-dance"],
     stats: [
-      { value: "2+ min", label: "longest single edit" },
+      { value: "Seconds", label: "from idea to post" },
+      { value: "9:16", label: "built for short-form" },
       { value: "1080p", label: "max output" },
-      { value: "8 cr", label: "per 5s clip, from" },
     ],
   },
   reel: {
     eyebrow: "Made with FAYAA",
-    title: "Every frame, recast.",
+    title: "Made to be shared.",
     rows: [
       ["locker-swap", "studio-dance", "cash-flex", "object-swap", "midnight-portrait", "crowd"],
       ["streetwear", "stadium-sprint", "hero-genjutsu", "freestyle", "locker-swap", "studio-dance"],
@@ -143,36 +149,36 @@ export const BASE_CONTENT: LandingContent = {
   },
   capabilities: {
     eyebrow: "How it works",
-    title: "One clip in. Any story out.",
+    title: "One clip in. A viral post out.",
     description:
-      "Genjutsu reads the motion, camera and timing of your video, then rebuilds it around whatever you hand it.",
+      "FAYAA reads the motion, camera and timing of any video, then remakes it around you, your product or the trend of the week.",
     steps: [
       {
         id: "motion",
-        tag: "01 · Motion transfer",
-        title: "Keep the moves, change the star.",
-        body: "Upload a performance and one photo. Every step, gesture and expression lands on your character, frame-accurate.",
+        tag: "01 · Join the trend",
+        title: "Hop on any trend in one tap.",
+        body: "Pick a trending dance or format, add one photo, and you are the star. Every step and beat lands on cue.",
         clipId: "studio-dance",
       },
       {
         id: "swap",
-        tag: "02 · Object swap",
-        title: "Replace one thing, touch nothing else.",
-        body: "Swap a product, prop or outfit while hands, lighting and background stay exactly as shot.",
+        tag: "02 · Product swap",
+        title: "Your product in the viral shot.",
+        body: "Drop your product, outfit or logo into a clip that already works. Hands, lighting and background stay exactly as shot.",
         clipId: "object-swap",
       },
       {
         id: "restyle",
         tag: "03 · Restyle",
-        title: "New world, same timing.",
-        body: "Re-light, re-grade or re-imagine the whole scene in any look, without losing the original edit's rhythm.",
+        title: "Same clip, new hook.",
+        body: "Turn a plain clip into a movie trailer, an anime opening or a night-city edit, and keep the rhythm that made it work.",
         clipId: "midnight-portrait",
       },
       {
         id: "long",
-        tag: "04 · Long video",
-        title: "Not just shorts.",
-        body: "Clips over 30 seconds are split into seamless passes and stitched back into one final MP4, up to 2+ minutes.",
+        tag: "04 · Ship it",
+        title: "Post-ready in seconds.",
+        body: "Vertical, 1080p and ready for TikTok, Reels and Shorts. Need longer? Edits run past two minutes in one MP4.",
         clipId: "hero-genjutsu",
       },
     ],
@@ -182,32 +188,40 @@ export const BASE_CONTENT: LandingContent = {
     eyebrow: "Community",
     title: "Made by creators like you.",
     description:
-      "Real Genjutsu renders from the FAYAA community. Remix any of them with your own characters in one click.",
+      "Real videos from the FAYAA community. Remix any of them with your own face or product in one click.",
     primaryCta: { label: "Start generating", href: "/studio", event: "Studio Open" },
   },
   tools: {
     eyebrow: "The studio",
     title: "Your whole pipeline, one tab.",
-    description: "Genjutsu is live today. More models and tools land in the same workspace as they ship.",
+    description: "Everything you need to make a viral video lives here. More tools land in the same workspace as they ship.",
   },
   templates: {
     eyebrow: "Templates",
     title: "Start from a hit.",
     description:
-      "Each preset loads a motion source, identity anchors and a camera-locked prompt straight into the studio.",
+      "Each template is a format that already goes viral. Load it, add yourself, post.",
     tryLabel: "Launch in studio",
   },
   festival: {
     eyebrow: "FAYAA Global Film Festival · Coming soon",
     title: "Your short film, on the big screen.",
     description:
-      "Make motion-transfer, object-swap and restyled shorts with Genjutsu to enter our first community festival.",
+      "Make your best viral short with FAYAA and enter our first community festival.",
     cta: { label: "Explore community work", href: "#community-showcase", event: "Festival Click" },
     clipId: "crowd",
   },
+  aroundTheWeb: {
+    eyebrow: "Around the web",
+    title: "See what people are making with AI.",
+    description:
+      "AI video is moving fast. Here's work we love from creators everywhere, made with all kinds of tools. Tap any piece to watch it at the source.",
+    disclaimer:
+      "Each piece belongs to its creator and is shown with credit and a link to the original. Not made with FAYAA unless it says so.",
+  },
   finalCta: {
-    title: ["Your next video", "starts here."],
-    subhead: "Free to start. No editing skills needed. Upgrade when you want longer, sharper renders.",
+    title: ["Your next viral", "video starts here."],
+    subhead: "Free to start. No editing skills needed. Make your first one in seconds.",
     primaryCta: { label: "Start creating free", href: "/signup", event: "Signup CTA Click" },
     secondaryCta: { label: "See pricing", href: "/pricing", event: "Pricing Click" },
     clipId: "hero-genjutsu",
@@ -250,10 +264,10 @@ export const CONTENT_VARIANTS: Record<string, Record<string, ContentPatch>> = {
   "hero-copy": {
     creator: {
       hero: {
-        headline: ["Your moves.", "Any star."],
+        headline: ["Go viral", "in seconds."],
         accentLine: 1,
         subhead:
-          "Film it once on your phone. FAYAA recasts it with any character, product or world, and keeps every beat of the original.",
+          "Film it once on your phone, or start from a trend. FAYAA turns it into short-form video people actually share.",
       },
     },
   },
@@ -267,6 +281,7 @@ export const CONTENT_VARIANTS: Record<string, Record<string, ContentPatch>> = {
         "tools-bento",
         "workflow-templates",
         "film-festival",
+        "around-the-web",
         "final-cta",
       ],
     },

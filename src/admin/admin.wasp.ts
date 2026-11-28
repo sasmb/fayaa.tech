@@ -7,6 +7,7 @@ import {
   syncStripePayments,
 } from "./overview/operations" with { type: "ref" };
 import { ExperimentsPage } from "./dashboards/experiments/ExperimentsPage" with { type: "ref" };
+import { SiteMediaPage } from "./dashboards/site-media/SiteMediaPage" with { type: "ref" };
 import { MessagesPage } from "./dashboards/messages/MessagesPage" with { type: "ref" };
 import { UsersDashboardPage } from "./dashboards/users/UsersDashboardPage" with { type: "ref" };
 import { CalendarPage } from "./elements/calendar/CalendarPage" with { type: "ref" };
@@ -32,6 +33,11 @@ export const adminSpec: Spec = [
     "AdminUsersRoute",
     "/admin/users",
     page(UsersDashboardPage, { authRequired: true }),
+  ),
+  route(
+    "AdminSiteMediaRoute",
+    "/admin/site-media",
+    page(SiteMediaPage, { authRequired: true }),
   ),
   route(
     "AdminExperimentsRoute",

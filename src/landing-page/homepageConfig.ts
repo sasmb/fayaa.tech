@@ -8,6 +8,7 @@ export type HomepageSectionId =
   | "tools-bento"
   | "workflow-templates"
   | "film-festival"
+  | "around-the-web"
   | "final-cta";
 
 export interface HomepageSectionConfig {
@@ -29,6 +30,7 @@ export const HOMEPAGE_LAYOUT: HomepageSectionConfig[] = [
   { id: "tools-bento", enabled: true, ariaLabel: "FAYAA tools and models" },
   { id: "workflow-templates", enabled: true, ariaLabel: "One-click Genjutsu templates" },
   { id: "film-festival", enabled: true, ariaLabel: "FAYAA Global Film Festival" },
+  { id: "around-the-web", enabled: true, ariaLabel: "AI video from around the web" },
   { id: "final-cta", enabled: true, ariaLabel: "Start creating with FAYAA" },
 ];
 

@@ -1,15 +1,17 @@
 import { useMemo, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "wasp/client/auth";
-import { getPublicHomepageShowcase, useQuery } from "wasp/client/operations";
+import { getPublicHomepageShowcase, getPublicSiteMedia, useQuery } from "wasp/client/operations";
 
 import { useDarkSurface } from "../client/design";
 import { useExperiments } from "../marketing/useExperiments";
 import { resolveLandingContent } from "../marketing/landingContent";
+import { applySiteMedia } from "../marketing/siteMedia";
 import type { TemplateItem } from "../video-studio/hf/components/studio/template-picker";
 import { useGenjutsuWorkspace } from "../video-studio/hf/generation/stores/genjutsu-workspace";
 import { SchemaMarkup } from "./components/SchemaMarkup";
 import { AnnouncementBar } from "./components/marketing/AnnouncementBar";
+import { AroundTheWebSection } from "./components/marketing/AroundTheWebSection";
 import { CapabilitiesStorySection } from "./components/marketing/CapabilitiesStorySection";
 import { CommunityShowcaseSection } from "./components/marketing/CommunityShowcaseSection";
 import { FilmFestivalSection } from "./components/marketing/FilmFestivalSection";
@@ -36,7 +38,8 @@ import {
  * The homepage is assembled from data:
  * - copy, clips and section order: src/marketing/landingContent.ts
  * - A/B experiments: src/marketing/experiments.ts
- * - media library and section on/off switches: ./homepageConfig.ts
+ * - default media library and section on/off switches: ./homepageConfig.ts
+ * - live media overrides managed by the owner at /admin/site-media
  * This file only wires data to section components.
  */
 export function LandingPage() {
@@ -44,21 +47,22 @@ export function LandingPage() {
   const navigate = useNavigate();
   const hydrateFromRemix = useGenjutsuWorkspace((s) => s.hydrateFromRemix);
   const { data: showcaseData } = useQuery(getPublicHomepageShowcase);
+  const { data: siteMedia } = useQuery(getPublicSiteMedia);
   const assignments = useExperiments();
-  const content = useMemo(() => resolveLandingContent(assignments), [assignments]);
+  const baseContent = useMemo(() => resolveLandingContent(assignments), [assignments]);
   const isLoggedIn = Boolean(user);
   useDarkSurface();
 
   const publicR2BaseUrl = import.meta.env.VITE_R2_PUBLIC_URL as string | undefined;
 
-  const clipsById = useMemo(() => {
+  const defaultClips = useMemo(() => {
     const map: Record<string, MediaClip> = {};
     for (const clip of MEDIA_CLIPS) {
       map[clip.id] = resolveMediaClip(clip, showcaseData?.resolvedStorageUrls, publicR2BaseUrl);
     }
-    // A video an admin features on the homepage takes over the hero.
+    // A render an admin features from the studio takes over the default hero.
     const featured = showcaseData?.heroFeatured?.[0];
-    const heroId = content.hero.backgroundClipId;
+    const heroId = baseContent.hero.backgroundClipId;
     if (featured && map[heroId]) {
       map[heroId] = {
         ...map[heroId],
@@ -67,7 +71,13 @@ export function LandingPage() {
       };
     }
     return map;
-  }, [showcaseData?.resolvedStorageUrls, showcaseData?.heroFeatured, publicR2BaseUrl, content.hero.backgroundClipId]);
+  }, [showcaseData?.resolvedStorageUrls, showcaseData?.heroFeatured, publicR2BaseUrl, baseContent.hero.backgroundClipId]);
+
+  // Clips managed at /admin/site-media replace the coded defaults per section.
+  const { content, clipsById, toolsClipId, web } = useMemo(
+    () => applySiteMedia(baseContent, defaultClips, siteMedia ?? []),
+    [baseContent, defaultClips, siteMedia]
+  );
 
   const pick = (ids: string[]) => ids.map((id) => clipsById[id]).filter((c): c is MediaClip => Boolean(c));
 
@@ -145,7 +155,7 @@ export function LandingPage() {
       <ToolsBentoSection
         content={content.tools}
         tools={BENTO_TOOLS}
-        featureClip={clipsById["studio-dance"]}
+        featureClip={clipsById[toolsClipId]}
         ariaLabel={ariaLabel}
       />
     ),
@@ -154,6 +164,9 @@ export function LandingPage() {
     ),
     "film-festival": (ariaLabel) => (
       <FilmFestivalSection content={content.festival} clip={clipsById[content.festival.clipId]} ariaLabel={ariaLabel} />
+    ),
+    "around-the-web": (ariaLabel) => (
+      <AroundTheWebSection content={content.aroundTheWeb} items={web} ariaLabel={ariaLabel} />
     ),
     "final-cta": (ariaLabel) => (
       <FinalCtaSection
