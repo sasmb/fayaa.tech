@@ -90,7 +90,7 @@ export function RenderHistory({ tasks, onRefresh }: RenderHistoryProps) {
                 <div className="aspect-[9/16] rounded-lg bg-black/40 border border-white/5 flex flex-col items-center justify-center text-center p-4">
                   {task.status === "PROCESSING" ? (
                     <>
-                      <RefreshCw className="w-6 h-6 text-lime-400 animate-spin mb-2" />
+                      <RefreshCw className="w-6 h-6 text-fy-accent-400 animate-spin mb-2" />
                       <span className="text-xs text-neutral-300">Rendering video...</span>
                       <span className="text-[10px] text-neutral-500 mt-1">Buzzer will notify you</span>
                     </>
@@ -114,7 +114,7 @@ export function RenderHistory({ tasks, onRefresh }: RenderHistoryProps) {
                       onClick={() => void handleTogglePublic(task)}
                       className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold transition-colors ${
                         task.isPublic
-                          ? "border-[#C8FF00]/40 bg-[#C8FF00]/15 text-[#C8FF00] hover:bg-[#C8FF00]/25"
+                          ? "border-fy-accent/40 bg-fy-accent/15 text-fy-accent hover:bg-fy-accent/25"
                           : "border-white/15 bg-white/5 text-neutral-300 hover:border-white/30 hover:text-white"
                       }`}
                     >
@@ -142,7 +142,7 @@ export function RenderHistory({ tasks, onRefresh }: RenderHistoryProps) {
                           { watermark: watermarkEnabled }
                         ).finally(() => setDownloadingId(null));
                       }}
-                      className="text-lime-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer disabled:opacity-60"
+                      className="text-fy-accent-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer disabled:opacity-60"
                     >
                       <Download className="w-3 h-3" />{" "}
                       {downloadingId === task.id

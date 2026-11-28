@@ -1000,11 +1000,11 @@ export function GenjutsuWorkbench({
   const activeError = localError ?? studioError ?? null
 
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden bg-[#09090A] text-white select-none">
+    <div className="relative flex h-full w-full flex-col overflow-hidden bg-fy-ink text-white select-none">
       {/* ══════════════════════════════════════════════════════════════════════
           GLOBAL TOP HEADER BAR (Matches Genjutsu Studio Screenshots 1, 2, 3)
          ══════════════════════════════════════════════════════════════════════ */}
-      <header className="flex h-[52px] w-full shrink-0 items-center justify-between border-b border-white/[0.07] bg-[#09090A] px-4">
+      <header className="flex h-[52px] w-full shrink-0 items-center justify-between border-b border-white/[0.07] bg-fy-ink px-4">
         <div className="flex items-center gap-5 overflow-x-auto">
           {/* FAYAA Brand Mark */}
           <Link
@@ -1152,7 +1152,7 @@ export function GenjutsuWorkbench({
                     type="button"
                     aria-label="Account profile and options"
                     title={authUser.email ?? "Account"}
-                    className="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.06] pr-2 pl-0.5 transition-colors hover:border-[#C8FF00]/60 focus:outline-none"
+                    className="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.06] pr-2 pl-0.5 transition-colors hover:border-fy-accent/60 focus:outline-none"
                   >
                     <img
                       src={getUserAvatarUrl(authUser)}
@@ -1190,7 +1190,7 @@ export function GenjutsuWorkbench({
                       to={routes.PricingPageRoute.to}
                       className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/[0.08] hover:text-white"
                     >
-                      <Crown className="size-3.5 text-[#C8FF00]" />
+                      <Crown className="size-3.5 text-fy-accent" />
                       <span>Plans & Credits</span>
                     </Link>
                   </DropdownMenuItem>
@@ -1218,7 +1218,7 @@ export function GenjutsuWorkbench({
           ) : (
             <Link
               to={routes.LoginRoute.to}
-              className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-[#C8FF00] px-3 text-xs font-bold text-black transition-transform hover:scale-105 hover:bg-[#d8ff3e]"
+              className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-fy-accent px-3 text-xs font-bold text-black transition-transform hover:scale-105 hover:bg-fy-accent-hover"
             >
               <LogIn className="size-3.5" />
               <span>Log In</span>
@@ -1326,7 +1326,7 @@ export function GenjutsuWorkbench({
           <div
             role="status"
             aria-live="polite"
-            className="fixed top-14 right-4 z-40 flex w-[360px] items-start gap-3.5 rounded-2xl border border-white/12 bg-[#161619]/95 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200"
+            className="fixed top-14 right-4 z-40 flex w-[360px] items-start gap-3.5 rounded-2xl border border-white/12 bg-fy-surface-2/95 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200"
           >
             {/* Circular yellow coin/gauge badge */}
             <div className="relative flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-[#FACC15]/80 bg-[#FACC15]/10 text-[#FACC15]">
@@ -1470,8 +1470,8 @@ export function GenjutsuWorkbench({
                   className={cn(
                     "relative flex min-h-[128px] flex-col justify-center overflow-hidden rounded-xl border border-dashed transition-colors",
                     sourceVideo
-                      ? "border-white/15 bg-[#141417] p-2"
-                      : "border-white/12 bg-[#141417]/80 hover:border-white/25 hover:bg-[#18181C]"
+                      ? "border-white/15 bg-fy-surface-2 p-2"
+                      : "border-white/12 bg-fy-surface-2/80 hover:border-white/25 hover:bg-[#18181C]"
                   )}
                 >
                   {sourceVideo ? (
@@ -1609,8 +1609,8 @@ export function GenjutsuWorkbench({
                   className={cn(
                     "relative flex min-h-[128px] flex-col justify-center overflow-hidden rounded-xl border border-dashed transition-colors",
                     referenceImages.length > 0
-                      ? "border-white/15 bg-[#141417] p-2"
-                      : "border-white/12 bg-[#141417]/80 hover:border-white/25 hover:bg-[#18181C]"
+                      ? "border-white/15 bg-fy-surface-2 p-2"
+                      : "border-white/12 bg-fy-surface-2/80 hover:border-white/25 hover:bg-[#18181C]"
                   )}
                 >
                   {referenceImages.length > 0 ? (
@@ -1708,7 +1708,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* Model Row */}
-                <div className="flex flex-col gap-1 rounded-xl border border-white/[0.07] bg-[#141417] p-2.5">
+                <div className="flex flex-col gap-1 rounded-xl border border-white/[0.07] bg-fy-surface-2 p-2.5">
                   <span className="text-[10px] text-zinc-400">Model</span>
                   <button
                     type="button"
@@ -1726,7 +1726,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* Quality Row */}
-                <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-[#141417] px-3 py-2.5">
+                <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-fy-surface-2 px-3 py-2.5">
                   <span className="text-xs font-medium text-zinc-200">Quality</span>
                   <div className="flex items-center gap-1.5">
                     {(["480p", "720p", "1080p"] as const).map((q) => (
@@ -1748,7 +1748,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* Video Length Row */}
-                <div className="flex flex-col gap-2 rounded-xl border border-white/[0.07] bg-[#141417] p-2.5">
+                <div className="flex flex-col gap-2 rounded-xl border border-white/[0.07] bg-fy-surface-2 p-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-zinc-200">
                       Video Length
@@ -1794,7 +1794,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* Scene Control Mode (Screenshot 3) */}
-                <div className="flex flex-col gap-2 rounded-xl border border-white/[0.07] bg-[#141417] p-2.5">
+                <div className="flex flex-col gap-2 rounded-xl border border-white/[0.07] bg-fy-surface-2 p-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-zinc-200">
                       Scene control mode
@@ -1859,7 +1859,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* Advanced Settings Drawer */}
-                <div className="flex flex-col rounded-xl border border-white/[0.07] bg-[#141417]">
+                <div className="flex flex-col rounded-xl border border-white/[0.07] bg-fy-surface-2">
                   <button
                     type="button"
                     onClick={() => setAdvancedSettingsOpen((v) => !v)}
@@ -1952,7 +1952,7 @@ export function GenjutsuWorkbench({
                       "flex w-full cursor-pointer items-center justify-between rounded-xl border p-2 transition-colors",
                       selectedStyleId !== "none"
                         ? "border-[#D9FF00]/40 bg-[#D9FF00]/[0.06]"
-                        : "border-white/[0.07] bg-[#141417] hover:border-white/15"
+                        : "border-white/[0.07] bg-fy-surface-2 hover:border-white/15"
                     )}
                   >
                     <div className="flex items-center gap-2.5">
@@ -1984,7 +1984,7 @@ export function GenjutsuWorkbench({
                   </button>
 
                   {stylePickerOpen ? (
-                    <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-white/10 bg-[#141417] p-2">
+                    <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-white/10 bg-fy-surface-2 p-2">
                       {STYLE_PRESETS.map((preset) => {
                         const active = preset.id === selectedStyleId
                         return (
@@ -2015,7 +2015,7 @@ export function GenjutsuWorkbench({
                                 </span>
                               ) : null}
                             </div>
-                            <span className="truncate bg-[#18181B] px-2 py-1 text-[10px] font-medium text-zinc-200">
+                            <span className="truncate bg-fy-surface-3 px-2 py-1 text-[10px] font-medium text-zinc-200">
                               {preset.id === "none" ? "No Override" : preset.name}
                             </span>
                           </button>
@@ -2036,8 +2036,8 @@ export function GenjutsuWorkbench({
                   className={cn(
                     "relative flex min-h-[140px] flex-col justify-center overflow-hidden rounded-xl border border-dashed transition-colors",
                     sourceVideo
-                      ? "border-white/15 bg-[#141417] p-2"
-                      : "border-white/12 bg-[#141417]/80 hover:border-white/25 hover:bg-[#18181C]"
+                      ? "border-white/15 bg-fy-surface-2 p-2"
+                      : "border-white/12 bg-fy-surface-2/80 hover:border-white/25 hover:bg-[#18181C]"
                   )}
                 >
                   {sourceVideo ? (
@@ -2198,7 +2198,7 @@ export function GenjutsuWorkbench({
                     const files = Array.from(e.dataTransfer.files ?? [])
                     if (files.length) void handleDirectImagesDrop(files)
                   }}
-                  className="flex flex-col gap-1.5 rounded-xl border border-white/[0.07] bg-[#141417] p-2.5"
+                  className="flex flex-col gap-1.5 rounded-xl border border-white/[0.07] bg-fy-surface-2 p-2.5"
                 >
                   <div className="flex items-center gap-2">
                     <AssetLibraryModal
@@ -2292,7 +2292,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* 6. Prompt Toggle Row */}
-                <div className="flex flex-col rounded-xl border border-white/[0.07] bg-[#141417] px-3 py-2.5">
+                <div className="flex flex-col rounded-xl border border-white/[0.07] bg-fy-surface-2 px-3 py-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-zinc-200">
                       Prompt
@@ -2348,7 +2348,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* 7. Model Selector Row */}
-                <div className="flex flex-col gap-1 rounded-xl border border-white/[0.07] bg-[#141417] p-2.5">
+                <div className="flex flex-col gap-1 rounded-xl border border-white/[0.07] bg-fy-surface-2 p-2.5">
                   <span className="text-[10px] text-zinc-400">Model</span>
                   <button
                     type="button"
@@ -2368,7 +2368,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* 8. Quality Row */}
-                <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-[#141417] px-3 py-2.5">
+                <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-fy-surface-2 px-3 py-2.5">
                   <span className="text-xs font-medium text-zinc-200">Quality</span>
                   <div className="flex items-center gap-1.5">
                     {(["480p", "720p", "1080p"] as const).map((q) => (
@@ -2390,7 +2390,7 @@ export function GenjutsuWorkbench({
                 </div>
 
                 {/* 8b. Video Length Selector Row */}
-                <div className="flex flex-col gap-2 rounded-xl border border-white/[0.07] bg-[#141417] p-2.5">
+                <div className="flex flex-col gap-2 rounded-xl border border-white/[0.07] bg-fy-surface-2 p-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-zinc-200">
                       Video Length
@@ -2460,7 +2460,7 @@ export function GenjutsuWorkbench({
 
           {/* Sticky Bottom Real-Time Cost Breakdown + Generate Button */}
           <div className="shrink-0 border-t border-white/[0.07] bg-[#0C0C0E] p-3 space-y-2">
-            <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-[#141417] px-2.5 py-1.5 text-[11px]">
+            <div className="flex items-center justify-between rounded-lg border border-white/[0.08] bg-fy-surface-2 px-2.5 py-1.5 text-[11px]">
               <div className="flex flex-col min-w-0">
                 <span className="truncate font-semibold text-zinc-200">
                   {selectedMotionModel.name} • {resolution}
@@ -2481,7 +2481,7 @@ export function GenjutsuWorkbench({
             </div>
 
             {realtimeCost.segmentCount > 1 ? (
-              <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-white/[0.08] bg-[#141417] px-2.5 py-1.5 text-[11px] text-zinc-300">
+              <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-white/[0.08] bg-fy-surface-2 px-2.5 py-1.5 text-[11px] text-zinc-300">
                 <input
                   type="checkbox"
                   checked={previewFirst}
@@ -2537,7 +2537,7 @@ export function GenjutsuWorkbench({
         {/* ══════════════════════════════════════════════════════════════════════
           RIGHT MAIN STAGE: TOP SUB-NAV + HERO + MASONRY DISCOVERY / HISTORY
          ══════════════════════════════════════════════════════════════════════ */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#09090A]">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-fy-ink">
           {/* Top Stage Navigation Bar: History | Motion Library | Styles New | How it works (Higgsfield Tabs) */}
           <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/[0.07] px-6">
             <Tabs
@@ -3045,7 +3045,7 @@ export function GenjutsuWorkbench({
                                     className="size-full object-contain"
                                   />
                                   {isPublicRun && (
-                                    <span className="pointer-events-none absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-[#C8FF00] px-2 py-0.5 text-[10px] font-black text-black uppercase shadow">
+                                    <span className="pointer-events-none absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-fy-accent px-2 py-0.5 text-[10px] font-black text-black uppercase shadow">
                                       <Globe className="size-3" /> Public
                                     </span>
                                   )}
@@ -3206,7 +3206,7 @@ export function GenjutsuWorkbench({
       <button
         type="button"
         onClick={() => setStageTab("how-it-works")}
-        className="fixed bottom-4 right-4 z-30 flex size-7 items-center justify-center rounded-full border border-white/10 bg-[#161619] text-zinc-400 hover:text-white hover:bg-white/10 shadow-lg cursor-pointer transition-colors"
+        className="fixed bottom-4 right-4 z-30 flex size-7 items-center justify-center rounded-full border border-white/10 bg-fy-surface-2 text-zinc-400 hover:text-white hover:bg-white/10 shadow-lg cursor-pointer transition-colors"
         title="Need help? View how it works"
       >
         <span className="text-xs font-semibold">?</span>
@@ -3415,7 +3415,7 @@ function MasonryVideoCard({
         </>
       }
       className={cn(
-        "overflow-hidden rounded-2xl border border-white/[0.08] bg-[#141417] transition-all hover:border-white/25",
+        "overflow-hidden rounded-2xl border border-white/[0.08] bg-fy-surface-2 transition-all hover:border-white/25",
         portrait
           ? "h-[520px]"
           : tall
@@ -3460,7 +3460,7 @@ function MotionLibraryVerticalCard({
         }
       }}
       className={cn(
-        "group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border transition-all aspect-[9/16] bg-[#141417]",
+        "group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border transition-all aspect-[9/16] bg-fy-surface-2",
         isSelected
           ? "border-[#D9FF00] ring-2 ring-[#D9FF00]/40 shadow-[0_0_24px_rgba(217,255,0,0.25)]"
           : "border-white/[0.08] hover:border-white/25 hover:shadow-xl"

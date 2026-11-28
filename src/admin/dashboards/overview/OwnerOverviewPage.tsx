@@ -76,7 +76,7 @@ export function OwnerOverviewPage({ user }: { user: AuthUser }) {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-foreground text-2xl font-bold">
+            <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
               Owner overview
             </h1>
             <p className="text-muted-foreground text-sm">
@@ -312,7 +312,7 @@ function MoneyChart({ data }: { data: AdminOverview }) {
     return {
       options: {
         ...baseChart,
-        colors: ["#3C50E0", "#F0950C"],
+        colors: ["#FF5B1F", "#FFB547"],
         stroke: { width: 2, curve: "smooth" },
         fill: { type: "gradient", gradient: { opacityFrom: 0.35, opacityTo: 0 } },
         xaxis: { categories, tickAmount: 6, labels: { rotate: 0 } },
@@ -340,7 +340,7 @@ function VolumeChart({ data }: { data: AdminOverview }) {
     return {
       options: {
         ...baseChart,
-        colors: ["#10B981", "#80CAEE"],
+        colors: ["#34D399", "#8B5CF6"],
         plotOptions: { bar: { columnWidth: "70%", borderRadius: 2 } },
         xaxis: { categories, tickAmount: 4, labels: { rotate: 0 } },
         yaxis: { min: 0, forceNiceScale: true },

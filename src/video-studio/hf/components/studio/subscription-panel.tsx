@@ -363,11 +363,11 @@ export function StudioSubscriptionPanel({
     : activeUltra.monthlyPrice
 
   return (
-    <div className="min-h-dvh w-full bg-[#09090A] text-white select-none">
+    <div className="min-h-dvh w-full bg-fy-ink text-white select-none">
       {/* ══════════════════════════════════════════════════════════════════════
           GLOBAL TOP HEADER BAR (Matches Screenshots 1–6)
          ══════════════════════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-40 flex h-[52px] w-full items-center justify-between border-b border-white/[0.07] bg-[#09090A]/95 px-4 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 flex h-[52px] w-full items-center justify-between border-b border-white/[0.07] bg-fy-ink/95 px-4 backdrop-blur-xl">
         <div className="flex items-center gap-5 overflow-x-auto">
           <Link
             to={routes.LandingPageRoute.to}
@@ -597,7 +597,7 @@ export function StudioSubscriptionPanel({
         {/* ════════════════════════════════════════════════════════════════════
             1. TOP GLOWING LIME PROMO BANNER (FAYAA Genjutsu Studio)
            ════════════════════════════════════════════════════════════════════ */}
-        <section className="relative overflow-hidden rounded-[22px] border border-[#C8FF00]/55 bg-gradient-to-r from-[#2B3704] via-[#131703] to-[#2B3704] px-7 py-8 shadow-[0_0_50px_rgba(200,255,0,0.14),inset_0_0_55px_rgba(200,255,0,0.2)] sm:px-10 sm:py-9">
+        <section className="relative overflow-hidden rounded-[22px] border border-fy-accent/55 bg-gradient-to-r from-[#3a1405] via-[#170803] to-[#3a1405] px-7 py-8 shadow-[0_0_50px_rgba(255,91,31,0.14),inset_0_0_55px_rgba(255,91,31,0.2)] sm:px-10 sm:py-9">
           {user?.subscriptionPlan === PaymentPlanId.UltraMonthly ||
           user?.subscriptionPlan === PaymentPlanId.UltraAnnual ? (
             <div>
@@ -670,7 +670,7 @@ export function StudioSubscriptionPanel({
               </div>
 
               {/* Monthly / Annual Save 20% Toggle Pill */}
-              <div className="flex h-10 items-center gap-2.5 rounded-full border border-white/10 bg-[#141417] px-4 text-xs">
+              <div className="flex h-10 items-center gap-2.5 rounded-full border border-white/10 bg-fy-surface-2 px-4 text-xs">
                 <span
                   className={cn(
                     "cursor-pointer transition-colors",
@@ -711,7 +711,7 @@ export function StudioSubscriptionPanel({
           {/* ══════════════════════════════════════════════════════════════════
               MAIN 2-COLUMN SUBSCRIPTION CARD CONTAINER (Screenshots 6, 2, 4)
              ══════════════════════════════════════════════════════════════════ */}
-          <div className="rounded-[28px] border border-white/[0.07] bg-[#111113] p-6 sm:p-10">
+          <div className="rounded-[28px] border border-white/[0.07] bg-fy-surface-1 p-6 sm:p-10">
             <div className="mx-auto grid max-w-[760px] grid-cols-1 gap-8 md:grid-cols-2">
               {/* ── LEFT COLUMN: PLUS PLAN ──────────────────────────────────── */}
               <div className="flex flex-col">
@@ -1104,7 +1104,7 @@ export function StudioSubscriptionPanel({
                   className={cn(
                     "flex min-h-[158px] flex-col justify-between rounded-2xl border p-6 transition-all",
                     pack.highlighted
-                      ? "border-[#84CC16]/60 bg-gradient-to-br from-[#3F6212]/55 via-[#1A2E05]/45 to-[#141417] shadow-[0_0_35px_rgba(132,204,22,0.18)]"
+                      ? "border-[#84CC16]/60 bg-gradient-to-br from-[#3F6212]/55 via-[#1A2E05]/45 to-fy-surface-2 shadow-[0_0_35px_rgba(132,204,22,0.18)]"
                       : "border-white/[0.08] bg-[#141416] hover:border-white/15"
                   )}
                 >
@@ -1281,13 +1281,13 @@ export function StudioSubscriptionPanel({
             </p>
           </div>
 
-          <div className="overflow-x-auto rounded-[24px] border border-white/[0.08] bg-[#111113] p-6 sm:p-8">
+          <div className="overflow-x-auto rounded-[24px] border border-white/[0.08] bg-fy-surface-1 p-6 sm:p-8">
             <table className="w-full min-w-[720px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-white/[0.07]">
                   {/* Col 1: Annual Save 20% toggle */}
                   <th className="w-[28%] pb-6 align-bottom">
-                    <div className="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-[#18181B] px-3 py-2 text-xs">
+                    <div className="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-fy-surface-3 px-3 py-2 text-xs">
                       <span className="font-semibold text-white">
                         Annual{" "}
                         <span className="text-[#D9FF00]">Save 20%</span>
@@ -1621,7 +1621,7 @@ export function StudioSubscriptionPanel({
             <button
               type="button"
               onClick={() => setShowAllCompareRows((v) => !v)}
-              className="h-10 cursor-pointer rounded-xl border border-white/15 bg-[#141417] px-6 text-xs font-semibold text-white transition-colors hover:bg-white/[0.08]"
+              className="h-10 cursor-pointer rounded-xl border border-white/15 bg-fy-surface-2 px-6 text-xs font-semibold text-white transition-colors hover:bg-white/[0.08]"
             >
               {showAllCompareRows ? "Show Less Features" : "Compare All Features"}
             </button>
@@ -1645,7 +1645,7 @@ export function StudioSubscriptionPanel({
               return (
                 <div
                   key={item.q}
-                  className="overflow-hidden rounded-xl border border-white/[0.07] bg-[#141417]"
+                  className="overflow-hidden rounded-xl border border-white/[0.07] bg-fy-surface-2"
                 >
                   <button
                     type="button"

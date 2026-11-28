@@ -80,7 +80,7 @@ export function RefundsPage() {
             </p>
             <a
               href="mailto:sam@nepocommerce.com"
-              className="inline-block text-xs font-bold text-[#c8ff00] hover:underline"
+              className="inline-block text-xs font-bold text-fy-accent hover:underline"
             >
               sam@nepocommerce.com →
             </a>
@@ -95,7 +95,7 @@ export function RefundsPage() {
               href="https://paddle.net"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block text-xs font-bold text-[#c8ff00] hover:underline"
+              className="inline-block text-xs font-bold text-fy-accent hover:underline"
             >
               paddle.net →
             </a>
@@ -112,8 +112,8 @@ export function RefundsPage() {
         </h2>
         <div className="p-4 rounded-xl bg-[#131317] border border-[#22222b] space-y-1 text-xs">
           <p className="font-semibold text-white">nexusbizz (FAYAA)</p>
-          <p>Email: <a href="mailto:sam@nepocommerce.com" className="text-[#c8ff00] hover:underline">sam@nepocommerce.com</a></p>
-          <p>Website: <a href="https://fayaa-studio-client.fly.dev" className="text-[#c8ff00] hover:underline">https://fayaa-studio-client.fly.dev</a></p>
+          <p>Email: <a href="mailto:sam@nepocommerce.com" className="text-fy-accent hover:underline">sam@nepocommerce.com</a></p>
+          <p>Website: <a href="https://fayaa-studio-client.fly.dev" className="text-fy-accent hover:underline">https://fayaa-studio-client.fly.dev</a></p>
         </div>
       </section>
     </LegalLayout>

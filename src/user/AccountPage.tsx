@@ -175,16 +175,16 @@ export function AccountPage({ user }: AccountPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090a] text-white flex flex-col font-sans selection:bg-[#c8ff00] selection:text-black">
+    <div className="min-h-screen bg-[#09090a] text-white flex flex-col font-sans selection:bg-fy-accent selection:text-black">
       {/* 1. Global Dark Header */}
       <header className="h-14 border-b border-[#1c1c22] bg-[#09090a]/95 backdrop-blur-md px-4 flex items-center justify-between sticky top-0 z-40">
         {/* Left: Brand + Nav Items */}
         <div className="flex items-center gap-5">
           <Link to="/studio" className="flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#c8ff00] to-emerald-400 flex items-center justify-center font-black text-black text-sm shadow-[0_0_15px_rgba(200,255,0,0.3)] transition-transform group-hover:scale-105">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-fy-amber via-fy-accent to-fy-rose flex items-center justify-center font-black text-black text-sm shadow-[0_0_15px_rgba(255,91,31,0.3)] transition-transform group-hover:scale-105">
               ⚡
             </div>
-            <span className="font-bold tracking-tight text-sm text-white group-hover:text-[#c8ff00] transition-colors">
+            <span className="font-bold tracking-tight text-sm text-white group-hover:text-fy-accent transition-colors">
               FAYAA
             </span>
           </Link>
@@ -201,7 +201,7 @@ export function AccountPage({ user }: AccountPageProps) {
               className="hover:text-white transition-colors flex items-center gap-1.5"
             >
               <span>Video Studio</span>
-              <span className="text-[9px] bg-[#c8ff00]/15 border border-[#c8ff00]/30 text-[#c8ff00] font-bold px-1.5 py-0.5 rounded leading-none">
+              <span className="text-[9px] bg-fy-accent/15 border border-fy-accent/30 text-fy-accent font-bold px-1.5 py-0.5 rounded leading-none">
                 Genjutsu
               </span>
             </Link>
@@ -218,7 +218,7 @@ export function AccountPage({ user }: AccountPageProps) {
         <div className="flex items-center gap-3">
           <Link
             to={routes.PricingPageRoute.to}
-            className="flex items-center gap-1.5 bg-[#141417] border border-[#2b2b35] hover:border-[#c8ff00]/40 text-[#c8ff00] text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+            className="flex items-center gap-1.5 bg-fy-surface-2 border border-[#2b2b35] hover:border-fy-accent/40 text-fy-accent text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
           >
             <Crown className="w-3.5 h-3.5" />
             <span>Get Credits</span>
@@ -227,7 +227,7 @@ export function AccountPage({ user }: AccountPageProps) {
           <button
             type="button"
             onClick={() => void logout()}
-            className="flex items-center gap-1.5 bg-[#141417] border border-[#2b2b35] hover:border-red-500/40 text-zinc-300 hover:text-red-400 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+            className="flex items-center gap-1.5 bg-fy-surface-2 border border-[#2b2b35] hover:border-red-500/40 text-zinc-300 hover:text-red-400 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer"
             title="Log out of your account"
           >
             <LogOut className="w-3.5 h-3.5" />
@@ -238,7 +238,7 @@ export function AccountPage({ user }: AccountPageProps) {
           <button
             type="button"
             onClick={() => setIsEditModalOpen(true)}
-            className="w-8 h-8 rounded-full overflow-hidden border border-white/20 hover:border-[#c8ff00] transition-colors focus:outline-none cursor-pointer"
+            className="w-8 h-8 rounded-full overflow-hidden border border-white/20 hover:border-fy-accent transition-colors focus:outline-none cursor-pointer"
             title="Edit profile"
           >
             <img
@@ -328,7 +328,7 @@ export function AccountPage({ user }: AccountPageProps) {
               <span className="text-[10px] text-[#71717a]">In Flight</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-[#c8ff00]">
+              <span className="text-sm font-bold text-fy-accent">
                 30/$1
               </span>
               <span className="text-[10px] text-[#71717a]">Rate</span>
@@ -356,7 +356,7 @@ export function AccountPage({ user }: AccountPageProps) {
               <h3 className="text-sm font-bold text-white truncate pr-2">
                 {planName}
               </h3>
-              <div className="flex items-center gap-1 text-sm font-black text-[#c8ff00]">
+              <div className="flex items-center gap-1 text-sm font-black text-fy-accent">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>{(user.credits ?? 0).toLocaleString()}</span>
               </div>
@@ -370,7 +370,7 @@ export function AccountPage({ user }: AccountPageProps) {
             <div className="space-y-2">
               <Link
                 to={routes.PricingPageRoute.to}
-                className="w-full bg-[#c8ff00] hover:bg-[#d8ff33] text-black text-xs font-bold py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                className="w-full bg-fy-accent hover:bg-[#d8ff33] text-black text-xs font-bold py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm"
               >
                 <Crown className="w-3.5 h-3.5" />
                 <span>Top Up / Upgrade Plan</span>
@@ -408,7 +408,7 @@ export function AccountPage({ user }: AccountPageProps) {
               title={copiedLink ? "Link copied!" : "Copy profile link"}
             >
               {copiedLink ? (
-                <Check className="w-4 h-4 text-[#c8ff00]" />
+                <Check className="w-4 h-4 text-fy-accent" />
               ) : (
                 <Copy className="w-4 h-4" />
               )}
@@ -450,7 +450,7 @@ export function AccountPage({ user }: AccountPageProps) {
               onClick={() => setIsEditModalOpen(true)}
               className="flex items-center gap-2 hover:text-white transition-colors text-left w-full group cursor-pointer"
             >
-              <MapPin className="w-3.5 h-3.5 text-[#71717a] group-hover:text-[#c8ff00] transition-colors shrink-0" />
+              <MapPin className="w-3.5 h-3.5 text-[#71717a] group-hover:text-fy-accent transition-colors shrink-0" />
               <span>{profile.location || "Add your location"}</span>
             </button>
 
@@ -470,7 +470,7 @@ export function AccountPage({ user }: AccountPageProps) {
                     href={s.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between text-xs text-[#a1a1aa] hover:text-[#c8ff00] bg-[#121217] border border-[#1f1f26] rounded-lg px-3 py-1.5 transition-colors"
+                    className="flex items-center justify-between text-xs text-[#a1a1aa] hover:text-fy-accent bg-[#121217] border border-[#1f1f26] rounded-lg px-3 py-1.5 transition-colors"
                   >
                     <span className="truncate">{s.platform || s.url}</span>
                     <ExternalLink className="w-3 h-3 text-[#71717a]" />
@@ -513,7 +513,7 @@ export function AccountPage({ user }: AccountPageProps) {
                 <h2 className="text-base font-bold text-white tracking-tight">
                   My Video Creations
                 </h2>
-                <span className="text-xs bg-[#1a1a22] text-[#c8ff00] font-semibold px-2 py-0.5 rounded-full border border-[#2a2a36]">
+                <span className="text-xs bg-[#1a1a22] text-fy-accent font-semibold px-2 py-0.5 rounded-full border border-[#2a2a36]">
                   {videoTasks?.length ?? 0}
                 </span>
               </div>
@@ -562,7 +562,7 @@ export function AccountPage({ user }: AccountPageProps) {
 
               <Link
                 to="/studio"
-                className="bg-[#c8ff00] hover:bg-[#d8ff33] text-black text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                className="bg-fy-accent hover:bg-[#d8ff33] text-black text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
               >
                 <Sparkles className="w-3.5 h-3.5 text-black" />
                 <span>New Video</span>
@@ -573,7 +573,7 @@ export function AccountPage({ user }: AccountPageProps) {
           {/* Video Creations Grid / States */}
           {isTasksLoading ? (
             <div className="py-24 flex flex-col items-center justify-center text-center">
-              <Loader2 className="w-8 h-8 text-[#c8ff00] animate-spin mb-3" />
+              <Loader2 className="w-8 h-8 text-fy-accent animate-spin mb-3" />
               <p className="text-xs text-[#8e8e96]">Loading your video creations...</p>
             </div>
           ) : filteredTasks.length === 0 ? (
@@ -595,7 +595,7 @@ export function AccountPage({ user }: AccountPageProps) {
               </p>
               <Link
                 to="/studio"
-                className="mt-5 inline-flex items-center gap-1.5 bg-[#c8ff00] hover:bg-[#d8ff33] text-black text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-sm"
+                className="mt-5 inline-flex items-center gap-1.5 bg-fy-accent hover:bg-[#d8ff33] text-black text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-sm"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Launch Video Studio</span>
@@ -626,7 +626,7 @@ export function AccountPage({ user }: AccountPageProps) {
                         />
                       ) : isProcessing ? (
                         <div className="flex flex-col items-center justify-center text-center p-6 text-neutral-400">
-                          <Loader2 className="w-8 h-8 text-[#c8ff00] animate-spin mb-3" />
+                          <Loader2 className="w-8 h-8 text-fy-accent animate-spin mb-3" />
                           <span className="text-xs font-semibold text-white">
                             Synthesizing Motion
                           </span>
@@ -713,7 +713,7 @@ export function AccountPage({ user }: AccountPageProps) {
                             }
                           >
                             {copiedTaskId === task.id ? (
-                              <Check className="w-3.5 h-3.5 text-[#c8ff00]" />
+                              <Check className="w-3.5 h-3.5 text-fy-accent" />
                             ) : (
                               <Copy className="w-3.5 h-3.5" />
                             )}
@@ -724,7 +724,7 @@ export function AccountPage({ user }: AccountPageProps) {
                           <span>ID: {task.id.slice(0, 8)}...</span>
                           <Link
                             to="/studio"
-                            className="text-[#c8ff00] hover:underline"
+                            className="text-fy-accent hover:underline"
                           >
                             Open in Studio →
                           </Link>
@@ -970,7 +970,7 @@ function EditProfileModal({
                   type="button"
                   onClick={() => setShowNamePublicly(!showNamePublicly)}
                   className={`w-9 h-5 flex items-center rounded-full p-0.5 transition-colors cursor-pointer ${
-                    showNamePublicly ? "bg-[#c8ff00]" : "bg-[#272733]"
+                    showNamePublicly ? "bg-fy-accent" : "bg-[#272733]"
                   }`}
                 >
                   <div
@@ -1197,7 +1197,7 @@ function SocialLinksModal({
             <button
               type="submit"
               disabled={isSaving}
-              className="bg-[#c8ff00] text-black text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
+              className="bg-fy-accent text-black text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
             >
               {isSaving ? "Saving..." : "Save Links"}
             </button>

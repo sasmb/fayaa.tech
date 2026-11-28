@@ -220,3 +220,46 @@
 .fy-marquee-track:hover {
   animation-play-state: paused;
 }
+
+/*
+ * Admin and other shadcn-based pages read HSL triplets (--background, --card,
+ * --primary ...). .fy-admin maps those onto the FAYAA palette so the owner
+ * dashboard matches the studio and marketing site.
+ */
+.fy-admin {
+  color-scheme: dark;
+  --background: 240 18% 3%;
+  --foreground: 40 14% 96%;
+  --card: 240 13% 6%;
+  --card-foreground: 40 14% 96%;
+  --card-accent: 240 13% 9%;
+  --card-accent-foreground: 40 14% 96%;
+  --card-subtle: 240 13% 9%;
+  --card-subtle-foreground: 40 14% 96%;
+  --popover: 240 13% 7%;
+  --popover-foreground: 40 14% 96%;
+  --primary: 16 100% 56%;
+  --primary-foreground: 12 29% 3%;
+  --secondary: 16 100% 56%;
+  --secondary-foreground: 40 14% 96%;
+  --secondary-muted: 18 100% 79%;
+  --secondary-muted-foreground: 12 29% 3%;
+  --muted: 240 13% 9%;
+  --muted-foreground: 253 5% 65%;
+  --accent: 240 10% 13%;
+  --accent-foreground: 40 14% 96%;
+  --destructive: 350 89% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 158 64% 52%;
+  --success-foreground: 0 0% 98%;
+  --warning: 43 96% 56%;
+  --warning-foreground: 12 29% 3%;
+  --border: 240 7% 13%;
+  --input: 240 7% 15%;
+  --ring: 16 100% 56%;
+  --radius: 0.75rem;
+}
+
+.fy-admin body {
+  background: var(--color-fy-ink);
+}

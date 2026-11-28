@@ -81,7 +81,7 @@ export function PrivacyPage() {
           5. Data Retention & Deletion
         </h2>
         <p>
-          We retain your account data and video generation history as long as your account remains active. You may delete any past video generation directly from your account gallery or request complete account erasure at any time by emailing us at <a href="mailto:sam@nepocommerce.com" className="text-[#c8ff00] hover:underline">sam@nepocommerce.com</a>.
+          We retain your account data and video generation history as long as your account remains active. You may delete any past video generation directly from your account gallery or request complete account erasure at any time by emailing us at <a href="mailto:sam@nepocommerce.com" className="text-fy-accent hover:underline">sam@nepocommerce.com</a>.
         </p>
       </section>
 
@@ -109,8 +109,8 @@ export function PrivacyPage() {
         </h2>
         <div className="p-4 rounded-xl bg-[#131317] border border-[#22222b] space-y-1 text-xs">
           <p className="font-semibold text-white">Data Protection Officer / nexusbizz</p>
-          <p>Email: <a href="mailto:sam@nepocommerce.com" className="text-[#c8ff00] hover:underline">sam@nepocommerce.com</a></p>
-          <p>Website: <a href="https://fayaa-studio-client.fly.dev" className="text-[#c8ff00] hover:underline">https://fayaa-studio-client.fly.dev</a></p>
+          <p>Email: <a href="mailto:sam@nepocommerce.com" className="text-fy-accent hover:underline">sam@nepocommerce.com</a></p>
+          <p>Website: <a href="https://fayaa-studio-client.fly.dev" className="text-fy-accent hover:underline">https://fayaa-studio-client.fly.dev</a></p>
         </div>
       </section>
     </LegalLayout>

@@ -34,7 +34,7 @@ export function VideoBuzzerModal({ videoUrl, onClose }: VideoBuzzerModalProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-[#101015] border border-lime-400/40 rounded-2xl shadow-2xl p-4 space-y-4"
+            className="w-full max-w-md bg-[#101015] border border-fy-accent-400/40 rounded-2xl shadow-2xl p-4 space-y-4"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -73,7 +73,7 @@ export function VideoBuzzerModal({ videoUrl, onClose }: VideoBuzzerModalProps) {
                     watermark: watermarkEnabled,
                   }).finally(() => setDownloading(false));
                 }}
-                className="flex-1 py-2.5 bg-lime-400 hover:bg-lime-300 text-black font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-lime-500/20 cursor-pointer disabled:opacity-60"
+                className="flex-1 py-2.5 bg-fy-accent-400 hover:bg-fy-accent-300 text-black font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-fy-accent-500/20 cursor-pointer disabled:opacity-60"
               >
                 <Download className="w-4 h-4" />{" "}
                 {downloading

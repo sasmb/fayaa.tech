@@ -3,6 +3,7 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
+  FlaskConical,
   LayoutDashboard,
   LayoutTemplate,
   Settings,
@@ -12,7 +13,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router";
 import { Link, routes } from "wasp/client/router";
-import Logo from "../../client/static/logo.svg";
+import { FayaaLogo, Pill } from "../../client/design";
 import { cn } from "../../client/utils";
 import { SidebarLinkGroup } from "./SidebarLinkGroup";
 
@@ -72,7 +73,7 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
     <aside
       ref={sidebar}
       className={cn(
-        "bg-muted z-9999 w-72.5 absolute left-0 top-0 flex h-screen flex-col overflow-y-hidden border-r duration-300 ease-linear lg:static lg:translate-x-0",
+        "z-9999 w-72.5 absolute left-0 top-0 flex h-screen flex-col overflow-y-hidden border-r border-fy-line bg-fy-surface-1/95 backdrop-blur-xl duration-300 ease-fy-out lg:static lg:translate-x-0",
         {
           "translate-x-0": sidebarOpen,
           "-translate-x-full": !sidebarOpen,
@@ -81,9 +82,10 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
     >
       {/* <!-- SIDEBAR HEADER --> */}
       <div className="py-5.5 lg:py-6.5 flex items-center justify-between gap-2 px-6">
-        <Link to={routes.LandingPageRoute.to}>
-          <img src={Logo} alt="Logo" width={50} />
-        </Link>
+        <div className="flex items-center gap-3">
+          <FayaaLogo to={routes.LandingPageRoute.to} />
+          <Pill tone="accent">Owner</Pill>
+        </div>
 
         <button
           ref={trigger}
@@ -102,7 +104,7 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         <nav className="mt-5 px-4 py-4 lg:mt-9 lg:px-6">
           {/* <!-- Menu Group --> */}
           <div>
-            <h3 className="text-muted-foreground mb-4 ml-4 text-sm font-semibold">
+            <h3 className="fy-eyebrow mb-3 ml-4">
               MENU
             </h3>
 
@@ -113,9 +115,9 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                 end
                 className={({ isActive }) =>
                   cn(
-                    "text-muted-foreground hover:bg-accent hover:text-accent-foreground group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium duration-300 ease-in-out",
+                    "group relative flex items-center gap-2.5 rounded-fy-md px-4 py-2.5 text-sm font-medium text-fy-muted transition-colors duration-300 ease-fy-out hover:bg-white/5 hover:text-fy-text [&>svg]:size-4.5",
                     {
-                      "bg-accent text-accent-foreground": isActive,
+                      "bg-white/[0.07] text-fy-text before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-fy-accent": isActive,
                     },
                   )
                 }
@@ -130,9 +132,9 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                   end
                   className={({ isActive }) =>
                     cn(
-                      "text-muted-foreground hover:bg-accent hover:text-accent-foreground group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium duration-300 ease-in-out",
+                      "group relative flex items-center gap-2.5 rounded-fy-md px-4 py-2.5 text-sm font-medium text-fy-muted transition-colors duration-300 ease-fy-out hover:bg-white/5 hover:text-fy-text [&>svg]:size-4.5",
                       {
-                        "bg-accent text-accent-foreground": isActive,
+                        "bg-white/[0.07] text-fy-text before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-fy-accent": isActive,
                       },
                     )
                   }
@@ -151,9 +153,9 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                   end
                   className={({ isActive }) =>
                     cn(
-                      "text-muted-foreground hover:bg-accent hover:text-accent-foreground group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium duration-300 ease-in-out",
+                      "group relative flex items-center gap-2.5 rounded-fy-md px-4 py-2.5 text-sm font-medium text-fy-muted transition-colors duration-300 ease-fy-out hover:bg-white/5 hover:text-fy-text [&>svg]:size-4.5",
                       {
-                        "bg-accent text-accent-foreground": isActive,
+                        "bg-white/[0.07] text-fy-text before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-fy-accent": isActive,
                       },
                     )
                   }
@@ -164,6 +166,25 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
               </li>
               {/* <!-- Menu Item Users --> */}
 
+              {/* <!-- Menu Item Experiments --> */}
+              <li>
+                <NavLink
+                  to={routes.AdminExperimentsRoute.to}
+                  end
+                  className={({ isActive }) =>
+                    cn(
+                      "group relative flex items-center gap-2.5 rounded-fy-md px-4 py-2.5 text-sm font-medium text-fy-muted transition-colors duration-300 ease-fy-out hover:bg-white/5 hover:text-fy-text [&>svg]:size-4.5",
+                      {
+                        "bg-white/[0.07] text-fy-text before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-fy-accent": isActive,
+                      },
+                    )
+                  }
+                >
+                  <FlaskConical />
+                  Experiments
+                </NavLink>
+              </li>
+
               {/* <!-- Menu Item Settings --> */}
               <li>
                 <NavLink
@@ -171,9 +192,9 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                   end
                   className={({ isActive }) =>
                     cn(
-                      "text-muted-foreground hover:bg-accent hover:text-accent-foreground group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium duration-300 ease-in-out",
+                      "group relative flex items-center gap-2.5 rounded-fy-md px-4 py-2.5 text-sm font-medium text-fy-muted transition-colors duration-300 ease-fy-out hover:bg-white/5 hover:text-fy-text [&>svg]:size-4.5",
                       {
-                        "bg-accent text-accent-foreground": isActive,
+                        "bg-white/[0.07] text-fy-text before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-fy-accent": isActive,
                       },
                     )
                   }
@@ -188,7 +209,7 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
 
           {/* <!-- Others Group --> */}
           <div>
-            <h3 className="text-muted-foreground mb-4 ml-4 text-sm font-semibold">
+            <h3 className="fy-eyebrow mb-3 ml-4">
               Extra Components
             </h3>
 
@@ -200,9 +221,9 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                   end
                   className={({ isActive }) =>
                     cn(
-                      "text-muted-foreground hover:bg-accent hover:text-accent-foreground group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium duration-300 ease-in-out",
+                      "group relative flex items-center gap-2.5 rounded-fy-md px-4 py-2.5 text-sm font-medium text-fy-muted transition-colors duration-300 ease-fy-out hover:bg-white/5 hover:text-fy-text [&>svg]:size-4.5",
                       {
-                        "bg-accent text-accent-foreground": isActive,
+                        "bg-white/[0.07] text-fy-text before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-fy-accent": isActive,
                       },
                     )
                   }
@@ -223,7 +244,7 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                       <NavLink
                         to="#"
                         className={cn(
-                          "text-muted-foreground hover:bg-accent hover:text-accent-foreground group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium duration-300 ease-in-out",
+                          "group relative flex items-center gap-2.5 rounded-fy-md px-4 py-2.5 text-sm font-medium text-fy-muted transition-colors duration-300 ease-fy-out hover:bg-white/5 hover:text-fy-text [&>svg]:size-4.5",
                           {
                             "bg-accent text-accent-foreground":
                               pathname.includes("ui"),
