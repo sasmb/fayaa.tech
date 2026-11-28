@@ -606,7 +606,7 @@ export function GenjutsuWorkbench({
       setStageTab("styles")
       setMode("restyle")
     }
-    setShowCreditPopup(true)
+    if (authUser) setShowCreditPopup(true)
   }
 
   // Upload helper used by both AssetLibraryModal and drag-and-drop on slots
@@ -1231,7 +1231,7 @@ export function GenjutsuWorkbench({
         {/* ══════════════════════════════════════════════════════════════════════
           POPUP 2: TOP-RIGHT CREDIT USAGE POPOVER (Appears after closing Popup 1)
          ══════════════════════════════════════════════════════════════════════ */}
-        {showCreditPopup ? (
+        {showCreditPopup && authUser ? (
           <div
             role="status"
             aria-live="polite"
