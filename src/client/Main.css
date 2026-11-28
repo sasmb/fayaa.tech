@@ -2,6 +2,7 @@
 @import "../video-studio/hf/styles/quanta/index.css";
 @import "../video-studio/hf/styles/theme.css";
 @import "../video-studio/hf/styles/studio/prompt-box.css";
+@import "./design/tokens.css";
 
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";

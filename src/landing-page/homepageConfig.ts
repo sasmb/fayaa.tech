@@ -2,10 +2,13 @@ import type { PublicShowcaseItem, ShowcaseCategory } from "../video-studio/showc
 
 export type HomepageSectionId =
   | "hero-showcase"
-  | "tools-bento"
-  | "film-festival"
+  | "reel-marquee"
+  | "capabilities-story"
   | "community-showcase"
-  | "workflow-templates";
+  | "tools-bento"
+  | "workflow-templates"
+  | "film-festival"
+  | "final-cta";
 
 export interface HomepageSectionConfig {
   id: HomepageSectionId;
@@ -14,35 +17,143 @@ export interface HomepageSectionConfig {
 }
 
 /**
- * Reorder or disable top-level homepage sections here without touching JSX layout code.
+ * Default order of the homepage. Experiments can reorder it (see
+ * src/marketing/landingContent.ts), and any section can be switched off here
+ * without touching JSX.
  */
 export const HOMEPAGE_LAYOUT: HomepageSectionConfig[] = [
+  { id: "hero-showcase", enabled: true, ariaLabel: "FAYAA video studio" },
+  { id: "reel-marquee", enabled: true, ariaLabel: "Made with FAYAA" },
+  { id: "capabilities-story", enabled: true, ariaLabel: "How FAYAA Genjutsu works" },
+  { id: "community-showcase", enabled: true, ariaLabel: "FAYAA Genjutsu by community" },
+  { id: "tools-bento", enabled: true, ariaLabel: "FAYAA tools and models" },
+  { id: "workflow-templates", enabled: true, ariaLabel: "One-click Genjutsu templates" },
+  { id: "film-festival", enabled: true, ariaLabel: "FAYAA Global Film Festival" },
+  { id: "final-cta", enabled: true, ariaLabel: "Start creating with FAYAA" },
+];
+
+/**
+ * Every video or still the marketing site plays lives in this library and is
+ * referenced by id from src/marketing/landingContent.ts. To swap footage:
+ * upload to R2 and set videoStorageKey/posterStorageKey (resolved server-side),
+ * or paste a public URL into videoUrl/poster. Clips without video still move,
+ * with a slow push-in on the poster.
+ */
+export interface MediaClip {
+  id: string;
+  title: string;
+  /** Short label shown on the tile, e.g. "Motion transfer". */
+  tag: string;
+  aspect: "portrait" | "landscape" | "square";
+  poster: string;
+  posterStorageKey?: string;
+  videoUrl?: string;
+  videoStorageKey?: string;
+  /** Optional remix prompt when the clip is opened in the studio. */
+  prompt?: string;
+}
+
+const GENJUTSU_DEMO_VIDEO =
+  "https://d3u0tzju9qaucj.cloudfront.net/4f337d0a-8b91-49a0-a8a1-b1231e0187fe/01a193ff-30aa-7895-a568-97ee1d417087/1a93cb6a-1214-48db-b8ec-e903f2efccc3.mp4";
+
+const unsplash = (id: string, w = 900) =>
+  `https://images.unsplash.com/${id}?w=${w}&q=80&auto=format&fit=crop`;
+
+export const MEDIA_CLIPS: MediaClip[] = [
   {
-    id: "hero-showcase",
-    enabled: true,
-    ariaLabel: "Featured Studio Workflows",
+    id: "hero-genjutsu",
+    title: "Genjutsu motion transfer",
+    tag: "Motion transfer",
+    aspect: "landscape",
+    poster: unsplash("photo-1534528741775-53994a69daeb", 1600),
+    videoUrl: GENJUTSU_DEMO_VIDEO,
   },
   {
-    id: "tools-bento",
-    enabled: true,
-    ariaLabel: "Promotions and AI Models",
+    id: "locker-swap",
+    title: "Tactical locker room swap",
+    tag: "Recast",
+    aspect: "portrait",
+    poster: unsplash("photo-1507003211169-0a1dd7228f2d", 700),
+    videoUrl: GENJUTSU_DEMO_VIDEO,
   },
   {
-    id: "film-festival",
-    enabled: true,
-    ariaLabel: "FAYAA Global Film Festival",
+    id: "cash-flex",
+    title: "Penthouse flex reel",
+    tag: "UGC",
+    aspect: "portrait",
+    poster: unsplash("photo-1534528741775-53994a69daeb", 700),
   },
   {
-    id: "community-showcase",
-    enabled: true,
-    ariaLabel: "FAYAA Genjutsu by Community",
+    id: "stadium-sprint",
+    title: "Sideline sprint",
+    tag: "Sports",
+    aspect: "portrait",
+    poster: unsplash("photo-1500648767791-00dcc994a43e", 700),
   },
   {
-    id: "workflow-templates",
-    enabled: true,
-    ariaLabel: "1-Click Genjutsu Templates",
+    id: "studio-dance",
+    title: "Contemporary studio dance",
+    tag: "Choreography",
+    aspect: "landscape",
+    poster: unsplash("photo-1517841905240-472988babdf9", 900),
+    videoUrl: GENJUTSU_DEMO_VIDEO,
+  },
+  {
+    id: "midnight-portrait",
+    title: "Midnight portrait",
+    tag: "Restyle",
+    aspect: "portrait",
+    poster: unsplash("photo-1494790108377-be9c29b29330", 700),
+  },
+  {
+    id: "freestyle",
+    title: "Freestyle groove",
+    tag: "Choreography",
+    aspect: "portrait",
+    poster: unsplash("photo-1539571696357-5a69c17a67c6", 700),
+  },
+  {
+    id: "object-swap",
+    title: "Scale model swap",
+    tag: "Object swap",
+    aspect: "landscape",
+    poster: unsplash("photo-1518709268805-4e9042af9f23", 900),
+  },
+  {
+    id: "crowd",
+    title: "Championship night",
+    tag: "Cinematic",
+    aspect: "landscape",
+    poster: unsplash("photo-1542751371-adc38448a05e", 900),
+  },
+  {
+    id: "streetwear",
+    title: "Streetwear ensemble",
+    tag: "Fashion",
+    aspect: "portrait",
+    poster: unsplash("photo-1578632767115-351597cf2477", 700),
   },
 ];
+
+export function getMediaClip(id: string): MediaClip | undefined {
+  return MEDIA_CLIPS.find((clip) => clip.id === id);
+}
+
+/** Resolves R2 keys on a clip into playable URLs (server map, then public base). */
+export function resolveMediaClip(
+  clip: MediaClip,
+  resolvedStorageUrls?: Record<string, string>,
+  publicBaseUrl?: string
+): MediaClip {
+  const videoUrl = clip.videoStorageKey
+    ? resolveStorageUrl(clip.videoStorageKey, clip.videoUrl ?? "", resolvedStorageUrls, publicBaseUrl)
+    : clip.videoUrl;
+  return {
+    ...clip,
+    poster: resolveStorageUrl(clip.posterStorageKey, clip.poster, resolvedStorageUrls, publicBaseUrl),
+    ...(videoUrl ? { videoUrl } : {}),
+  };
+}
 
 export interface HeroShowcaseCardConfig {
   id: string;
@@ -355,73 +466,6 @@ export const BENTO_TOOLS: BentoToolConfig[] = [
   },
 ];
 
-export const HOMEPAGE_ANNOUNCEMENT = {
-  badgeLabel: "2+ Min Videos >",
-  message:
-    "FAYAA Genjutsu Light & Pro — Edit videos up to 2+ minutes (auto-split into seamless passes) up to 1080p. Save 20% on Annual Plans.",
-  ctaLabel: "View Plans & Credits",
-  ctaHref: "/pricing",
-};
-
-export const HOMEPAGE_PROMO_CONFIG = {
-  backdropImage:
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=900&q=80",
-  visitor: {
-    headingPrimary: "CREATE WITH FAYAA",
-    headingAccent: "GENJUTSU V1.0",
-    bullets: [
-      "Edit & restyle short clips OR videos up to 2+ minutes — we auto-split long videos into uniform passes",
-      "Multi-image character & product reference lock — save 20% on annual plans or top up credits anytime",
-    ],
-    ctaLabel: "Sign up & start creating",
-    ctaHref: "/signup",
-  },
-  loggedIn: {
-    headingPrimary: "GENJUTSU LIGHT & PRO",
-    headingSecondary: "EDIT VIDEOS UP TO 2+ MIN ›",
-    description:
-      "Upload short clips or videos up to 2+ minutes (>30s auto-splits every 30s into one seamless final MP4), starting from 8 credits per 5s clip.",
-    primaryCtaLabel: "Open Genjutsu Studio",
-    primaryCtaHref: "/studio",
-    secondaryCtaLabel: "Plans & Credits",
-    secondaryCtaHref: "/pricing",
-  },
-};
-
-export const HOMEPAGE_FESTIVAL_CONFIG = {
-  badgeLabel: "FAYAA Global Film Festival • Coming Soon",
-  heading: "SUBMISSIONS OPENING SOON",
-  description:
-    "Create motion-transfer, object-swap, and restyled short films with FAYAA Genjutsu to participate in our upcoming community showcase.",
-  ctaLabel: "Explore community creations",
-  ctaHref: "#community-showcase",
-};
-
-export const HOMEPAGE_COMMUNITY_CONFIG = {
-  heading: "FAYAA GENJUTSU BY COMMUNITY",
-  description:
-    "Take the motion and recast it with your characters, locations, and products, or swap specific elements while keeping the rest untouched.",
-  primaryCtaLabel: "Start generating",
-  secondaryCtaLabel: "Learn more",
-  workbenchLinkLabel: "Open Genjutsu Workbench",
-};
-
-export const HOMEPAGE_TEMPLATES_CONFIG = {
-  heroImages: [
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&q=80",
-    "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&q=80",
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
-  ] as readonly [string, string, string],
-  heroAlt: "FAYAA Genjutsu presets",
-  badgeLabel: "Ready-to-Run Workflows",
-  heading: "Launch a Genjutsu Template in One Click",
-  descriptionPrefix: "Every preset pre-loads a motion source video,",
-  descriptionHighlight: "@Image1",
-  descriptionSuffix:
-    "identity anchors, and camera-locked prompt directly into the FAYAA Studio Workbench.",
-  tryLabel: "Launch in Studio",
-};
-
 /**
  * Returns only enabled homepage sections in their configured display order.
  */
@@ -445,6 +489,10 @@ export function getCuratedHomepageStorageKeys(): string[] {
   for (const shot of COMMUNITY_GENJUTSU_SHOTS) {
     if (shot.videoStorageKey) keys.add(shot.videoStorageKey);
     if (shot.posterStorageKey) keys.add(shot.posterStorageKey);
+  }
+  for (const clip of MEDIA_CLIPS) {
+    if (clip.videoStorageKey) keys.add(clip.videoStorageKey);
+    if (clip.posterStorageKey) keys.add(clip.posterStorageKey);
   }
   return Array.from(keys);
 }
