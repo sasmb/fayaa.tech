@@ -9,6 +9,7 @@ import type {
 import * as z from "zod";
 
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
+import { triggerMarketingRebuild } from "./deployHook";
 import { siteMediaInputSchema, type SiteMediaInput, type SiteMediaItem } from "./siteMedia";
 
 const SELECT = {
@@ -54,11 +55,13 @@ export const upsertSiteMedia: UpsertSiteMedia<SiteMediaInput, SiteMediaItem> = a
   const { id, sortOrder, ...data } = ensureArgsSchemaOrThrowHttpError(siteMediaInputSchema, rawArgs);
 
   if (id) {
-    return context.entities.SiteMedia.update({
+    const updated = await context.entities.SiteMedia.update({
       where: { id },
       data: { ...data, ...(sortOrder !== undefined ? { sortOrder } : {}) },
       select: SELECT,
     });
+    triggerMarketingRebuild("site media updated");
+    return updated;
   }
 
   const last = await context.entities.SiteMedia.findFirst({
@@ -66,16 +69,19 @@ export const upsertSiteMedia: UpsertSiteMedia<SiteMediaInput, SiteMediaItem> = a
     orderBy: { sortOrder: "desc" },
     select: { sortOrder: true },
   });
-  return context.entities.SiteMedia.create({
+  const created = await context.entities.SiteMedia.create({
     data: { ...data, sortOrder: sortOrder ?? (last ? last.sortOrder + 1 : 0) },
     select: SELECT,
   });
+  triggerMarketingRebuild("site media added");
+  return created;
 };
 
 export const deleteSiteMedia: DeleteSiteMedia<{ id: string }, { id: string }> = async (rawArgs, context) => {
   assertAdmin(context.user);
   const { id } = ensureArgsSchemaOrThrowHttpError(z.object({ id: z.string().uuid() }), rawArgs);
   await context.entities.SiteMedia.delete({ where: { id } });
+  triggerMarketingRebuild("site media removed");
   return { id };
 };
 
@@ -105,6 +111,7 @@ export const moveSiteMedia: MoveSiteMedia<{ id: string; direction: "up" | "down"
       context.entities.SiteMedia.update({ where: { id: rowId }, data: { sortOrder: index } })
     )
   );
+  triggerMarketingRebuild("site media reordered");
   return context.entities.SiteMedia.findMany({
     where: { slot: item.slot },
     orderBy: { sortOrder: "asc" },

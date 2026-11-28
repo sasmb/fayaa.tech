@@ -1,0 +1,48 @@
+name: Marketing site
+
+# Builds and checks the static marketing site (site/) on every PR that
+# touches it, and asks the host to rebuild once a day so dated campaigns in
+# src/marketing/landingContent.ts switch on and off without a code change.
+on:
+  pull_request:
+    paths:
+      - "site/**"
+      - "src/marketing/**"
+      - "src/landing-page/homepageConfig.ts"
+      - "src/client/design/tokens.css"
+      - ".github/workflows/site.yml"
+  schedule:
+    - cron: "15 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+      - run: npx astro check
+      - run: npm test
+
+  nightly-rebuild:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger marketing deploy hook
+        env:
+          HOOK: ${{ secrets.MARKETING_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "MARKETING_DEPLOY_HOOK_URL not set; skipping."; exit 0; fi
+          curl -fsS -X POST "$HOOK" > /dev/null && echo "Rebuild requested."

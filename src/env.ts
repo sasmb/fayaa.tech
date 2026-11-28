@@ -4,6 +4,7 @@ import * as z from "zod";
 import { googleAnalyticsEnvSchema, plausibleEnvSchema } from "./analytics/env";
 import { authEnvSchema } from "./auth/env";
 import { fileUploadEnvSchema } from "./file-upload/env";
+import { marketingClientEnvSchema, marketingEnvSchema } from "./marketing/env";
 import { lemonSqueezyEnvSchema } from "./payment/lemonSqueezy/env";
 import { paddleClientEnvSchema, paddleEnvSchema } from "./payment/paddle/env";
 import { polarEnvSchema } from "./payment/polar/env";
@@ -29,6 +30,7 @@ export const serverEnvValidationSchema = defineEnvValidationSchema(
     ...plausibleEnvSchema.shape,
     ...googleAnalyticsEnvSchema.shape,
     ...videoStudioEnvSchema.shape,
+    ...marketingEnvSchema.shape,
   }),
 );
 
@@ -37,5 +39,6 @@ export const serverEnvValidationSchema = defineEnvValidationSchema(
 export const clientEnvValidationSchema = defineEnvValidationSchema(
   z.object({
     ...paddleClientEnvSchema.shape,
+    ...marketingClientEnvSchema.shape,
   }),
 );

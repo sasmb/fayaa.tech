@@ -1,0 +1,13 @@
+---
+interface Props { class?: string }
+const { class: className = "" } = Astro.props;
+---
+<a href="/" class:list={["group flex items-center gap-2.5", className]} aria-label="FAYAA home">
+  <span class="fy-heat-bg flex size-9 items-center justify-center rounded-fy-md text-fy-on-accent shadow-[0_8px_24px_-8px_rgb(255_91_31/0.8)] transition-transform duration-500 ease-fy-out group-hover:-rotate-8 group-hover:scale-105">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="size-5">
+      <path d="M4.5 9.5C4.5 6.5 7.5 5 10 6.5C12.5 8 11.5 16 14 17.5C16.5 19 19.5 17.5 19.5 14.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+      <path d="M4.5 15.5C4.5 12.5 7.5 11 10 12.5C12.5 14 11.5 6 14 7.5C16.5 9 19.5 7.5 19.5 5.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+    </svg>
+  </span>
+  <span class="font-display text-lg font-bold tracking-tight">FAYAA</span>
+</a>

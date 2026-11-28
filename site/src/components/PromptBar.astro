@@ -1,0 +1,17 @@
+---
+import { app } from "../config";
+interface Props { examples: string[]; class?: string }
+const { examples, class: className = "" } = Astro.props;
+---
+<form data-prompt-form action={app.studio()} method="get" class:list={["fy-glass flex w-full max-w-xl items-center gap-2 rounded-full p-1.5 pl-5", className]}>
+  <label for="hero-prompt" class="sr-only">Describe your video</label>
+  <input
+    id="hero-prompt"
+    name="prompt"
+    type="text"
+    autocomplete="off"
+    placeholder={examples[0] ?? "Describe your video"}
+    class="min-w-0 flex-1 bg-transparent text-sm text-fy-text placeholder:text-fy-subtle focus:outline-none"
+  />
+  <button type="submit" class="h-10 shrink-0 rounded-full bg-fy-accent px-5 text-sm font-semibold text-fy-on-accent transition-colors hover:bg-fy-accent-hover">Create</button>
+</form>

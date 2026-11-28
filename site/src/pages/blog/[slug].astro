@@ -1,0 +1,56 @@
+---
+import type { GetStaticPaths } from "astro";
+import { render } from "astro:content";
+
+import Button from "../../components/Button.astro";
+import Clip from "../../components/Clip.astro";
+import { app } from "../../config";
+import Base from "../../layouts/Base.astro";
+import { formatDate, getPosts } from "../../lib/blog";
+import { clipsFor } from "../../lib/content";
+import { getLandingPage } from "../../lib/landingPages";
+import { blogPosting, breadcrumbs } from "../../lib/schema";
+
+export const getStaticPaths = (async () => {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}) satisfies GetStaticPaths;
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const path = `/blog/${post.id}`;
+const clip = post.data.clip ? clipsFor([post.data.clip])[0] : undefined;
+const cta = post.data.cta ? getLandingPage(post.data.cta) : undefined;
+---
+<Base
+  title={post.data.title}
+  description={post.data.description}
+  path={path}
+  type="article"
+  published={post.data.published}
+  schema={[
+    blogPosting({ title: post.data.title, description: post.data.description, path, published: post.data.published, updated: post.data.updated, author: post.data.author }),
+    breadcrumbs([{ name: "Home", path: "/" }, { name: "Blog", path: "/blog" }, { name: post.data.title, path }]),
+  ]}
+>
+  <article class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+    <nav aria-label="Breadcrumb" class="text-xs text-fy-subtle"><a href="/blog" class="hover:text-fy-text">← Blog</a></nav>
+    <header class="mt-6">
+      <time datetime={post.data.published.toISOString()} class="fy-eyebrow">{formatDate(post.data.published)}</time>
+      <h1 class="mt-3 font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">{post.data.title}</h1>
+      <p class="mt-4 text-lg text-fy-muted">{post.data.description}</p>
+    </header>
+    {clip && <div class="mx-auto mt-10 max-w-[260px]"><Clip clip={clip} eager class="fy-glow" /></div>}
+    <div class="prose prose-lg prose-fayaa mt-10 max-w-none">
+      <Content />
+    </div>
+    <aside class="fy-card mt-14 p-8 text-center">
+      <h2 class="font-display text-2xl font-bold">Make your first viral video in seconds.</h2>
+      <p class="mt-2 text-fy-muted">Free to start. No editing skills needed.</p>
+      <div class="mt-6 flex flex-wrap justify-center gap-3">
+        <Button href={app.signup} event="Signup CTA Click">Start creating free</Button>
+        {cta && <Button href={`/${cta.slug}`} variant="ghost">{cta.nav}</Button>}
+      </div>
+    </aside>
+  </article>
+</Base>

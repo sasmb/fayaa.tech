@@ -1,0 +1,65 @@
+---
+import Button from "../components/Button.astro";
+import Faq from "../components/Faq.astro";
+import { app } from "../config";
+import Base from "../layouts/Base.astro";
+import { CREDIT_PACKS, LIGHT_720_5S, PLANS, PRICING_FAQ, videosFor } from "../lib/pricing";
+import { breadcrumbs, faqPage, softwareApplication } from "../lib/schema";
+
+const offers = [
+  ...PLANS.map((p) => ({ name: `FAYAA ${p.name} (monthly)`, price: p.monthly })),
+  ...CREDIT_PACKS.map((p) => ({ name: `FAYAA ${p.name}`, price: p.price })),
+];
+const fmt = (n: number) => n.toLocaleString("en-US");
+---
+
+<Base
+  title="Pricing: AI Video Plans From $39/mo"
+  description={`Start free, then pick Plus or Ultra, or top up with credit packs from $12. Plus covers about ${videosFor(1470, LIGHT_720_5S)} short AI videos a month. Cancel anytime.`}
+  path="/pricing"
+  schema={[softwareApplication(offers), faqPage(PRICING_FAQ), breadcrumbs([{ name: "Home", path: "/" }, { name: "Pricing", path: "/pricing" }])]}
+>
+  <section class="relative overflow-hidden">
+    <div aria-hidden="true" class="pointer-events-none absolute -top-32 left-1/2 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-fy-accent/15 blur-[140px]"></div>
+    <div class="relative mx-auto max-w-7xl px-4 pb-10 pt-20 text-center sm:px-6">
+      <p class="fy-eyebrow text-fy-accent-300">Pricing</p>
+      <h1 class="fy-display mx-auto mt-4 max-w-4xl text-[clamp(2.5rem,7vw,5rem)]">Viral videos, <span class="fy-text-heat">priced per post.</span></h1>
+      <p class="mx-auto mt-6 max-w-2xl text-lg text-fy-muted">Start free. Upgrade when you are posting every week. Every video shows its exact credit cost before you generate.</p>
+    </div>
+  </section>
+
+  <section class="mx-auto grid max-w-5xl gap-6 px-4 sm:px-6 md:grid-cols-2" aria-label="Plans">
+    {PLANS.map((plan) => (
+      <article class:list={["fy-card relative flex flex-col p-8", plan.highlighted && "ring-1 ring-fy-accent/60"]}>
+        {plan.highlighted && <span class="absolute right-6 top-6 rounded-full bg-fy-accent/15 px-3 py-1 text-xs font-semibold text-fy-accent-300">Best value</span>}
+        <h2 class="font-display text-3xl font-bold">{plan.name}</h2>
+        <p class="mt-1 text-fy-muted">{plan.blurb}</p>
+        <p class="mt-6"><span class="font-display text-5xl font-bold">${plan.annualPerMonth}</span><span class="text-fy-muted">/mo billed yearly</span></p>
+        <p class="mt-1 text-sm text-fy-muted">or ${plan.monthly}/mo billed monthly</p>
+        <p class="mt-4 text-sm"><strong>{fmt(plan.creditsMonthly)} credits/mo</strong> monthly, {fmt(plan.creditsAnnual)}/mo on yearly · about {videosFor(plan.creditsMonthly, LIGHT_720_5S)} short videos</p>
+        <ul class="mt-6 flex-1 space-y-3 text-sm">
+          {plan.features.map((f) => <li class="flex gap-3"><span class="text-fy-accent" aria-hidden="true">✓</span><span class="text-fy-muted">{f}</span></li>)}
+        </ul>
+        <Button href={app.pricing} class="mt-8" variant={plan.highlighted ? "primary" : "ghost"} event="Pricing Plan Click">Get {plan.name}</Button>
+      </article>
+    ))}
+  </section>
+
+  <section class="mx-auto max-w-5xl px-4 py-16 sm:px-6" aria-labelledby="packs-title">
+    <h2 id="packs-title" class="font-display text-2xl font-bold">Credit top-ups</h2>
+    <p class="mt-2 text-fy-muted">One-time packs. No subscription, and they don't expire while your account is active.</p>
+    <div class="mt-6 grid gap-4 sm:grid-cols-3">
+      {CREDIT_PACKS.map((pack) => (
+        <a href={app.pricing} data-event="Credit Pack Click" class="fy-card block p-6 transition-colors hover:border-fy-accent/50">
+          <h3 class="font-semibold">{pack.name}</h3>
+          <p class="mt-3"><span class="font-display text-3xl font-bold">${pack.price}</span></p>
+          <p class="mt-1 text-sm text-fy-muted">{fmt(pack.credits)} credits · about {videosFor(pack.credits, LIGHT_720_5S)} short videos</p>
+        </a>
+      ))}
+    </div>
+    <p class="mt-6 text-sm text-fy-subtle">Prices in USD. Taxes may apply at checkout. Business pricing and larger Ultra tiers are available in the app.</p>
+    <div class="mt-8"><Button href={app.signup} event="Signup CTA Click">Start free</Button></div>
+  </section>
+
+  <Faq items={PRICING_FAQ} title="Pricing questions" />
+</Base>

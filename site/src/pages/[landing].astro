@@ -1,0 +1,99 @@
+---
+import type { GetStaticPaths } from "astro";
+
+import Button from "../components/Button.astro";
+import Clip from "../components/Clip.astro";
+import Faq from "../components/Faq.astro";
+import { app } from "../config";
+import Base from "../layouts/Base.astro";
+import { clipsFor, getClip } from "../lib/content";
+import { LANDING_PAGES, type LandingPage } from "../lib/landingPages";
+import { breadcrumbs, faqPage, softwareApplication } from "../lib/schema";
+import { MEDIA_CLIPS } from "../../../src/landing-page/homepageConfig";
+
+export const getStaticPaths = (() => LANDING_PAGES.map((page) => ({ params: { landing: page.slug }, props: { page } }))) satisfies GetStaticPaths;
+
+const { page } = Astro.props as { page: LandingPage };
+const clips = Object.fromEntries(MEDIA_CLIPS.map((c) => [c.id, c]));
+const hero = getClip(clips, page.heroClipId);
+const gallery = clipsFor(page.clipIds.filter((id) => id !== page.heroClipId));
+const related = LANDING_PAGES.filter((p) => p.slug !== page.slug);
+const path = `/${page.slug}`;
+---
+
+<Base
+  title={page.title}
+  description={page.description}
+  path={path}
+  schema={[softwareApplication(), faqPage(page.faq), breadcrumbs([{ name: "Home", path: "/" }, { name: page.nav, path }])]}
+>
+  <nav aria-label="Breadcrumb" class="mx-auto max-w-7xl px-4 pt-6 text-xs text-fy-subtle sm:px-6">
+    <a href="/" class="hover:text-fy-text">Home</a> <span aria-hidden="true">/</span> <span aria-current="page">{page.nav}</span>
+  </nav>
+
+  <section class="mx-auto grid max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1.2fr_1fr]">
+    <div>
+      <p class="fy-eyebrow text-fy-accent-300">{page.eyebrow}</p>
+      <h1 class="fy-display mt-4 text-[clamp(2.5rem,6vw,4.75rem)] text-balance">{page.h1}</h1>
+      <p class="mt-6 max-w-xl text-lg text-fy-muted text-pretty">{page.intro}</p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <Button href={app.studio(page.prompt)} size="lg" event="Studio Open">Try it free</Button>
+        <Button href="/pricing" size="lg" variant="ghost" event="Pricing Click">See pricing</Button>
+      </div>
+    </div>
+    <div class="mx-auto w-full max-w-xs">
+      <Clip clip={hero} eager class="fy-glow" />
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6" aria-labelledby="steps-title">
+    <h2 id="steps-title" class="font-display text-3xl font-bold sm:text-4xl">How it works</h2>
+    <ol class="mt-8 grid gap-4 md:grid-cols-3">
+      {page.steps.map((step, i) => (
+        <li class="fy-card p-6">
+          <span class="fy-eyebrow text-fy-accent-300">Step {i + 1}</span>
+          <h3 class="mt-2 font-display text-xl font-bold">{step.title}</h3>
+          <p class="mt-2 text-sm text-fy-muted">{step.body}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  {gallery.length > 0 && (
+    <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6" aria-labelledby="gallery-title">
+      <h2 id="gallery-title" class="font-display text-3xl font-bold sm:text-4xl">Made with FAYAA</h2>
+      <ul class="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3">
+        {gallery.map((item) => (
+          <li>
+            <a href={app.studio(item.prompt)} data-event="Remix Click" class="group block">
+              <Clip clip={item} label />
+              <span class="mt-2 inline-block text-xs text-fy-muted group-hover:text-fy-accent-300">Remix this →</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6" aria-labelledby="who-title">
+    <h2 id="who-title" class="font-display text-3xl font-bold sm:text-4xl">Who it's for</h2>
+    <div class="mt-8 grid gap-4 md:grid-cols-3">
+      {page.useCases.map((u) => (
+        <div class="fy-card p-6">
+          <h3 class="font-semibold">{u.title}</h3>
+          <p class="mt-2 text-sm text-fy-muted">{u.body}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <Faq items={page.faq} />
+
+  <section class="mx-auto max-w-7xl px-4 pb-20 sm:px-6" aria-labelledby="related-title">
+    <h2 id="related-title" class="fy-eyebrow">More ways to make viral videos</h2>
+    <ul class="mt-4 flex flex-wrap gap-2">
+      {related.map((p) => <li><a href={`/${p.slug}`} class="fy-glass inline-block rounded-full px-4 py-2 text-sm text-fy-muted hover:text-fy-text">{p.nav}</a></li>)}
+      <li><a href="/blog" class="fy-glass inline-block rounded-full px-4 py-2 text-sm text-fy-muted hover:text-fy-text">Guides on the blog</a></li>
+    </ul>
+  </section>
+</Base>

@@ -1,0 +1,15 @@
+---
+/**
+ * Renders one slot of copy for every variant of an experiment. CSS shows the
+ * one the visitor is assigned (see experimentCss.ts); control is the default.
+ */
+interface Props {
+  exp: string;
+  /** variantId -> text. Must include "control". */
+  values: Record<string, string>;
+}
+const { exp, values } = Astro.props;
+const entries = Object.entries(values);
+const distinct = new Set(entries.map(([, v]) => v)).size > 1;
+---
+{distinct ? entries.map(([variant, text]) => <span data-exp={exp} data-variant={variant}>{text}</span>) : <Fragment>{values.control}</Fragment>}

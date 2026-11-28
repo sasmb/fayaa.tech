@@ -1,0 +1,68 @@
+@import "tailwindcss";
+/* The FAYAA design system is shared with the app: one file owns the brand. */
+@import "../../../src/client/design/tokens.css";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html {
+  background: var(--color-fy-ink);
+  color: var(--color-fy-text);
+  color-scheme: dark;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--color-fy-ink);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: rgb(255 91 31 / 0.35);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-fy-accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Videos fade in once they can play, so a slow clip never flashes. */
+video[data-clip] {
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-fy-out);
+}
+video[data-clip].is-ready {
+  opacity: 1;
+}
+
+/* ---- A/B variants without flicker ----
+ * Every variant is rendered into the HTML. Elements tagged
+ * data-exp="<experiment>" data-variant="<variant>" are hidden unless the
+ * inline script in Base.astro put that variant on <html>. Control shows
+ * when no assignment exists (no JS, crawlers). */
+[data-exp] {
+  display: contents;
+}
+[data-exp]:not([data-variant="control"]) {
+  display: none;
+}
+
+.prose-fayaa {
+  --tw-prose-body: var(--color-fy-muted);
+  --tw-prose-headings: var(--color-fy-text);
+  --tw-prose-links: var(--color-fy-accent-300);
+  --tw-prose-bold: var(--color-fy-text);
+  --tw-prose-counters: var(--color-fy-subtle);
+  --tw-prose-bullets: var(--color-fy-accent);
+  --tw-prose-hr: var(--color-fy-line);
+  --tw-prose-quotes: var(--color-fy-text);
+  --tw-prose-quote-borders: var(--color-fy-accent);
+  --tw-prose-code: var(--color-fy-accent-200);
+  --tw-prose-th-borders: var(--color-fy-line-strong);
+  --tw-prose-td-borders: var(--color-fy-line);
+}
